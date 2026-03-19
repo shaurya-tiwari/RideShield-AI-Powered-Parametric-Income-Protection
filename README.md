@@ -6,42 +6,42 @@
 
 <p align="center">
   <strong>AI-powered income protection for gig workers</strong><br/>
-  Designed for <strong>Zomato Delivery Partners</strong>
+  Built for <strong>Zomato Delivery Partners</strong>
 </p>
 
 ---
 
-## 🚨 Problem Statement
+## 🚨 Problem Context
 
-Gig delivery workers face **20–30% income loss** due to unpredictable external factors:
+Gig delivery workers lose **20–30% of their income** due to external disruptions:
 
-* 🌧 Weather disruptions (rain, extreme heat, AQI spikes)
-* ⚡ Platform instability (app outages, low order density)
-* 🚨 Social disruptions (curfews, strikes, market closures)
+* 🌧 Weather (rain, heat, AQI)
+* ⚡ Platform outages
+* 🚨 Social restrictions (curfews, strikes)
 
-### Current Gaps
+### Current Reality
 
-* ❌ No structured income protection
-* ❌ No real-time compensation mechanisms
-
----
-
-## 🎯 Solution Overview
-
-We present a **parametric AI-driven insurance system** that:
-
-* Continuously monitors real-world disruption signals
-* Quantifies income loss dynamically
-* Triggers automated payouts with zero manual intervention
-* Uses intelligent fraud detection to ensure system integrity
+* ❌ No income protection system
+* ❌ No real-time compensation
 
 ---
 
-## ⚠️ Design Constraints
+## 🎯 Objective
 
-* ✔ Coverage strictly limited to **income loss only**
-* ❌ No health, accident, or vehicle-related claims
-* ✔ Mandatory **weekly pricing model** aligned with gig earnings cycles
+Design a **parametric AI insurance system** that:
+
+* Detects real-world disruptions automatically
+* Calculates income loss precisely
+* Triggers payouts without manual claims
+* Prevents fraud using behavioral intelligence
+
+---
+
+## ⚠️ Constraints (Strictly Followed)
+
+* ✔ Only income loss is covered
+* ❌ No health / accident / vehicle claims
+* ✔ Weekly subscription pricing (mandatory)
 
 ---
 
@@ -49,53 +49,47 @@ We present a **parametric AI-driven insurance system** that:
 
 **Rahul — Zomato Delivery Partner (Delhi)**
 
-* Earnings: ₹25–₹40 per delivery
-* Throughput: 2–3 deliveries/hour
-* Daily income: ₹800–₹1000
-
-This persona reflects real-world gig economy behavior and risk exposure.
+* ₹25–₹40 per delivery
+* 2–3 deliveries/hour
+* ₹800–₹1000/day
 
 ---
 
-## 🌍 Disruption Landscape
+## 🌍 Disruption Categories
 
-### Environmental Factors
+### 🌧 Environmental
 
-* Heavy rainfall
-* Extreme temperatures
-* Hazardous AQI levels
+* Heavy rain
+* Extreme heat
+* AQI spikes
 
-### Social Factors
+### 🚨 Social
 
-* Government-imposed curfews
+* Curfew
 * Local strikes
-* Zone/market closures
+* Market closures
 
-### Platform Factors
+### ⚡ Platform
 
-* Application outages
-* Reduced demand density
+* App outages
+* Low order density
 
-**Impact:**
-
-> Reduced working hours directly translate to **loss of income**
+> Impact: **Loss of working hours → Loss of income**
 
 ---
 
-## ⚙️ System Architecture
-
-The system operates as a **continuous decision pipeline**:
+## ⚙️ End-to-End System Flow
 
 ```
-Onboarding → Risk Profiling → Policy Creation
+Onboarding → Risk Profiling → Weekly Policy Creation
         ↓
 Real-Time Monitoring
         ↓
 Disruption Detection
         ↓
-Validation (Fraud + Activity)
+Activity + Fraud Validation
         ↓
-Claim Generation
+Auto Claim Generation
         ↓
 Decision Engine
         ↓
@@ -104,121 +98,139 @@ Instant / Delayed / Rejected Payout
 
 ---
 
-## 🧾 Intelligent Onboarding
+## 🧾 Onboarding Module
 
-Captures:
+**Inputs:**
 
-* User identity and location
-* Platform association
-* Income patterns and working hours
+* Name, City
+* Platform (Zomato)
+* Avg daily income
+* Working hours
 
-Generates:
+**Outputs:**
 
 * Worker profile
 * Initial risk score
-* Personalized weekly policy
+* Suggested policy
 
 ---
 
-## 🧠 AI Risk Modeling
+## 🧠 AI Risk Assessment
 
-The system computes a dynamic **risk score (0–1)** based on:
+```
+risk_score ∈ [0,1]
+```
 
-* Geographic risk (e.g., AQI, traffic density)
-* Historical weather patterns
-* Frequency of disruptions
-* Social instability indicators
+Based on:
+
+* City risk (AQI, traffic)
+* Historical weather
+* Disruption frequency
+* Social instability
 
 ---
 
-## 💰 Dynamic Weekly Pricing
-
-Premiums are calculated using a **risk-adjusted pricing model**:
+## 💰 Weekly Pricing Model
 
 ```
 weekly_premium = base_price + (risk_score × multiplier)
 ```
 
-Ensuring fairness, scalability, and affordability for gig workers.
+**Example:**
+
+* Base = ₹30
+* Risk = 0.7
+  👉 Premium = ₹44/week
 
 ---
 
 ## 🌩️ Parametric Trigger Engine
 
-The core of the system is a **real-time trigger detection engine**.
+| Trigger  | Condition            |
+| -------- | -------------------- |
+| Rain     | rainfall > threshold |
+| AQI      | AQI > 300            |
+| Traffic  | congestion > 0.75    |
+| Platform | outage detected      |
+| Social   | curfew active        |
 
-| Trigger Type | Condition                |
-| ------------ | ------------------------ |
-| Weather      | Rainfall above threshold |
-| AQI          | AQI > 300                |
-| Traffic      | High congestion          |
-| Platform     | Outage detected          |
-| Social       | Curfew or restriction    |
-
----
-
-## 🔢 Disruption Intelligence
-
-Multiple signals are aggregated into a unified disruption score:
+### Multi-Trigger Intelligence
 
 ```
-disruption_score = weighted sum of environmental + social + platform signals
+disruption_score =
+  0.25 weather +
+  0.2 AQI +
+  0.15 traffic +
+  0.2 platform +
+  0.2 social
 ```
-
-This ensures **context-aware decision making**, not binary triggers.
 
 ---
 
 ## 📡 Event Confidence Layer
 
-Each detected event is validated using a **confidence score** derived from:
+```
+event_confidence ∈ [0,1]
+```
 
-* Multi-source data verification
-* API reliability
+Ensures reliability using:
+
+* Multi-source validation
 * Behavioral consistency
+* API trust
 
 ---
 
-## 👨‍🔧 Worker Activity Validation
+## 👨‍🔧 Activity Validation
 
-To ensure legitimacy, the system evaluates:
+Verifies if the worker was actually active:
 
-* Movement patterns (speed, route behavior)
+* Movement (bike speed)
 * Delivery stop patterns
-* Active working duration
+* Active duration
 
 ---
 
 ## 🔍 Fraud Detection Engine
 
-A multi-layered fraud detection system evaluates:
+```
+fraud_score =
+  distance_anomaly +
+  movement_pattern +
+  inactivity +
+  ip_mismatch +
+  cluster_score +
+  social_mismatch
+```
 
-* Location anomalies
-* Behavioral inconsistencies
-* Inactivity patterns
-* IP mismatches
-* Cluster-based anomalies
-* Social condition mismatches
+### 🚨 Social Fraud Case
 
-### Social Fraud Example
+Curfew active + no user activity → flagged as fraud
 
-> Curfew active + no prior activity → flagged as fraud
+### Decision Logic
+
+| Score   | Action    |
+| ------- | --------- |
+| < 0.4   | ✅ Approve |
+| 0.4–0.7 | ⚠ Delay   |
+| > 0.7   | ❌ Reject  |
 
 ---
 
 ## 🧩 Cluster Fraud Detection
 
-Detects coordinated fraud attempts:
+```
+group by (location + time)
 
+if count > threshold:
+  cluster_flag = TRUE
 ```
-Same location + same time + multiple users → cluster anomaly
-```
+
+Detects coordinated fraud attempts
 
 ---
 
-## 💰 Income Loss Computation
-
-Payouts are strictly based on **lost earning potential**:
+## 💰 Income Loss Engine
 
 ```
 income_per_hour = daily_income / working_hours
@@ -230,80 +242,79 @@ payout = income_per_hour × disruption_duration
 
 ## ⚖️ Decision Engine
 
-Final decisions are made using a composite scoring model:
-
 ```
-final_score = disruption + confidence + trust - fraud
+final_score =
+  0.35 disruption +
+  0.25 confidence +
+  0.25 (1 - fraud) +
+  0.15 trust
 ```
 
-| Score Range | Outcome           |
-| ----------- | ----------------- |
-| High        | 💸 Instant payout |
-| Medium      | ⏳ Delayed payout  |
-| Low         | ❌ Rejected        |
+| Score   | Outcome    |
+| ------- | ---------- |
+| > 0.7   | 💸 Instant |
+| 0.5–0.7 | ⏳ Delayed  |
+| < 0.5   | ❌ Rejected |
 
 ---
 
-## 💳 Instant Payout Infrastructure
+## 💳 Instant Payout System
 
-* Integrated with Razorpay (test/mock)
-* Instant wallet-based credit
-* Full transaction logging
-* Retry & failure handling system
+* Razorpay (test/mock integration)
+* Instant wallet credit
+* Transaction logs
+* Retry handling
 
 ---
 
-## 📊 System Dashboard
+## 📊 Dashboard
 
-### Worker View
+### 👤 Worker
 
 * Weekly premium
-* Active coverage
-* Earnings protected
+* Coverage
 * Claim status
 
-### Admin View
+### 🛠 Admin
 
-* Total claims processed
-* Fraud detection rate
-* Cluster alerts
+* Fraud rate
+* Alerts
 * Disruption analytics
 
 ---
 
-## 🔮 Predictive Intelligence (Advanced)
+## 🔮 Predictive Intelligence
 
-The system incorporates **predictive modeling**:
+Example:
 
-* Forecasts disruptions (e.g., upcoming rain)
-* Adjusts coverage proactively
+⚠ Rain expected → coverage adjusted proactively
 
 ---
 
-## 🧪 Demonstration Scenarios
+## 🧪 Demo Scenarios
 
-### Legitimate Case
+### ✅ Legit Case
 
-Rain + verified activity → Instant payout
+Rain + valid activity → Instant payout
 
-### Fraud Case
+### ❌ Fraud Case
 
 Fake GPS + inactivity → Rejected
 
-### Curfew Case
+### ⚠ Curfew Case
 
-No activity during restriction → Delayed / Rejected
+No activity → Delayed / Rejected
 
 ---
 
-## 🧠 System Vision
+## 🧠 System Positioning
 
-This is not a simple rule-based system.
+This is not a simple rule engine.
 
-> It is an **AI-driven financial decision engine** that continuously evaluates environmental, social, platform, and behavioral signals to protect gig worker income in real time.
+> It is a **persona-specific AI system** that evaluates environmental, social, platform, and behavioral signals to make real-time financial decisions.
 
 ---
 
 ## 🏁 Final Pitch
 
-> A parametric insurance platform that safeguards gig workers’ income by automatically detecting disruptions and executing real-time, fraud-resistant payouts aligned with their weekly earning cycle.
+> A parametric insurance system for Zomato delivery partners that automatically protects income during disruptions using AI-driven risk scoring, fraud detection, and zero-touch payouts aligned with a weekly earning cycle.
