@@ -6,18 +6,36 @@ A recharge-style, AI-powered parametric insurance system that protects Zomato de
 
 ---
 
+## ✅ Requirement Coverage
+
+| Requirement | Status |
+|---|---|
+| Weekly pricing model | ✔ Covered — formula, 4 plan tiers, worked example |
+| AI risk profiling | ✔ Covered — regression model, city + weather + social inputs |
+| Parametric triggers (5 types) | ✔ Covered — rain, AQI, traffic, platform, social |
+| Zero-touch claim automation | ✔ Covered — no worker action required, system-initiated |
+| Fraud detection | ✔ Covered — anomaly scoring, cluster detection, trust system |
+| Analytics dashboard | ✔ Covered — worker + admin views with defined metrics |
+| Payout processing | ✔ Covered — Razorpay sandbox + UPI simulator |
+| Worker onboarding | ✔ Covered — workflow step 1, risk score on signup |
+| Income-only scope | ✔ Enforced — no health, accident, or vehicle coverage |
+
+---
+
 ## 📌 Table of Contents
 
-1. [Problem & Persona](#-problem--persona)
-2. [Persona-Based Scenario](#-persona-based-scenario)
-3. [System Workflow](#-system-workflow)
-4. [Weekly Premium Model](#-weekly-premium-model)
-5. [Parametric Triggers](#-parametric-trigger-engine)
-6. [AI/ML Integration](#-aiml-integration)
-7. [Tech Stack](#-tech-stack)
-8. [Development Plan](#-development-plan)
-9. [Platform Justification](#-platform-justification-web)
-10. [Innovation & Extras](#-innovation--extras)
+1. [Requirement Coverage](#-requirement-coverage)
+2. [Problem & Persona](#-problem--persona)
+3. [Persona-Based Scenario](#-persona-based-scenario)
+4. [System Workflow](#-system-workflow)
+5. [Weekly Premium Model](#-weekly-premium-model)
+6. [Parametric Triggers](#-parametric-trigger-engine)
+7. [AI/ML Integration](#-aiml-integration)
+8. [Tech Stack](#-tech-stack)
+9. [Development Plan](#-development-plan)
+10. [Analytics Dashboard](#-analytics-dashboard)
+11. [Platform Justification](#-platform-justification-web)
+12. [Innovation & Extras](#-innovation--extras)
 
 ---
 
@@ -137,9 +155,10 @@ A curfew is declared at 6 PM. Arun claims income loss. However, Arun had zero de
     └── Score → Instant / Delayed / Rejected
          ↓
 [7] Payout Execution
-    └── Wallet credit (Razorpay simulation)
-    └── Notification sent
-    └── Claim logged with full audit trail
+    └── Channel 1: In-app wallet credit (Razorpay sandbox simulation)
+    └── Channel 2: UPI direct transfer simulation (for Pro Max plan)
+    └── Notification pushed to worker
+    └── Claim logged with full audit trail + transaction ID
 ```
 
 > ⚠️ **Zero-touch design is intentional.** Rahul never opens the app to file a claim. The system acts on his behalf the moment a valid disruption is detected.
@@ -193,6 +212,28 @@ weekly_premium = 39 × 1.5 × 0.6 = ₹35.10 → rounded to ₹35/week
 ```
 
 > Premium is capped at a ±20% change week-over-week to prevent pricing shock.
+
+### Viability Basis
+
+A natural question: *how does ₹29–₹35/week cover a ₹300 claim?*
+
+The answer is standard risk pooling — not every worker files a claim every week:
+
+```
+Delhi avg payable disruptions:  ~2–3 events/month
+Average payout per event:       ~₹150 (disruption_duration × income_per_hour)
+Claim approval rate:            ~60% (fraud + ineligibility filter)
+
+Expected monthly payout/worker: 2.5 events × ₹150 × 0.60 = ₹225/month
+Worker pays (Smart Protect):    ₹35/week × 4 = ₹140/month
+
+Pool sustainability:
+- ~40% of active policy holders have no payable disruption in a given week
+- Their premiums subsidise the 60% who do — identical to how all insurance works
+- Higher-risk weeks (monsoon) → risk_score rises → premium rises automatically
+```
+
+The weekly model also reduces adverse selection: workers can't buy coverage *only* during predicted rain weeks because the premium adjusts upward the moment the forecast worsens.
 
 ---
 
@@ -321,6 +362,7 @@ Constraints:
 | AQI API | WAQI / CPCB | Delhi-specific pollution data |
 | Traffic API | TomTom / HERE Maps | Congestion index per zone |
 | Payments | Razorpay Sandbox | Simulated instant wallet credits |
+| Payments (alt) | UPI Simulator | Direct bank transfer simulation for Pro Max plan |
 | ML Models | Scikit-learn | Risk scoring, fraud detection |
 | Hosting | Vercel (Frontend) + Render (Backend) | Free tier, fast deployment for demo |
 | Maps/Geo | Leaflet.js | Zone visualization and GPS validation |
@@ -353,6 +395,37 @@ Constraints:
 - [ ] Demo scenario runner (3 pre-built scenarios)
 - [ ] End-to-end testing
 - [ ] Final video walkthrough
+
+---
+
+## 📊 Analytics Dashboard
+
+### Worker Dashboard
+Every worker sees a personal weekly summary tied to their active plan:
+
+| Metric | Description |
+|---|---|
+| Active plan & expiry | Current plan name, coverage cap, days remaining |
+| Weekly earnings protected | Total income shielded by active coverage this week |
+| Claims this week | Count of auto-triggered claims + their status (instant / delayed / rejected) |
+| Payout history | Last 4 weeks of credited amounts with timestamps |
+| Disruption alerts | Live feed — active triggers in the worker's zone right now |
+| Trust score indicator | Visual badge showing account standing (affects fraud leniency) |
+
+### Admin / Insurer Dashboard
+Operational and predictive metrics for the insurance operator:
+
+| Metric | Description |
+|---|---|
+| Total active policies | Count of weekly plans currently in force, broken down by plan tier |
+| Claims volume | Daily/weekly claim count with approve / delay / reject breakdown |
+| Fraud rate | % of claims flagged, cluster alerts with zone + timestamp |
+| Payout vs premium ratio | Loss ratio per plan tier — viability signal for pricing |
+| Disruption map | Heatmap of active triggers across Delhi zones in real-time |
+| Next-week forecast | Predicted high-risk zones based on weather + AQI forecast (Pro Max feature) |
+| Worker activity index | Aggregate movement data showing city-wide delivery activity levels |
+
+> Both dashboards are built in Phase 3 using React + recharts, backed by the same PostgreSQL claims and events tables used by the payout engine.
 
 ---
 
@@ -413,3 +486,5 @@ It is a **multi-signal AI pipeline** that:
 - Issues zero-touch payouts in under 2 minutes
 
 All wrapped in an affordable, weekly recharge model that fits how delivery partners actually earn.
+
+> *Built for Rahul. Designed for every gig worker who loses income because the world didn't cooperate.*
