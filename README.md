@@ -36,6 +36,9 @@ A recharge-style, AI-powered parametric insurance system that protects Zomato de
 10. [Analytics Dashboard](#-analytics-dashboard)
 11. [Platform Justification](#-platform-justification-web)
 12. [Innovation & Extras](#-innovation--extras)
+13. [Challenges We Navigated](#️-challenges-we-navigated)
+14. [What's Next](#-whats-next)
+15. [Summary](#-summary)
 
 ---
 
@@ -474,17 +477,45 @@ final_income ≤ city_avg × 1.5    // anti-fraud cap
 
 ---
 
+## ⚠️ Challenges We Navigated
+
+Building an automated financial system without human intervention in the loop surfaced problems we hadn't anticipated at the start.
+
+**Signal fusion across unreliable sources.** No single API is trustworthy enough to trigger a financial payout on its own. We designed an event confidence layer that cross-validates across API reliability, mass behavioral patterns, and historical disruption data — so a single bad API response can't incorrectly trigger or block a claim.
+
+**Fraud in a zero-touch system.** Removing manual claim filing eliminates friction for honest users — but also removes the human check that catches fraud. We addressed this by building fraud detection directly into the pipeline: GPS validation, delivery stop patterns, cluster detection for coordinated rings, and a trust score that builds over time. The system has to be suspicious by default without being unfair to legitimate workers.
+
+**Social events have no API.** Curfews, strikes, and sudden zone closures — some of the most impactful disruptions — have no structured data source. We solved this with behavioral inference: if 40%+ of workers in a zone go offline simultaneously without a weather or platform cause, the system infers a social disruption. It's not perfect, but it's defensible and resilient to data gaps.
+
+**Making ₹35 cover ₹300 claims.** The economics had to actually work. We grounded the pricing model in disruption frequency data: at ~2–3 payable events per month, 60% approval rate, and ~₹150 average payout, the expected monthly liability per worker is ~₹225. A ₹140/month premium pool across all active workers is sustainable through standard risk pooling — the ~40% of workers with no disruption in a given week subsidise those who do.
+
+---
+
+## 🔮 What's Next
+
+Phase 1 is architecture and documentation. The next two phases build and polish the product. Beyond the hackathon, we see a clear path to a deployable system:
+
+- **Mobile-first interface or WhatsApp onboarding** — Rahul shouldn't need a browser. A lightweight app or WhatsApp-based flow would make plan purchase and payout notification frictionless on any phone.
+- **Real platform API integration** — replace our simulated order density data with actual delivery platform signals from Zomato, Swiggy, or Blinkit via partner APIs.
+- **Multi-city expansion** — each city gets a locally calibrated `base_risk` profile. Delhi monsoon ≠ Bengaluru rain ≠ Mumbai flood. The model is designed to scale this way.
+- **Advanced predictive risk models** — move from 48-hour weather forecasts to week-ahead risk forecasting, enabling workers to make better decisions about which plan to buy before a high-disruption week.
+- **Insurer partnerships** — RideShield is designed to run as white-label infrastructure for insurance providers who want to serve the gig economy without building the automation layer themselves.
+
+> The long-term goal is simple: no gig worker should experience income loss without immediate, automated financial protection.
+
+---
+
 ## 🏁 Summary
 
-**RideShield** is not a simple "if rain then pay" system.
+**RideShield** is not a simple "if rain then pay" system — and we didn't build it that way.
 
-It is a **multi-signal AI pipeline** that:
+We built a multi-signal AI pipeline that:
 - Monitors 5 disruption categories in real-time
 - Validates events across behavioral, API, and historical signals
-- Detects individual and coordinated fraud
-- Calculates fair income loss using verified data
+- Detects individual and coordinated fraud before a single rupee moves
+- Calculates fair income loss using verified, multi-source data
 - Issues zero-touch payouts in under 2 minutes
 
-All wrapped in an affordable, weekly recharge model that fits how delivery partners actually earn.
+All wrapped in an affordable, weekly recharge model that fits how delivery partners actually earn — because we designed it around Rahul, not around what's convenient for an insurer.
 
 > *Built for Rahul. Designed for every gig worker who loses income because the world didn't cooperate.*
