@@ -99,7 +99,7 @@ income_confidence ∈ [0,1]
 
 ---
 
-## 📦 Multi-Plan System
+## 📦 Multi-Plan System (Dynamically Calculated)
 
 ### 🟢 Basic Protect
 
