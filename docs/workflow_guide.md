@@ -78,6 +78,11 @@ Seeded demo workers:
 - Vikram: `+919876543211`
 - Arun: `+919876543212`
 - Priya: `+919876543213`
+- Aman: `+919876543214`
+- Farhan: `+919876543215`
+- Sneha: `+919876543216`
+- Neha: `+919876543217`
+- Rohit: `+919876543218`
 
 ### 3. Open the app
 
@@ -168,6 +173,29 @@ Flow:
 7. Fraud and decision logic run
 8. Approved claims pay out, delayed claims go to admin review
 
+## Geography And Locations
+
+RideShield is no longer only driven by hardcoded frontend geography constants.
+
+Current location model:
+- cities and zones are bootstrapped into the database
+- thresholds and baseline risk profiles are attached to zones
+- onboarding, demo runner, and admin filters fetch location data from `/api/locations/*`
+- scheduler reads active cities/zones from the DB first
+
+Current supported cities:
+- Delhi
+- Mumbai
+- Bengaluru
+- Chennai
+
+Current important rule:
+- `zone_id` is the backend source of truth
+- city/zone strings remain for compatibility and display
+
+Current practical consequence:
+- adding a supported zone within the current model is now a data/bootstrap concern, not only a frontend constant edit
+
 ## Current Product Guarantees
 
 - claims are system-generated, not manually filed
@@ -175,6 +203,8 @@ Flow:
 - duplicate and extension behavior is audited
 - tests are isolated from the live dev database
 - seed data can be rerun safely
+- scheduler state is visible in health/admin surfaces
+- location data is API-driven in the main user/admin flows
 
 ## Useful Docs
 

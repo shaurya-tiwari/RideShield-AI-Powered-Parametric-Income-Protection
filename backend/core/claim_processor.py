@@ -13,6 +13,7 @@ from backend.config import settings
 from backend.core.decision_engine import decision_engine
 from backend.core.fraud_detector import fraud_detector
 from backend.core.income_verifier import income_verifier
+from backend.core.location_service import location_service
 from backend.core.payout_executor import payout_executor
 from backend.core.trigger_engine import trigger_engine
 from backend.db.models import AuditLog, Claim, Event, Policy, TrustScore, Worker
@@ -39,7 +40,7 @@ class ClaimProcessor:
             self._set_scenario(scenario)
 
         if not zones:
-            zones = settings.CITY_RISK_PROFILES.get(city, {}).get("zones", ["south_delhi"])
+            zones = [zone.slug for zone in await location_service.get_active_zones(db, city_slug=city)]
 
         results = {
             "cycle_timestamp": utc_now_naive().isoformat(),
@@ -94,23 +95,25 @@ class ClaimProcessor:
             "claim_details": [],
         }
 
+        zone_record = await location_service.resolve_zone(db, city, zone)
         signals = await trigger_engine.fetch_all_signals(zone, city)
         zone_result["signals"] = {k: v for k, v in signals.items() if k != "raw_data" and isinstance(v, (int, float))}
-        fired = trigger_engine.evaluate_thresholds(signals)
+        thresholds = trigger_engine.thresholds_for_zone(zone_record)
+        fired = trigger_engine.evaluate_thresholds(signals, thresholds=thresholds)
         zone_result["triggers_fired"] = fired
         if not fired:
             return zone_result
 
-        disruption_score = trigger_engine.calculate_disruption_score(signals)
+        disruption_score = trigger_engine.calculate_disruption_score(signals, thresholds=thresholds)
         event_confidence = trigger_engine.calculate_event_confidence(signals, fired, zone)
         events, created, extended = await trigger_engine.get_or_create_event(
-            db, zone, city, fired, signals, disruption_score, event_confidence
+            db, zone_record, fired, signals, disruption_score, event_confidence, thresholds=thresholds
             , demo_run_id=demo_run_id
         )
         zone_result["events_created"] = created
         zone_result["events_extended"] = extended
 
-        affected_workers = await trigger_engine.find_affected_workers(db, zone, fired)
+        affected_workers = await trigger_engine.find_affected_workers(db, zone_record, fired)
         for worker_info in affected_workers:
             for event in events:
                 claim_result = await self._process_worker_claim(

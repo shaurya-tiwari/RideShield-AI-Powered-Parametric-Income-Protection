@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 from backend.config import settings
 from backend.core.claim_processor import claim_processor
+from backend.core.location_service import location_service
 from backend.database import async_session_factory
 
 logger = logging.getLogger("rideshield.scheduler")
@@ -62,10 +63,23 @@ class TriggerScheduler:
             try:
                 async with async_session_factory() as db:
                     results = {}
-                    for city, profile in settings.CITY_RISK_PROFILES.items():
-                        zones = profile.get("zones", [])
+                    active_cities = await location_service.get_active_cities(db)
+                    if active_cities:
+                        city_zone_pairs = [
+                            (city.slug, [zone.slug for zone in await location_service.get_active_zones(db, city_slug=city.slug)])
+                            for city in active_cities
+                        ]
+                    else:
+                        logger.warning("No active cities found in DB geography. Falling back to config-backed city profiles.")
+                        city_zone_pairs = [
+                            (city, profile.get("zones", []))
+                            for city, profile in settings.CITY_RISK_PROFILES.items()
+                        ]
+
+                    for city, zones in city_zone_pairs:
                         if not zones:
                             continue
+                        logger.info("Scheduler monitoring %s zones for %s: %s", len(zones), city, ", ".join(zones))
                         result = await claim_processor.run_trigger_cycle(db=db, city=city, zones=zones[:], scenario=None)
                         await db.commit()
                         results[city] = {

@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.core.premium_calculator import premium_calculator
 from backend.core.risk_scorer import risk_scorer
+from backend.core.location_service import location_service
 from backend.database import async_session_factory, init_db
 from backend.db.models import AuditLog, Policy, TrustScore, Worker, WorkerActivity
 
@@ -172,6 +173,216 @@ WORKERS = [
         "activity": [],
         "notes": "active multi",
     },
+    {
+        "key": "aman",
+        "label": "Aman Verma",
+        "phone": "+919876543214",
+        "city": "mumbai",
+        "zone": "south_mumbai",
+        "platform": "swiggy",
+        "income": Decimal("780"),
+        "hours": Decimal("8"),
+        "consent_days": 20,
+        "trust": {
+            "score": Decimal("0.620"),
+            "total_claims": 8,
+            "approved_claims": 6,
+            "fraud_flags": 1,
+            "account_age_days": 20,
+            "device_stability": Decimal("0.800"),
+        },
+        "plan": {
+            "plan_name": "smart_protect",
+            "status": "active",
+            "purchased_offset": timedelta(hours=14),
+            "activates_offset": timedelta(hours=2),
+            "expires_offset": timedelta(days=6, hours=6),
+            "triggers": ["rain", "heat", "traffic"],
+            "base_price": Decimal("39"),
+            "plan_factor": Decimal("1.4"),
+            "coverage_cap": Decimal("550"),
+        },
+        "activity": [
+            {
+                "zone": "south_mumbai",
+                "latitude": Decimal("18.93") + Decimal(str(i * 0.002)),
+                "longitude": Decimal("72.83") + Decimal(str(i * 0.002)),
+                "speed_kmh": Decimal(str(17 + i * 2)),
+                "has_delivery_stop": True,
+                "recorded_offset": timedelta(hours=5) - timedelta(minutes=i * 20),
+            }
+            for i in range(6)
+        ],
+        "notes": "mumbai active",
+    },
+    {
+        "key": "farhan",
+        "label": "Farhan Ali",
+        "phone": "+919876543215",
+        "city": "mumbai",
+        "zone": "navi_mumbai",
+        "platform": "zomato",
+        "income": Decimal("1100"),
+        "hours": Decimal("10"),
+        "consent_days": 90,
+        "trust": {
+            "score": Decimal("0.910"),
+            "total_claims": 40,
+            "approved_claims": 38,
+            "fraud_flags": 0,
+            "account_age_days": 90,
+            "device_stability": Decimal("0.980"),
+        },
+        "plan": {
+            "plan_name": "assured_plan",
+            "status": "active",
+            "purchased_offset": timedelta(hours=72),
+            "activates_offset": timedelta(hours=24),
+            "expires_offset": timedelta(days=5, hours=12),
+            "triggers": ["rain", "heat", "aqi", "traffic"],
+            "base_price": Decimal("49"),
+            "plan_factor": Decimal("2.3"),
+            "coverage_cap": Decimal("900"),
+        },
+        "activity": [
+            {
+                "zone": "navi_mumbai",
+                "latitude": Decimal("19.03") + Decimal(str(i * 0.001)),
+                "longitude": Decimal("73.02") + Decimal(str(i * 0.001)),
+                "speed_kmh": Decimal(str(22 + i * 2)),
+                "has_delivery_stop": True,
+                "recorded_offset": timedelta(hours=6) - timedelta(minutes=i * 18),
+            }
+            for i in range(5)
+        ],
+        "notes": "mumbai high trust",
+    },
+    {
+        "key": "sneha",
+        "label": "Sneha Iyer",
+        "phone": "+919876543216",
+        "city": "chennai",
+        "zone": "adyar",
+        "platform": "swiggy",
+        "income": Decimal("950"),
+        "hours": Decimal("9"),
+        "consent_days": 45,
+        "trust": {
+            "score": Decimal("0.880"),
+            "total_claims": 30,
+            "approved_claims": 28,
+            "fraud_flags": 0,
+            "account_age_days": 45,
+            "device_stability": Decimal("0.970"),
+        },
+        "plan": {
+            "plan_name": "assured_plan",
+            "status": "active",
+            "purchased_offset": timedelta(hours=36),
+            "activates_offset": timedelta(hours=6),
+            "expires_offset": timedelta(days=5, hours=20),
+            "triggers": ["rain", "aqi", "social"],
+            "base_price": Decimal("49"),
+            "plan_factor": Decimal("2.1"),
+            "coverage_cap": Decimal("850"),
+        },
+        "activity": [
+            {
+                "zone": "adyar",
+                "latitude": Decimal("13.01") + Decimal(str(i * 0.001)),
+                "longitude": Decimal("80.25") + Decimal(str(i * 0.001)),
+                "speed_kmh": Decimal(str(18 + i * 2)),
+                "has_delivery_stop": True,
+                "recorded_offset": timedelta(hours=4) - timedelta(minutes=i * 22),
+            }
+            for i in range(6)
+        ],
+        "notes": "chennai active",
+    },
+    {
+        "key": "neha",
+        "label": "Neha Gupta",
+        "phone": "+919876543217",
+        "city": "chennai",
+        "zone": "anna_nagar",
+        "platform": "swiggy",
+        "income": Decimal("980"),
+        "hours": Decimal("9"),
+        "consent_days": 70,
+        "trust": {
+            "score": Decimal("0.890"),
+            "total_claims": 22,
+            "approved_claims": 20,
+            "fraud_flags": 0,
+            "account_age_days": 70,
+            "device_stability": Decimal("0.960"),
+        },
+        "plan": {
+            "plan_name": "assured_plan",
+            "status": "active",
+            "purchased_offset": timedelta(hours=30),
+            "activates_offset": timedelta(hours=5),
+            "expires_offset": timedelta(days=5, hours=10),
+            "triggers": ["rain", "aqi", "social"],
+            "base_price": Decimal("49"),
+            "plan_factor": Decimal("2.0"),
+            "coverage_cap": Decimal("800"),
+        },
+        "activity": [
+            {
+                "zone": "anna_nagar",
+                "latitude": Decimal("13.08") + Decimal(str(i * 0.001)),
+                "longitude": Decimal("80.21") + Decimal(str(i * 0.001)),
+                "speed_kmh": Decimal(str(16 + i * 2)),
+                "has_delivery_stop": True,
+                "recorded_offset": timedelta(hours=3) - timedelta(minutes=i * 17),
+            }
+            for i in range(4)
+        ],
+        "notes": "chennai high trust",
+    },
+    {
+        "key": "rohit",
+        "label": "Rohit Yadav",
+        "phone": "+919876543218",
+        "city": "bengaluru",
+        "zone": "whitefield",
+        "platform": "zomato",
+        "income": Decimal("720"),
+        "hours": Decimal("7"),
+        "consent_days": 12,
+        "trust": {
+            "score": Decimal("0.410"),
+            "total_claims": 3,
+            "approved_claims": 2,
+            "fraud_flags": 0,
+            "account_age_days": 12,
+            "device_stability": Decimal("0.620"),
+        },
+        "plan": {
+            "plan_name": "smart_protect",
+            "status": "pending",
+            "purchased_offset": timedelta(hours=4),
+            "activates_offset": -timedelta(hours=20),
+            "expires_offset": timedelta(days=7, hours=12),
+            "triggers": ["heat", "traffic", "platform_outage"],
+            "base_price": Decimal("39"),
+            "plan_factor": Decimal("1.6"),
+            "coverage_cap": Decimal("500"),
+        },
+        "activity": [
+            {
+                "zone": "whitefield",
+                "latitude": Decimal("12.97") + Decimal(str(i * 0.001)),
+                "longitude": Decimal("77.75") + Decimal(str(i * 0.001)),
+                "speed_kmh": Decimal(str(14 + i * 2)),
+                "has_delivery_stop": i % 2 == 0,
+                "recorded_offset": timedelta(hours=2) - timedelta(minutes=i * 15),
+            }
+            for i in range(5)
+        ],
+        "notes": "bengaluru pending",
+    },
 ]
 
 
@@ -184,13 +395,20 @@ def policy_display_name(plan_name: str) -> str:
 
 async def upsert_worker(db, spec: dict, now: datetime):
     worker = (await db.execute(select(Worker).where(Worker.phone == spec["phone"]))).scalar_one_or_none()
-    risk = risk_scorer.calculate_risk_score(spec["city"], spec["zone"])
+    zone_record = await location_service.resolve_zone(db, spec["city"], spec["zone"])
+    risk = risk_scorer.calculate_risk_score(
+        spec["city"],
+        zone_record.slug,
+        city_base_override=float(zone_record.risk_profile.base_risk) if zone_record.risk_profile else None,
+    )
 
     payload = {
         "name": spec["label"],
         "phone": spec["phone"],
+        "city_id": zone_record.city_id,
+        "zone_id": zone_record.id,
         "city": spec["city"],
-        "zone": spec["zone"],
+        "zone": zone_record.slug,
         "platform": spec["platform"],
         "self_reported_income": spec["income"],
         "working_hours": spec["hours"],
@@ -210,7 +428,7 @@ async def upsert_worker(db, spec: dict, now: datetime):
         for key, value in payload.items():
             setattr(worker, key, value)
 
-    return worker, risk, created
+    return worker, zone_record, risk, created
 
 
 async def upsert_trust_score(db, worker: Worker, trust_spec: dict, now: datetime):
@@ -275,6 +493,7 @@ async def replace_activity_logs(db, worker: Worker, activity_spec: list[dict], n
         db.add(
             WorkerActivity(
                 worker_id=worker.id,
+                zone_id=worker.zone_id,
                 zone=item["zone"],
                 latitude=item["latitude"],
                 longitude=item["longitude"],
@@ -292,11 +511,12 @@ async def seed():
 
     async with async_session_factory() as db:
         print("Seeding database...")
+        await location_service.ensure_bootstrap(db, strict_backfill=True)
         now = utc_now_naive()
         results = []
 
         for spec in WORKERS:
-            worker, risk, created = await upsert_worker(db, spec, now)
+            worker, zone_record, risk, created = await upsert_worker(db, spec, now)
             await upsert_trust_score(db, worker, spec["trust"], now)
             policy, premium = await upsert_policy(db, worker, spec, risk["risk_score"], now)
             await replace_activity_logs(db, worker, spec["activity"], now)
@@ -305,6 +525,8 @@ async def seed():
                 {
                     "label": spec["label"],
                     "worker_id": worker.id,
+                    "city": zone_record.city_ref.slug,
+                    "zone": zone_record.slug,
                     "risk_score": risk["risk_score"],
                     "premium": premium["final_premium"],
                     "notes": spec["notes"],

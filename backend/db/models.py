@@ -25,6 +25,8 @@ class Worker(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
     name = Column(String(100), nullable=False)
     phone = Column(String(15), unique=True, nullable=False, index=True)
+    city_id = Column(UUID(as_uuid=True), ForeignKey("cities.id"), nullable=True, index=True)
+    zone_id = Column(UUID(as_uuid=True), ForeignKey("zones.id"), nullable=True, index=True)
     city = Column(String(50), nullable=False, index=True)
     zone = Column(String(50), nullable=True)
     platform = Column(String(50), nullable=False)
@@ -44,6 +46,8 @@ class Worker(Base):
     claims = relationship("Claim", back_populates="worker", lazy="selectin")
     trust_score = relationship("TrustScore", back_populates="worker", uselist=False, lazy="selectin")
     activity_logs = relationship("WorkerActivity", back_populates="worker", lazy="selectin")
+    city_ref = relationship("City", back_populates="workers", lazy="selectin")
+    zone_ref = relationship("Zone", back_populates="workers", lazy="selectin")
 
     def __repr__(self):
         return f"<Worker {self.name} ({self.city})>"
@@ -91,6 +95,7 @@ class Event(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
     event_type = Column(String(50), nullable=False, index=True)
+    zone_id = Column(UUID(as_uuid=True), ForeignKey("zones.id"), nullable=True, index=True)
     zone = Column(String(50), nullable=False, index=True)
     city = Column(String(50), nullable=False, index=True)
     started_at = Column(DateTime, nullable=False)
@@ -108,6 +113,7 @@ class Event(Base):
 
     # Relationships
     claims = relationship("Claim", back_populates="event", lazy="selectin")
+    zone_ref = relationship("Zone", back_populates="events", lazy="selectin")
 
     __table_args__ = (
         Index("idx_event_zone_type_time", "event_type", "zone", "started_at"),
@@ -244,6 +250,7 @@ class WorkerActivity(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
     worker_id = Column(UUID(as_uuid=True), ForeignKey("workers.id"), nullable=False, index=True)
+    zone_id = Column(UUID(as_uuid=True), ForeignKey("zones.id"), nullable=True, index=True)
     zone = Column(String(50), nullable=False, index=True)
     latitude = Column(Numeric(10, 7), nullable=True)
     longitude = Column(Numeric(10, 7), nullable=True)
@@ -253,6 +260,7 @@ class WorkerActivity(Base):
 
     # Relationships
     worker = relationship("Worker", back_populates="activity_logs")
+    zone_ref = relationship("Zone", back_populates="activity_logs", lazy="selectin")
 
     __table_args__ = (
         Index("idx_activity_zone_time", "zone", "recorded_at"),
@@ -261,3 +269,82 @@ class WorkerActivity(Base):
 
     def __repr__(self):
         return f"<WorkerActivity {self.worker_id} at {self.recorded_at}>"
+
+
+class City(Base):
+    """Supported city for worker onboarding and trigger monitoring."""
+    __tablename__ = "cities"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
+    slug = Column(String(50), nullable=False, unique=True, index=True)
+    display_name = Column(String(100), nullable=False)
+    active = Column(Boolean, default=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    zones = relationship("Zone", back_populates="city_ref", lazy="selectin")
+    workers = relationship("Worker", back_populates="city_ref", lazy="selectin")
+
+    def __repr__(self):
+        return f"<City {self.slug}>"
+
+
+class Zone(Base):
+    """Operational zone within a city."""
+    __tablename__ = "zones"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
+    city_id = Column(UUID(as_uuid=True), ForeignKey("cities.id"), nullable=False, index=True)
+    slug = Column(String(80), nullable=False, unique=True, index=True)
+    display_name = Column(String(120), nullable=False)
+    active = Column(Boolean, default=True, index=True)
+    centroid_lat = Column(Numeric(10, 7), nullable=True)
+    centroid_lon = Column(Numeric(10, 7), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    city_ref = relationship("City", back_populates="zones", lazy="selectin")
+    threshold_profile = relationship("ZoneThresholdProfile", back_populates="zone_ref", uselist=False, lazy="selectin")
+    risk_profile = relationship("ZoneRiskProfile", back_populates="zone_ref", uselist=False, lazy="selectin")
+    workers = relationship("Worker", back_populates="zone_ref", lazy="selectin")
+    events = relationship("Event", back_populates="zone_ref", lazy="selectin")
+    activity_logs = relationship("WorkerActivity", back_populates="zone_ref", lazy="selectin")
+
+    __table_args__ = (
+        UniqueConstraint("city_id", "slug", name="uq_zone_city_slug"),
+    )
+
+    def __repr__(self):
+        return f"<Zone {self.slug}>"
+
+
+class ZoneThresholdProfile(Base):
+    """Per-zone trigger thresholds."""
+    __tablename__ = "zone_threshold_profiles"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
+    zone_id = Column(UUID(as_uuid=True), ForeignKey("zones.id"), nullable=False, unique=True, index=True)
+    rain_threshold_mm = Column(Numeric(10, 2), nullable=False)
+    heat_threshold_c = Column(Numeric(10, 2), nullable=False)
+    aqi_threshold = Column(Integer, nullable=False)
+    traffic_threshold = Column(Numeric(4, 3), nullable=False)
+    platform_outage_threshold = Column(Numeric(4, 3), nullable=False)
+    social_inactivity_threshold = Column(Numeric(4, 3), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    zone_ref = relationship("Zone", back_populates="threshold_profile", lazy="selectin")
+
+
+class ZoneRiskProfile(Base):
+    """Per-zone pricing and risk defaults."""
+    __tablename__ = "zone_risk_profiles"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
+    zone_id = Column(UUID(as_uuid=True), ForeignKey("zones.id"), nullable=False, unique=True, index=True)
+    base_risk = Column(Numeric(4, 3), nullable=False)
+    avg_daily_income = Column(Numeric(10, 2), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    zone_ref = relationship("Zone", back_populates="risk_profile", lazy="selectin")

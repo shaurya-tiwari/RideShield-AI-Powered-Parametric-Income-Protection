@@ -11,6 +11,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config import settings
+from backend.core.location_service import location_service
 from backend.core.trigger_scheduler import trigger_scheduler
 from backend.database import get_db
 
@@ -49,8 +50,10 @@ async def db_health_check(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/health/config")
-async def config_check():
+async def config_check(db: AsyncSession = Depends(get_db)):
     """Show current configuration (non-sensitive)."""
+    cities = await location_service.get_active_cities(db)
+    city_map = await location_service.get_city_zone_map(db)
     return {
         "simulation_mode": settings.SIMULATION_MODE,
         "scheduler": trigger_scheduler.state,
@@ -65,6 +68,7 @@ async def config_check():
             "social_inactivity_threshold": settings.SOCIAL_INACTIVITY_THRESHOLD,
         },
         "trigger_check_interval_seconds": settings.TRIGGER_CHECK_INTERVAL_SECONDS,
-        "available_cities": list(settings.CITY_RISK_PROFILES.keys()),
+        "available_cities": [city.slug for city in cities] or list(settings.CITY_RISK_PROFILES.keys()),
+        "city_zone_map": city_map,
         "available_plans": list(settings.PLAN_DEFINITIONS.keys()),
     }

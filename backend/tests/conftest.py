@@ -11,6 +11,7 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
 from backend.config import settings
+from backend.core.location_service import location_service
 from backend.database import Base, close_db, engine
 from backend.main import app
 
@@ -23,6 +24,11 @@ async def ensure_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
+    from backend.database import async_session_factory
+
+    async with async_session_factory() as session:
+        await location_service.ensure_bootstrap(session, strict_backfill=True)
+        await session.commit()
     yield
     await close_db()
 

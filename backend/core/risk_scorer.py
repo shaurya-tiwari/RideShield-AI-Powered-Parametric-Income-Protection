@@ -69,6 +69,7 @@ class RiskScorer:
         city: str,
         zone: str = None,
         reference_date: datetime = None,
+        city_base_override: float | None = None,
     ) -> dict:
         """
         Calculate risk score for a worker.
@@ -83,7 +84,7 @@ class RiskScorer:
         month = reference_date.month
 
         city_profile = settings.CITY_RISK_PROFILES.get(city, {})
-        city_base = city_profile.get("base_risk", 0.50)
+        city_base = city_base_override if city_base_override is not None else city_profile.get("base_risk", 0.50)
 
         city_overrides = self.CITY_SEASONAL_OVERRIDES.get(city, {})
         if month in city_overrides:

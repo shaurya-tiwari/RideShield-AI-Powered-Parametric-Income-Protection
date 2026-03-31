@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from backend.config import settings
+from backend.core.location_service import location_service
 from backend.core.premium_calculator import premium_calculator
 from backend.core.risk_scorer import risk_scorer
 from backend.database import get_db
@@ -55,6 +56,30 @@ def get_active_policy(worker, now):
     return None
 
 
+async def resolve_worker_zone(db: AsyncSession, city_slug: str, zone_slug: str | None):
+    if not zone_slug:
+        zones = await location_service.get_active_zones(db, city_slug=city_slug)
+        if not zones:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"City '{city_slug}' is not supported.",
+            )
+        return zones[0]
+    try:
+        return await location_service.resolve_zone(db, city_slug, zone_slug)
+    except ValueError as exc:
+        valid = [zone.slug for zone in await location_service.get_active_zones(db, city_slug=city_slug)]
+        if not valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"City '{city_slug}' is not supported.",
+            ) from exc
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"{exc} Valid zones: {', '.join(valid)}",
+        ) from exc
+
+
 @router.post("/register", response_model=WorkerRegisterResponse, status_code=201)
 async def register_worker(
     request: WorkerRegisterRequest,
@@ -70,28 +95,22 @@ async def register_worker(
             detail="A worker with this phone number is already registered.",
         )
 
-    city_profile = settings.CITY_RISK_PROFILES.get(request.city)
-    if not city_profile:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"City '{request.city}' is not supported.",
-        )
+    zone_record = await resolve_worker_zone(db, request.city, request.zone)
 
-    if request.zone and request.zone not in city_profile["zones"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Zone '{request.zone}' is not valid for city '{request.city}'. "
-            f"Valid zones: {', '.join(city_profile['zones'])}",
-        )
-
-    risk_result = risk_scorer.calculate_risk_score(city=request.city, zone=request.zone)
+    risk_result = risk_scorer.calculate_risk_score(
+        city=request.city,
+        zone=zone_record.slug,
+        city_base_override=float(zone_record.risk_profile.base_risk) if zone_record.risk_profile else None,
+    )
     client_ip = req.client.host if req.client else None
 
     worker = Worker(
         name=request.name,
         phone=request.phone,
+        city_id=zone_record.city_id,
+        zone_id=zone_record.id,
         city=request.city,
-        zone=request.zone,
+        zone=zone_record.slug,
         platform=request.platform,
         self_reported_income=request.self_reported_income,
         working_hours=request.working_hours,
@@ -123,7 +142,7 @@ async def register_worker(
             action="registered",
             details={
                 "city": request.city,
-                "zone": request.zone,
+                "zone": zone_record.slug,
                 "platform": request.platform,
                 "risk_score": risk_result["risk_score"],
                 "consent_given": True,
@@ -152,6 +171,7 @@ async def register_worker(
 
     return WorkerRegisterResponse(
         worker_id=worker.id,
+        zone_id=worker.zone_id,
         name=worker.name,
         city=worker.city,
         zone=worker.zone,
@@ -202,6 +222,8 @@ async def get_worker_profile(
 
     return WorkerProfileResponse(
         id=worker.id,
+        city_id=worker.city_id,
+        zone_id=worker.zone_id,
         name=worker.name,
         phone=worker.phone,
         city=worker.city,
@@ -247,13 +269,10 @@ async def update_worker(
 
     recalculate_risk = False
     if update.zone is not None:
-        city_profile = settings.CITY_RISK_PROFILES.get(worker.city)
-        if update.zone not in city_profile["zones"]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Zone '{update.zone}' is not valid for city '{worker.city}'.",
-            )
-        worker.zone = update.zone
+        zone_record = await resolve_worker_zone(db, worker.city, update.zone)
+        worker.zone_id = zone_record.id
+        worker.city_id = zone_record.city_id
+        worker.zone = zone_record.slug
         recalculate_risk = True
 
     if update.self_reported_income is not None:
@@ -262,7 +281,11 @@ async def update_worker(
         worker.working_hours = update.working_hours
 
     if recalculate_risk:
-        risk_result = risk_scorer.calculate_risk_score(city=worker.city, zone=worker.zone)
+        risk_result = risk_scorer.calculate_risk_score(
+            city=worker.city,
+            zone=worker.zone,
+            city_base_override=float(zone_record.risk_profile.base_risk) if zone_record.risk_profile else None,
+        )
         worker.risk_score = risk_result["risk_score"]
 
     worker.updated_at = utc_now_naive()
@@ -325,6 +348,8 @@ async def list_workers(
         worker_responses.append(
             WorkerProfileResponse(
                 id=worker.id,
+                city_id=worker.city_id,
+                zone_id=worker.zone_id,
                 name=worker.name,
                 phone=worker.phone,
                 city=worker.city,
@@ -353,7 +378,7 @@ async def get_risk_score(
 ):
     """Get detailed risk score breakdown for a worker."""
 
-    result = await db.execute(select(Worker).where(Worker.id == worker_id))
+    result = await db.execute(select(Worker).options(selectinload(Worker.zone_ref)).where(Worker.id == worker_id))
     worker = result.scalar_one_or_none()
 
     if not worker:
@@ -362,7 +387,11 @@ async def get_risk_score(
             detail="Worker not found.",
         )
 
-    risk_result = risk_scorer.calculate_risk_score(city=worker.city, zone=worker.zone)
+    risk_result = risk_scorer.calculate_risk_score(
+        city=worker.city,
+        zone=worker.zone,
+        city_base_override=float(worker.zone_ref.risk_profile.base_risk) if worker.zone_ref and worker.zone_ref.risk_profile else None,
+    )
     plans, recommended = premium_calculator.calculate_all_plans(risk_result["risk_score"])
 
     return {

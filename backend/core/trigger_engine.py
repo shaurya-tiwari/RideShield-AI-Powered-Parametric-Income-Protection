@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from backend.config import settings
-from backend.db.models import AuditLog, Event, Worker
+from backend.db.models import AuditLog, Event, Worker, Zone
 from simulations.aqi_mock import aqi_simulator
 from simulations.platform_mock import platform_simulator
 from simulations.traffic_mock import traffic_simulator
@@ -51,6 +51,19 @@ class TriggerEngine:
             "raw_data": {"weather": weather, "aqi": aqi, "traffic": traffic, "platform": platform},
         }
 
+    def thresholds_for_zone(self, zone: Zone | None = None) -> Dict:
+        if zone and zone.threshold_profile:
+            profile = zone.threshold_profile
+            return {
+                "rain": {"field": "rainfall_mm_hr", "threshold": float(profile.rain_threshold_mm), "weight": 0.20, "source": "openweather"},
+                "heat": {"field": "temperature_c", "threshold": float(profile.heat_threshold_c), "weight": 0.15, "source": "openweather"},
+                "aqi": {"field": "aqi_value", "threshold": float(profile.aqi_threshold), "weight": 0.15, "source": "waqi"},
+                "traffic": {"field": "congestion_index", "threshold": float(profile.traffic_threshold), "weight": 0.15, "source": "tomtom"},
+                "platform_outage": {"field": "order_density_drop", "threshold": float(profile.platform_outage_threshold), "weight": 0.20, "source": "platform_sim"},
+                "social": {"field": "normalized_inactivity", "threshold": float(profile.social_inactivity_threshold), "weight": 0.15, "source": "behavioral"},
+            }
+        return self.THRESHOLDS
+
     def _calculate_social_signal(self, weather: Dict, traffic: Dict, platform: Dict) -> float:
         """
         Approximate a civic-disruption signal from behavioral collapse.
@@ -69,17 +82,19 @@ class TriggerEngine:
 
         return 0.0
 
-    def evaluate_thresholds(self, signals: Dict) -> List[str]:
+    def evaluate_thresholds(self, signals: Dict, thresholds: Dict | None = None) -> List[str]:
+        active_thresholds = thresholds or self.THRESHOLDS
         return [
             trigger_type
-            for trigger_type, config in self.THRESHOLDS.items()
+            for trigger_type, config in active_thresholds.items()
             if isinstance(signals.get(trigger_type, 0), (int, float))
             and signals.get(trigger_type, 0) >= config["threshold"]
         ]
 
-    def calculate_disruption_score(self, signals: Dict) -> float:
+    def calculate_disruption_score(self, signals: Dict, thresholds: Dict | None = None) -> float:
+        active_thresholds = thresholds or self.THRESHOLDS
         score = 0.0
-        for trigger_type, config in self.THRESHOLDS.items():
+        for trigger_type, config in active_thresholds.items():
             raw = signals.get(trigger_type, 0)
             if not isinstance(raw, (int, float)):
                 continue
@@ -94,13 +109,14 @@ class TriggerEngine:
         behavioral_score = min(1.0, platform_drop / 0.5) if platform_drop > 0.2 else 0.3
         return round((0.50 * api_score) + (0.30 * behavioral_score) + (0.20 * 0.7), 3)
 
-    def calculate_severity(self, signals: Dict, fired_triggers: List[str]) -> float:
+    def calculate_severity(self, signals: Dict, fired_triggers: List[str], thresholds: Dict | None = None) -> float:
+        active_thresholds = thresholds or self.THRESHOLDS
         if not fired_triggers:
             return 0.0
         severities = []
         for trigger in fired_triggers:
             value = signals.get(trigger, 0)
-            threshold = self.THRESHOLDS[trigger]["threshold"]
+            threshold = active_thresholds[trigger]["threshold"]
             if threshold > 0:
                 severities.append(min(2.0, value / threshold))
         return round(sum(severities) / len(severities), 3) if severities else 0.0
@@ -108,29 +124,30 @@ class TriggerEngine:
     async def get_or_create_event(
         self,
         db: AsyncSession,
-        zone: str,
-        city: str,
+        zone: Zone,
         fired_triggers: List[str],
         signals: Dict,
         disruption_score: float,
         event_confidence: float,
+        thresholds: Dict | None = None,
         demo_run_id: str | None = None,
     ) -> Tuple[List[Event], int, int]:
         now = utc_now_naive()
         hour_start = now.replace(minute=0, second=0, microsecond=0)
         incident_type = fired_triggers[0] if len(fired_triggers) == 1 else "compound_disruption"
-        severity = self.calculate_severity(signals, fired_triggers)
+        active_thresholds = thresholds or self.THRESHOLDS
+        severity = self.calculate_severity(signals, fired_triggers, thresholds=active_thresholds)
         trigger_details = {
             trigger_type: {
                 "raw_value": signals.get(trigger_type, 0),
-                "threshold": self.THRESHOLDS[trigger_type]["threshold"],
-                "source": self.THRESHOLDS[trigger_type]["source"],
+                "threshold": active_thresholds[trigger_type]["threshold"],
+                "source": active_thresholds[trigger_type]["source"],
             }
             for trigger_type in fired_triggers
         }
         representative_raw = max((float(signals.get(trigger_type, 0) or 0) for trigger_type in fired_triggers), default=0.0)
-        representative_threshold = min((self.THRESHOLDS[trigger_type]["threshold"] for trigger_type in fired_triggers), default=0.0)
-        api_source = "multi_source" if len(fired_triggers) > 1 else self.THRESHOLDS[fired_triggers[0]]["source"]
+        representative_threshold = min((active_thresholds[trigger_type]["threshold"] for trigger_type in fired_triggers), default=0.0)
+        api_source = "multi_source" if len(fired_triggers) > 1 else active_thresholds[fired_triggers[0]]["source"]
 
         existing = None
         if not (settings.SIMULATION_MODE and demo_run_id):
@@ -138,8 +155,7 @@ class TriggerEngine:
                 await db.execute(
                     select(Event).where(
                         and_(
-                            Event.zone == zone,
-                            Event.city == city,
+                            Event.zone_id == zone.id,
                             Event.status == "active",
                             Event.started_at >= hour_start,
                         )
@@ -172,8 +188,8 @@ class TriggerEngine:
                     entity_id=existing.id,
                     action="event_extended",
                     details={
-                        "zone": zone,
-                        "city": city,
+                        "zone": zone.slug,
+                        "city": zone.city_ref.slug,
                         "event_type": incident_type,
                         "fired_triggers": fired_triggers,
                         "disruption_score": disruption_score,
@@ -185,8 +201,9 @@ class TriggerEngine:
 
         event = Event(
             event_type=incident_type,
-            zone=zone,
-            city=city,
+            zone_id=zone.id,
+            zone=zone.slug,
+            city=zone.city_ref.slug,
             started_at=now,
             severity=Decimal(str(severity)),
             raw_value=Decimal(str(representative_raw)),
@@ -212,7 +229,7 @@ class TriggerEngine:
                 action="created",
                 details={
                     "event_type": incident_type,
-                    "zone": zone,
+                    "zone": zone.slug,
                     "fired_triggers": fired_triggers,
                     "disruption_score": disruption_score,
                     "event_confidence": event_confidence,
@@ -221,13 +238,13 @@ class TriggerEngine:
         )
         return [event], 1, 0
 
-    async def find_affected_workers(self, db: AsyncSession, zone: str, fired_triggers: List[str]) -> List[Dict]:
+    async def find_affected_workers(self, db: AsyncSession, zone: Zone, fired_triggers: List[str]) -> List[Dict]:
         now = utc_now_naive()
         workers = (
             await db.execute(
                 select(Worker)
                 .options(selectinload(Worker.policies), selectinload(Worker.trust_score), selectinload(Worker.claims))
-                .where(and_(Worker.zone == zone, Worker.status == "active"))
+                .where(and_(Worker.zone_id == zone.id, Worker.status == "active"))
             )
         ).scalars().all()
 

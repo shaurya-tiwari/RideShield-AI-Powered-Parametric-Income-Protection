@@ -8,6 +8,10 @@ This repo keeps the detailed implementation in FastAPI Swagger at `/docs`.
   - `/health`
   - `/health/db`
   - `/health/config`
+- `Locations`
+  - `/api/locations/cities`
+  - `/api/locations/zones`
+  - `/api/locations/config`
 - `Auth`
   - `/api/auth/worker/login`
   - `/api/auth/admin/login`
@@ -47,6 +51,26 @@ This repo keeps the detailed implementation in FastAPI Swagger at `/docs`.
   - `/api/payouts/stats`
 - `Analytics`
   - `/api/analytics/admin-overview`
+
+## Important current contract notes
+
+- Auth login endpoints return `token`.
+- Protected endpoints expect `Authorization: Bearer <token>`.
+- Worker claims response is an object with a `claims` array.
+- Review queue response is an object with a `claims` array.
+- Event history response is an object with an `events` array.
+- Policy plan listing is worker-specific:
+  - `/api/policies/plans/{worker_id}`
+
+## Geography note
+
+Location data is now DB-backed for the currently supported cities and zones.
+
+Use:
+- `/api/locations/cities`
+- `/api/locations/zones`
+
+as the source of truth for frontend dropdowns and admin/demo filters.
 
 ## Recommended local verification flow
 

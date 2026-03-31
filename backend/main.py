@@ -15,13 +15,15 @@ from backend.api.auth import router as auth_router
 from backend.api.claims import router as claims_router
 from backend.api.events import router as events_router
 from backend.api.health import router as health_router
+from backend.api.locations import router as locations_router
 from backend.api.policies import router as policies_router
 from backend.api.payouts import router as payouts_router
 from backend.api.triggers import router as triggers_router
 from backend.api.workers import router as workers_router
 from backend.config import settings
+from backend.core.location_service import location_service
 from backend.core.trigger_scheduler import trigger_scheduler
-from backend.database import close_db, init_db
+from backend.database import async_session_factory, close_db, init_db
 
 logging.basicConfig(
     level=logging.INFO,
@@ -51,6 +53,10 @@ async def lifespan(app: FastAPI):
     if settings.DEBUG:
         await init_db()
         logger.info("Database tables initialized")
+    async with async_session_factory() as session:
+        await location_service.ensure_bootstrap(session, strict_backfill=True)
+        await session.commit()
+    logger.info("Geography bootstrap complete")
 
     if settings.ENABLE_TRIGGER_SCHEDULER:
         await trigger_scheduler.start()
@@ -105,6 +111,7 @@ async def log_requests(request: Request, call_next):
 
 
 app.include_router(health_router)
+app.include_router(locations_router)
 app.include_router(analytics_router)
 app.include_router(auth_router)
 app.include_router(workers_router)
@@ -133,6 +140,7 @@ async def root():
         },
         "endpoints": {
             "workers": "/api/workers",
+            "locations": "/api/locations",
             "policies": "/api/policies",
             "triggers": "/api/triggers",
             "events": "/api/events",

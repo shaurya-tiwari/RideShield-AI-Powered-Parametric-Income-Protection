@@ -66,12 +66,13 @@ class WorkerRegisterRequest(BaseModel):
 
     @field_validator("city")
     @classmethod
-    def validate_city(cls, v):
-        valid_cities = ["delhi", "mumbai", "bengaluru", "chennai"]
-        v_lower = v.lower().strip()
-        if v_lower not in valid_cities:
-            raise ValueError(f"City must be one of: {', '.join(valid_cities)}")
-        return v_lower
+    def normalize_city(cls, v):
+        return v.lower().strip()
+
+    @field_validator("zone")
+    @classmethod
+    def normalize_zone(cls, v):
+        return v.lower().strip() if isinstance(v, str) else v
 
     @field_validator("platform")
     @classmethod
@@ -133,6 +134,7 @@ class WorkerRegisterResponse(BaseModel):
     """Response after successful registration."""
 
     worker_id: UUID
+    zone_id: Optional[UUID] = None
     name: str
     city: str
     zone: Optional[str]
@@ -151,6 +153,8 @@ class WorkerProfileResponse(BaseModel):
     """Full worker profile response."""
 
     id: UUID
+    city_id: Optional[UUID] = None
+    zone_id: Optional[UUID] = None
     name: str
     phone: str
     city: str

@@ -78,7 +78,8 @@ async def test_register_invalid_city_fails():
             "consent_given": True
         })
 
-        assert response.status_code == 422
+        assert response.status_code == 400
+        assert "not supported" in response.json()["detail"]
 
 
 @pytest.mark.asyncio

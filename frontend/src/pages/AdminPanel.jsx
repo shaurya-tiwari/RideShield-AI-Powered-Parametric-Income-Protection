@@ -9,10 +9,13 @@ import StatCard from "../components/StatCard";
 import { analyticsApi } from "../api/analytics";
 import { claimsApi } from "../api/claims";
 import { eventsApi } from "../api/events";
+import { locationsApi } from "../api/locations";
 import { payoutsApi } from "../api/payouts";
-import { formatCurrency, formatPercent } from "../utils/formatters";
+import { formatCurrency, formatPercent, humanizeSlug } from "../utils/formatters";
 
 export default function AdminPanel() {
+  const [selectedCity, setSelectedCity] = useState("all");
+  const [cityOptions, setCityOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [claimStats, setClaimStats] = useState(null);
   const [payoutStats, setPayoutStats] = useState(null);
@@ -23,7 +26,13 @@ export default function AdminPanel() {
 
   useEffect(() => {
     load();
+    loadCities();
   }, []);
+
+  async function loadCities() {
+    const response = await locationsApi.cities();
+    setCityOptions(response.data || []);
+  }
 
   async function load() {
     setLoading(true);
@@ -65,6 +74,7 @@ export default function AdminPanel() {
     { label: "Delayed", value: claimStats?.delayed || 0 },
     { label: "Rejected", value: claimStats?.rejected || 0 },
   ];
+  const visibleEvents = selectedCity === "all" ? events : events.filter((event) => event.city === selectedCity);
 
   if (loading) {
     return <div className="panel p-8 text-center text-ink/60">Loading admin panel...</div>;
@@ -76,6 +86,16 @@ export default function AdminPanel() {
         eyebrow="Admin controls"
         title="Claim operations and system health"
         description="This panel tracks throughput, fraud pressure, payout volume, and the delayed-claim review queue."
+        action={
+          <select className="field min-w-44" value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)}>
+            <option value="all">All cities</option>
+            {cityOptions.map((city) => (
+              <option key={city.id} value={city.slug}>
+                {city.display_name}
+              </option>
+            ))}
+          </select>
+        }
       />
 
       <div className="grid gap-4 md:grid-cols-4">
@@ -116,10 +136,10 @@ export default function AdminPanel() {
             </ResponsiveContainer>
           </div>
         </div>
-        <EventPanel events={events.slice(0, 8)} />
+        <EventPanel events={visibleEvents.slice(0, 8)} />
       </div>
 
-      <DisruptionMap events={events.filter((event) => event.city === "delhi")} city="delhi" />
+      <DisruptionMap events={visibleEvents} city={selectedCity} />
 
       <ReviewQueue claims={queue?.claims || []} resolvingId={resolvingId} onResolve={handleResolve} />
 
@@ -135,11 +155,11 @@ export default function AdminPanel() {
                 <div key={entry.id} className="rounded-2xl bg-black/[0.03] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="font-semibold">{entry.action === "duplicate_detected" ? "Duplicate stopped" : "Incident extended"}</p>
-                    <span className="pill bg-black/[0.05] text-ink/60">{entry.details?.zone || "system"}</span>
+                    <span className="pill bg-black/[0.05] text-ink/60">{humanizeSlug(entry.details?.zone || "system")}</span>
                   </div>
                   <p className="mt-2 text-sm text-ink/65">
                     {(entry.details?.incident_triggers || entry.details?.fired_triggers || []).length
-                      ? (entry.details.incident_triggers || entry.details.fired_triggers).join(", ")
+                      ? (entry.details.incident_triggers || entry.details.fired_triggers).map(humanizeSlug).join(", ")
                       : "No trigger list"}
                   </p>
                 </div>

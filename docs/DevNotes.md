@@ -1,13 +1,16 @@
 ## RideShield Dev Notes
 
-This file is the implementation baseline for finishing the sprint markdowns against the actual repo. The sprint docs are useful references, but they are not the source of truth anymore. The current codebase has already diverged in several places for correctness, Windows compatibility, and maintainability.
+This file is the implementation baseline for the current repo, not a copy of the sprint markdowns. `Sprint_1.md`, `Sprint_2.md`, and `Sprint_3.md` were used as planning references, but the codebase has intentionally diverged where correctness, maintainability, Windows compatibility, and demo clarity required it.
 
 ### Current Baseline
 
 - Sprint 1 foundation is implemented and working.
-- Sprint 2 core modules, routers, schemas, and tests exist in the repo.
-- Current backend test status: `23 passed`.
-- Current live demo paths work, but scenario outcomes do not yet fully match the narrative in `Sprint_2.md`.
+- Sprint 2 engine/orchestration scope is implemented and working.
+- Sprint 3 product/frontend scope is implemented for the current non-ML baseline.
+- Current backend test status: `35 passed`.
+- Frontend production build succeeds.
+- Trigger monitoring now runs on a scheduler and can also be exercised manually through the demo runner and trigger APIs.
+- Geography is no longer only a frontend/config constant problem. The repo now has a DB-backed geography foundation for the currently supported cities.
 
 ### Important Divergences From Sprint Markdown Files
 
@@ -398,6 +401,85 @@ Sprint 3 parity improvements now implemented:
   - started from `backend/main.py`
   - interval configured by `TRIGGER_CHECK_INTERVAL_SECONDS`
   - visible in `/health/config` and admin analytics
+
+### Geography Foundation Mini-Sprint
+
+This was added after Sprint 3 completion to prevent Sprint 4 and Sprint 5 from being built on brittle hardcoded geography.
+
+Implemented:
+- DB-backed geography tables in `backend/db/models.py`:
+  - `City`
+  - `Zone`
+  - `ZoneThresholdProfile`
+  - `ZoneRiskProfile`
+- `zone_id` / `city_id` support on workers
+- `zone_id` support on events and worker activity
+- location bootstrap and backfill service:
+  - `backend/core/location_service.py`
+- location routes:
+  - `GET /api/locations/cities`
+  - `GET /api/locations/zones`
+  - `GET /api/locations/config`
+
+Current geography rule:
+- `zone_id` is the internal source of truth
+- legacy `city` / `zone` strings remain for compatibility and display
+- write paths must keep them synchronized
+
+Backfill safety:
+- old rows are backfilled strictly from `city` + `zone`
+- unmapped rows are logged
+- bootstrap/backfill raises loudly on mismatch instead of silently proceeding
+
+Scheduler hardening:
+- scheduler now reads active cities and zones from the DB first
+- if DB geography is empty, it falls back to config bootstrap values
+- active monitored zones are logged clearly
+
+Frontend geography updates:
+- onboarding, demo runner, and admin filters now fetch cities/zones from backend APIs
+- hardcoded frontend geography constants are no longer the primary source of truth for those flows
+- pages now include location-loading awareness so the UI does not render an empty world while data is still loading
+
+Current supported cities in the bootstrap layer:
+- Delhi
+- Mumbai
+- Bengaluru
+- Chennai
+
+Current seeded demo workers now cover multiple cities:
+- Rahul Kumar
+- Vikram Singh
+- Arun Patel
+- Priya Sharma
+- Aman Verma
+- Farhan Ali
+- Sneha Iyer
+- Neha Gupta
+- Rohit Yadav
+
+Verification after geography refactor:
+- backend tests: `35 passed`
+- frontend build: successful
+- in-process API smoke pass confirms the current route contracts for:
+  - health
+  - locations
+  - auth
+  - workers
+  - policies
+  - triggers
+  - events
+  - claims
+  - payouts
+  - analytics
+
+Important current API contract notes:
+- auth login returns `token`, not `access_token`
+- protected routes require `Authorization: Bearer <token>`
+- policy plans route is `/api/policies/plans/{worker_id}`
+- event detail route is `/api/events/detail/{event_id}`
+- claim detail route is `/api/claims/detail/{claim_id}`
+- worker claims route returns an object with a `claims` array, not a raw list
 - admin analytics surface
   - `backend/api/analytics.py`
   - exposes:
@@ -558,3 +640,67 @@ Continue Sprint 3 implementation and polish:
 - refine worker dashboard and admin panel behavior from real API responses
 - tighten admin/demo UX and narrative flow
 - then push Sprint 3 together with `publicIMG/`
+
+### Multi-City Demo Update
+
+The backend was already city-agnostic across the configured profiles, but the demo layer was still too Delhi-centric.
+
+Updated:
+- `scripts/seed_data.py`
+  - now includes demo personas across all currently supported cities:
+    - Delhi
+    - Mumbai
+    - Bengaluru
+    - Chennai
+- `frontend/src/pages/DemoRunner.jsx`
+  - now supports city selection instead of hardcoding Delhi
+  - demo workers are created in the selected city and zone
+  - trigger snapshots and scenario runs are refreshed per selected city
+- `frontend/src/pages/AdminPanel.jsx`
+  - now supports city filtering instead of showing Delhi-only map data
+- `frontend/src/components/DisruptionMap.jsx`
+  - now includes zone coordinates for Mumbai and Chennai in addition to Delhi and Bengaluru
+
+Important constraint:
+- this multi-city pass intentionally stays within the cities and zones already supported by `backend/config.py`
+- the broader CSV example with Kolkata, Jaipur, Lucknow, Hyderabad, Ahmedabad, and Pune would require adding those cities to validation, risk profiles, mock baselines, and frontend constants first
+
+### Geography Foundation Mini-Sprint
+
+The repo now has a proper DB-backed geography layer so Sprint 4 and Sprint 5 do not build on hardcoded location constants.
+
+Implemented:
+- new geography tables and migration:
+  - `cities`
+  - `zones`
+  - `zone_threshold_profiles`
+  - `zone_risk_profiles`
+  - plus `zone_id` / `city_id` references added to legacy entities
+- new location bootstrap service:
+  - creates/refreshes geography from current configured cities
+  - backfills `zone_id` references from legacy string fields
+  - fails loudly if unmapped rows are found during backfill
+- source-of-truth rule:
+  - `zone_id` is now the internal source of truth
+  - legacy `city` / `zone` strings remain for compatibility and display
+- scheduler hardening:
+  - scheduler now reads active cities/zones from DB
+  - falls back to config if DB geography is empty
+  - logs monitored zones explicitly
+- new location APIs:
+  - `GET /api/locations/cities`
+  - `GET /api/locations/zones`
+  - `GET /api/locations/config`
+- frontend now loads locations from backend APIs in:
+  - onboarding
+  - demo runner
+  - admin city filter
+
+Important guardrails that were intentionally added:
+- backfill is strict and logs unmapped rows before raising
+- seed data now bootstraps geography because seed is now bootstrap config, not just demo data
+- frontend includes loading-aware location fetches so geography does not briefly appear empty
+
+Verification after geography refactor:
+- backend tests: `35 passed`
+- frontend build: successful

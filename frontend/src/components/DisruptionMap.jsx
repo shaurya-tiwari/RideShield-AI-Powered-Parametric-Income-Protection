@@ -6,11 +6,19 @@ const ZONE_COORDS = {
   east_delhi: { top: "44%", left: "72%" },
   west_delhi: { top: "42%", left: "20%" },
   central_delhi: { top: "40%", left: "46%" },
+  south_mumbai: { top: "78%", left: "36%" },
+  western_suburbs: { top: "42%", left: "24%" },
+  eastern_suburbs: { top: "46%", left: "64%" },
+  navi_mumbai: { top: "36%", left: "78%" },
   koramangala: { top: "62%", left: "46%" },
   whitefield: { top: "32%", left: "76%" },
   indiranagar: { top: "42%", left: "58%" },
   jayanagar: { top: "70%", left: "40%" },
   electronic_city: { top: "84%", left: "52%" },
+  t_nagar: { top: "50%", left: "40%" },
+  anna_nagar: { top: "28%", left: "44%" },
+  adyar: { top: "68%", left: "64%" },
+  velachery: { top: "72%", left: "52%" },
 };
 
 function intensityClass(score) {
@@ -51,7 +59,9 @@ export default function DisruptionMap({ events = [], city = "delhi" }) {
     <div className="panel p-6">
       <div className="mb-5">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-ink/45">Disruption map</p>
-        <h3 className="mt-1 text-2xl font-bold">Zone heat view for {humanizeSlug(city)}</h3>
+        <h3 className="mt-1 text-2xl font-bold">
+          Zone heat view for {city === "all" ? "all monitored cities" : humanizeSlug(city)}
+        </h3>
       </div>
       <div className="grid gap-5 lg:grid-cols-[1fr_0.9fr]">
         <div className="relative min-h-72 rounded-[2rem] bg-[radial-gradient(circle_at_top,_rgba(39,77,117,0.16),_transparent_48%),linear-gradient(180deg,rgba(248,244,236,1),rgba(240,235,224,1))] p-4">

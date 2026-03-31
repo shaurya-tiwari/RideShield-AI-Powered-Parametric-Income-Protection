@@ -7,9 +7,10 @@ import PlanCard from "../components/PlanCard";
 import PremiumCalculator from "../components/PremiumCalculator";
 import RiskGauge from "../components/RiskGauge";
 import SectionHeader from "../components/SectionHeader";
+import { locationsApi } from "../api/locations";
 import { policiesApi } from "../api/policies";
 import { workersApi } from "../api/workers";
-import { CITY_OPTIONS, CITY_ZONES, PLATFORM_OPTIONS, STORAGE_KEYS } from "../utils/constants";
+import { PLATFORM_OPTIONS, STORAGE_KEYS } from "../utils/constants";
 
 const initialForm = {
   name: "",
@@ -28,16 +29,46 @@ export default function Onboarding() {
   const [step, setStep] = useState("register");
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
+  const [locationsLoading, setLocationsLoading] = useState(true);
+  const [cityOptions, setCityOptions] = useState([]);
+  const [zoneOptions, setZoneOptions] = useState([]);
   const [registration, setRegistration] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState("");
   const [policyPurchase, setPolicyPurchase] = useState(null);
   const selectedPlanData = registration?.available_plans?.find((plan) => plan.plan_name === selectedPlan);
 
   useEffect(() => {
-    if (!CITY_ZONES[form.city]?.includes(form.zone)) {
-      setForm((current) => ({ ...current, zone: CITY_ZONES[current.city][0] }));
+    loadCities();
+  }, []);
+
+  useEffect(() => {
+    if (form.city) {
+      loadZones(form.city);
     }
-  }, [form.city, form.zone]);
+  }, [form.city]);
+
+  async function loadCities() {
+    setLocationsLoading(true);
+    try {
+      const response = await locationsApi.cities();
+      const cities = response.data || [];
+      setCityOptions(cities);
+      if (cities.length && !cities.some((city) => city.slug === form.city)) {
+        setForm((current) => ({ ...current, city: cities[0].slug }));
+      }
+    } finally {
+      setLocationsLoading(false);
+    }
+  }
+
+  async function loadZones(citySlug) {
+    const response = await locationsApi.zones(citySlug);
+    const zones = response.data || [];
+    setZoneOptions(zones);
+    if (zones.length && !zones.some((zone) => zone.slug === form.zone)) {
+      setForm((current) => ({ ...current, zone: zones[0].slug }));
+    }
+  }
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -139,20 +170,20 @@ export default function Onboarding() {
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
                   <label className="label">City</label>
-                  <select className="field" value={form.city} onChange={(e) => updateField("city", e.target.value)}>
-                    {CITY_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
+                  <select className="field" value={form.city} onChange={(e) => updateField("city", e.target.value)} disabled={locationsLoading}>
+                    {cityOptions.map((option) => (
+                      <option key={option.id} value={option.slug}>
+                        {option.display_name}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
                   <label className="label">Zone</label>
-                  <select className="field" value={form.zone} onChange={(e) => updateField("zone", e.target.value)}>
-                    {(CITY_ZONES[form.city] || []).map((zone) => (
-                      <option key={zone} value={zone}>
-                        {zone}
+                  <select className="field" value={form.zone} onChange={(e) => updateField("zone", e.target.value)} disabled={locationsLoading || !zoneOptions.length}>
+                    {zoneOptions.map((zone) => (
+                      <option key={zone.id} value={zone.slug}>
+                        {zone.display_name}
                       </option>
                     ))}
                   </select>
@@ -187,7 +218,7 @@ export default function Onboarding() {
                 />
                 <span>Worker consents to location, behavior, and device data being used for claim validation and fraud checks.</span>
               </label>
-              <button type="submit" className="button-primary" disabled={loading || !form.consent_given}>
+              <button type="submit" className="button-primary" disabled={loading || locationsLoading || !form.consent_given || !form.zone}>
                 {loading ? "Calculating risk profile..." : "Register worker"}
               </button>
             </div>

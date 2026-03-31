@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config import settings
 from backend.core.claim_processor import claim_processor
+from backend.core.location_service import location_service
 from backend.core.trigger_engine import trigger_engine
 from backend.database import get_db
 from backend.schemas.event import SignalSnapshot, TriggerCheckRequest
@@ -23,7 +24,7 @@ router = APIRouter(prefix="/api/triggers", tags=["Triggers"])
 @router.post("/check")
 async def run_trigger_check(request: TriggerCheckRequest, db: AsyncSession = Depends(get_db)):
     city = request.city or "delhi"
-    zones = request.zones or settings.CITY_RISK_PROFILES.get(city, {}).get("zones", ["south_delhi"])[:2]
+    zones = request.zones or [zone.slug for zone in await location_service.get_active_zones(db, city_slug=city)]
     return await claim_processor.run_trigger_cycle(
         db=db,
         zones=zones,
@@ -34,8 +35,8 @@ async def run_trigger_check(request: TriggerCheckRequest, db: AsyncSession = Dep
 
 
 @router.get("/status")
-async def get_trigger_status(city: str = "delhi", zones: Optional[str] = None):
-    zone_list = zones.split(",") if zones else settings.CITY_RISK_PROFILES.get(city, {}).get("zones", [])
+async def get_trigger_status(city: str = "delhi", zones: Optional[str] = None, db: AsyncSession = Depends(get_db)):
+    zone_list = zones.split(",") if zones else [zone.slug for zone in await location_service.get_active_zones(db, city_slug=city)]
     snapshots = []
     for zone in zone_list:
         zone = zone.strip()
