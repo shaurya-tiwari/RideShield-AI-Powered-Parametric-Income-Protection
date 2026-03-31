@@ -1,8 +1,6 @@
-"""
-Analytics API for admin dashboard metrics and operational summaries.
-"""
+"""Analytics API for admin dashboard metrics and operational summaries."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
@@ -13,12 +11,9 @@ from backend.core.session_auth import require_admin_session
 from backend.core.trigger_scheduler import trigger_scheduler
 from backend.database import get_db
 from backend.db.models import AuditLog, Event, Payout, Policy, Worker, WorkerActivity
+from backend.utils.time import utc_now_naive
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
-
-
-def utc_now_naive() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def forecast_band(score: float) -> str:
@@ -41,27 +36,26 @@ async def get_admin_overview(
     cutoff = now - timedelta(days=days)
     recent_activity_cutoff = now - timedelta(hours=6)
 
-    active_policies = (
+    active_policy_rows = (
         await db.execute(
-            select(Policy).where(
+            select(Policy.plan_name, Policy.weekly_premium, Worker.city)
+            .join(Worker, Worker.id == Policy.worker_id)
+            .where(
                 Policy.status == "active",
                 Policy.activates_at <= now,
                 Policy.expires_at >= now,
             )
         )
-    ).scalars().all()
+    ).all()
 
     policies_by_plan: dict[str, int] = {}
     policies_by_city: dict[str, int] = {}
     premiums_in_force = 0.0
-    for policy in active_policies:
-        policies_by_plan[policy.plan_name] = policies_by_plan.get(policy.plan_name, 0) + 1
-        worker = (
-            await db.execute(select(Worker.city).where(Worker.id == policy.worker_id))
-        ).scalar_one_or_none()
-        if worker:
-            policies_by_city[worker] = policies_by_city.get(worker, 0) + 1
-        premiums_in_force += float(policy.weekly_premium or 0)
+    for plan_name, weekly_premium, city in active_policy_rows:
+        policies_by_plan[plan_name] = policies_by_plan.get(plan_name, 0) + 1
+        if city:
+            policies_by_city[city] = policies_by_city.get(city, 0) + 1
+        premiums_in_force += float(weekly_premium or 0)
 
     payouts_total = (
         await db.execute(
@@ -130,7 +124,7 @@ async def get_admin_overview(
 
     return {
         "period_days": days,
-        "active_policies_total": len(active_policies),
+        "active_policies_total": len(active_policy_rows),
         "active_policies_by_plan": policies_by_plan,
         "active_policies_by_city": policies_by_city,
         "premiums_in_force": round(premiums_in_force, 2),

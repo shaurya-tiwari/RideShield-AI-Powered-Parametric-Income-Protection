@@ -9,7 +9,7 @@ Endpoints:
     GET  /api/policies/history/{worker_id}  -> Get policy history
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -22,6 +22,7 @@ from backend.core.premium_calculator import premium_calculator
 from backend.core.session_auth import require_admin_session
 from backend.database import get_db
 from backend.db.models import AuditLog, Policy, Worker
+from backend.utils.time import utc_now_naive
 from backend.schemas.policy import (
     PlanListResponse,
     PolicyCreateRequest,
@@ -32,10 +33,6 @@ from backend.schemas.policy import (
 )
 
 router = APIRouter(prefix="/api/policies", tags=["Policies"])
-
-
-def utc_now_naive() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 @router.get("/plans/{worker_id}")

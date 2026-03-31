@@ -66,3 +66,11 @@ These logs are intended for local diagnosis of:
 - incident creation and extension
 - claim generation
 - payout movement
+
+## Security Posture Notes
+
+- session signing and admin access are env-backed
+- worker-scoped APIs enforce ownership checks for non-admin sessions
+- admin analytics and stats routes remain admin-only
+- CORS is restricted to configured frontend origins
+- baseline response headers now include frame, content-type, referrer, and CSP controls

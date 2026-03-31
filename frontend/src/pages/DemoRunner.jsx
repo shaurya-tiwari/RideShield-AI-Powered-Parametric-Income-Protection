@@ -44,7 +44,7 @@ export default function DemoRunner() {
   const [setupLoading, setSetupLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "Demo Runner | RideShield";
+    document.title = "Simulation Control | RideShield";
   }, []);
 
   useEffect(() => {
@@ -138,13 +138,13 @@ export default function DemoRunner() {
       <section className="mb-6 flex items-end justify-between gap-6">
         <div>
           <p className="eyebrow">Demo runner</p>
-          <h1 className="mt-2 text-4xl font-bold tracking-tight text-[#173126]">Simulation Control Center</h1>
+          <h1 className="mt-2 text-4xl font-bold tracking-tight text-primary">Simulation Control Center</h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-ink/65">
             Use real trigger APIs to force a visible RideShield cycle: signal threshold crossed, incident created, claims
             processed, payouts completed.
           </p>
         </div>
-        <div className="hidden items-center gap-2 rounded-[18px] bg-[#f4f4ef] px-4 py-3 text-xs font-bold uppercase tracking-[0.24em] text-ink/55 lg:flex">
+        <div className="hidden items-center gap-2 rounded-[18px] bg-surface-container-low px-4 py-3 text-xs font-bold uppercase tracking-[0.24em] text-ink/55 lg:flex">
           <span className="h-2 w-2 rounded-full bg-emerald-500" />
           Engine live
         </div>
@@ -156,10 +156,10 @@ export default function DemoRunner() {
             <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className="eyebrow">Scenario controls</p>
-                <h2 className="mt-2 text-2xl font-bold text-[#173126]">Run environment changes deliberately</h2>
+                <h2 className="mt-2 text-2xl font-bold text-primary">Run environment changes deliberately</h2>
               </div>
               <div className="flex flex-wrap gap-3">
-                <select className="field min-w-44 !rounded-full !bg-[#f4f4ef] !py-2" value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)}>
+                <select className="field min-w-44 !rounded-full !bg-surface-container-low !py-2" value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)}>
                   {locations.cities.map((city) => (
                     <option key={city.id} value={city.slug}>
                       {city.display_name}
@@ -169,7 +169,7 @@ export default function DemoRunner() {
               <button type="button" className="button-secondary !rounded-full !py-2" onClick={createDemoWorker} disabled={setupLoading}>
                   {setupLoading ? "Creating..." : "Create demo worker"}
                 </button>
-                <button type="button" className="button-secondary !rounded-full !bg-[#eef3ef] !py-2" onClick={handleReset}>
+                <button type="button" className="button-secondary !rounded-full !bg-surface-container !py-2" onClick={handleReset}>
                   Reset simulators
                 </button>
               </div>
@@ -191,8 +191,8 @@ export default function DemoRunner() {
 
           <div className="panel-quiet rounded-[28px] p-6">
             <div className="mb-6 flex items-center gap-3">
-              <Activity size={18} className="text-[#173126]" />
-              <h3 className="text-xl font-bold text-[#173126]">Automation Logic: Causality Flow</h3>
+              <Activity size={18} className="text-primary" />
+              <h3 className="text-xl font-bold text-primary">Automation Logic: Causality Flow</h3>
             </div>
             <div className="relative grid gap-4 md:grid-cols-4">
               <div className="absolute left-[12%] right-[12%] top-7 hidden h-0.5 bg-outline-variant md:block" />
@@ -204,11 +204,11 @@ export default function DemoRunner() {
               ].map(({ icon: Icon, label, text }, index) => (
                 <div key={label} className="relative">
                   <div className="flex flex-col items-center text-center">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-[#173126] shadow-[0_10px_25px_rgba(26,28,25,0.08)]">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-primary shadow-[0_10px_25px_rgba(26,28,25,0.08)]">
                       <Icon size={20} />
                     </div>
                     <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.24em] text-ink/45">{label}</p>
-                    <p className="mt-1 text-sm font-semibold text-[#173126]">{text}</p>
+                    <p className="mt-1 text-sm font-semibold text-primary">{text}</p>
                   </div>
                   {index < 3 ? <ChevronRight size={18} className="absolute right-[-18px] top-5 hidden text-ink/30 md:hidden" /> : null}
                 </div>
@@ -257,7 +257,7 @@ export default function DemoRunner() {
 
           <div className="panel p-6">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-bold uppercase tracking-[0.22em] text-[#173126]">Live Activity Log</h3>
+              <h3 className="text-sm font-bold uppercase tracking-[0.22em] text-primary">Live Activity Log</h3>
               <span className="text-[11px] font-mono text-ink/45">STREAM ACTIVE</span>
             </div>
             <div className="max-h-80 space-y-3 overflow-y-auto text-sm">
@@ -281,18 +281,18 @@ export default function DemoRunner() {
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div className="panel-quiet rounded-[22px] p-4">
                 <p className="text-sm text-ink/45">Claims in window</p>
-                <p className="mt-2 text-2xl font-bold text-[#173126]">{claimStats?.total_claims ?? 0}</p>
+                <p className="mt-2 text-2xl font-bold text-primary">{claimStats?.total_claims ?? 0}</p>
                 <p className="mt-2 text-sm text-ink/55">Approval rate {formatPercent(claimStats?.approval_rate)}</p>
               </div>
               <div className="panel-quiet rounded-[22px] p-4">
                 <p className="text-sm text-ink/45">Payout volume</p>
-                <p className="mt-2 text-2xl font-bold text-[#173126]">{formatCurrency(payoutStats?.total_amount)}</p>
+                <p className="mt-2 text-2xl font-bold text-primary">{formatCurrency(payoutStats?.total_amount)}</p>
                 <p className="mt-2 text-sm text-ink/55">{payoutStats?.total_payouts ?? 0} transfers</p>
               </div>
             </div>
-            <div className="mt-4 rounded-[22px] bg-[#f4f4ef] p-4">
+            <div className="mt-4 rounded-[22px] bg-surface-container-low p-4">
               <p className="text-sm text-ink/45">Scheduler cadence</p>
-              <p className="mt-2 text-lg font-semibold text-[#173126]">
+              <p className="mt-2 text-lg font-semibold text-primary">
                 {scheduler?.interval_seconds || "--"} second interval · next run{" "}
                 {scheduler?.next_scheduled_at ? formatDateTime(scheduler.next_scheduled_at) : "--"}
               </p>
@@ -305,7 +305,7 @@ export default function DemoRunner() {
               {snapshotSummary.map((snapshot) => (
                 <div key={snapshot.zone} className="panel-quiet rounded-[22px] p-4">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="font-semibold text-[#173126]">{humanizeSlug(snapshot.zone)}</p>
+                    <p className="font-semibold text-primary">{humanizeSlug(snapshot.zone)}</p>
                     <span className="pill bg-white text-ink/60">{snapshot.triggers_active.length} triggers</span>
                   </div>
                   <p className="mt-2 text-sm leading-6 text-ink/65">

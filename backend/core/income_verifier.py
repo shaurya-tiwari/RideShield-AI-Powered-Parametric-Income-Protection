@@ -2,7 +2,7 @@
 Income verification and payout calculation.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from typing import Dict
 
 from sqlalchemy import and_, func, select
@@ -10,10 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config import settings
 from backend.db.models import Worker, WorkerActivity
-
-
-def utc_now_naive() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+from backend.utils.time import utc_now_naive
 
 
 class IncomeVerifier:

@@ -1,6 +1,4 @@
-"""
-Background scheduler for periodic trigger checks.
-"""
+"""Background scheduler for periodic trigger checks."""
 
 import asyncio
 import logging
@@ -9,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from backend.config import settings
 from backend.core.claim_processor import claim_processor
 from backend.core.location_service import location_service
+from backend.core.trigger_engine import trigger_engine
 from backend.database import async_session_factory
 
 logger = logging.getLogger("rideshield.scheduler")
@@ -96,6 +95,8 @@ class TriggerScheduler:
                             "claims_rejected": result["claims_rejected"],
                             "total_payout": result["total_payout"],
                         }
+                    stale_events_closed = await trigger_engine.end_stale_events(db)
+                    await db.commit()
                     self.state["run_count"] += 1
                     self.state["last_result"] = results
                     total_events_created = sum(item["events_created"] for item in results.values())
@@ -106,7 +107,7 @@ class TriggerScheduler:
                     total_claims_rejected = sum(item["claims_rejected"] for item in results.values())
                     total_payout = round(sum(item["total_payout"] for item in results.values()), 2)
                     logger.info(
-                        "scheduler_run_done cities=%s events_created=%s events_extended=%s claims_generated=%s claims_approved=%s claims_delayed=%s claims_rejected=%s total_payout=%s",
+                        "scheduler_run_done cities=%s events_created=%s events_extended=%s claims_generated=%s claims_approved=%s claims_delayed=%s claims_rejected=%s stale_events_closed=%s total_payout=%s",
                         len(results),
                         total_events_created,
                         total_events_extended,
@@ -114,6 +115,7 @@ class TriggerScheduler:
                         total_claims_approved,
                         total_claims_delayed,
                         total_claims_rejected,
+                        stale_events_closed,
                         total_payout,
                     )
                     return results
@@ -132,7 +134,7 @@ class TriggerScheduler:
                 try:
                     await self.run_once()
                 except Exception:
-                    pass
+                    logger.exception("Trigger scheduler loop iteration failed")
                 self.state["next_scheduled_at"] = (
                     datetime.now(timezone.utc) + timedelta(seconds=settings.TRIGGER_CHECK_INTERVAL_SECONDS)
                 ).isoformat()

@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from backend.core.premium_calculator import premium_calculator
 from backend.core.risk_scorer import risk_scorer
 from backend.core.location_service import location_service
+from backend.core.password_auth import hash_password
 from backend.database import async_session_factory, init_db
 from backend.db.models import AuditLog, Policy, TrustScore, Worker, WorkerActivity
 
@@ -30,6 +31,7 @@ WORKERS = [
         "key": "rahul",
         "label": "Rahul Kumar",
         "phone": "+919876543210",
+        "password": "rahul1234",
         "city": "delhi",
         "zone": "south_delhi",
         "platform": "zomato",
@@ -72,6 +74,7 @@ WORKERS = [
         "key": "vikram",
         "label": "Vikram Singh",
         "phone": "+919876543211",
+        "password": "vikram1234",
         "city": "delhi",
         "zone": "south_delhi",
         "platform": "zomato",
@@ -104,6 +107,7 @@ WORKERS = [
         "key": "arun",
         "label": "Arun Patel",
         "phone": "+919876543212",
+        "password": "arun1234",
         "city": "delhi",
         "zone": "east_delhi",
         "platform": "zomato",
@@ -145,6 +149,7 @@ WORKERS = [
         "key": "priya",
         "label": "Priya Sharma",
         "phone": "+919876543213",
+        "password": "priya1234",
         "city": "bengaluru",
         "zone": "koramangala",
         "platform": "swiggy",
@@ -177,6 +182,7 @@ WORKERS = [
         "key": "aman",
         "label": "Aman Verma",
         "phone": "+919876543214",
+        "password": "aman1234",
         "city": "mumbai",
         "zone": "south_mumbai",
         "platform": "swiggy",
@@ -219,6 +225,7 @@ WORKERS = [
         "key": "farhan",
         "label": "Farhan Ali",
         "phone": "+919876543215",
+        "password": "farhan1234",
         "city": "mumbai",
         "zone": "navi_mumbai",
         "platform": "zomato",
@@ -261,6 +268,7 @@ WORKERS = [
         "key": "sneha",
         "label": "Sneha Iyer",
         "phone": "+919876543216",
+        "password": "sneha1234",
         "city": "chennai",
         "zone": "adyar",
         "platform": "swiggy",
@@ -303,6 +311,7 @@ WORKERS = [
         "key": "neha",
         "label": "Neha Gupta",
         "phone": "+919876543217",
+        "password": "neha1234",
         "city": "chennai",
         "zone": "anna_nagar",
         "platform": "swiggy",
@@ -345,6 +354,7 @@ WORKERS = [
         "key": "rohit",
         "label": "Rohit Yadav",
         "phone": "+919876543218",
+        "password": "rohit1234",
         "city": "bengaluru",
         "zone": "whitefield",
         "platform": "zomato",
@@ -405,6 +415,7 @@ async def upsert_worker(db, spec: dict, now: datetime):
     payload = {
         "name": spec["label"],
         "phone": spec["phone"],
+        "password_hash": hash_password(spec["password"]),
         "city_id": zone_record.city_id,
         "zone_id": zone_record.id,
         "city": spec["city"],
@@ -525,6 +536,8 @@ async def seed():
                 {
                     "label": spec["label"],
                     "worker_id": worker.id,
+                    "phone": spec["phone"],
+                    "password": spec["password"],
                     "city": zone_record.city_ref.slug,
                     "zone": zone_record.slug,
                     "risk_score": risk["risk_score"],
@@ -567,6 +580,9 @@ async def seed():
         print("\nWorker IDs for testing:")
         for row in results:
             print(f"   {row['label']} ({row['notes']}): {row['worker_id']}")
+        print("\nWorker credentials for sign-in:")
+        for row in results:
+            print(f"   {row['label']}: {row['phone']} / {row['password']}")
 
 
 if __name__ == "__main__":

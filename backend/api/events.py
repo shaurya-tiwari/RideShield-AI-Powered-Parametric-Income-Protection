@@ -2,7 +2,7 @@
 Events API for viewing detected disruption events.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from typing import Optional
 from uuid import UUID
 
@@ -13,12 +13,9 @@ from sqlalchemy.orm import selectinload
 
 from backend.database import get_db
 from backend.db.models import Claim, Event
+from backend.utils.time import utc_now_naive
 
 router = APIRouter(prefix="/api/events", tags=["Events"])
-
-
-def utc_now_naive() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def serialize_event(event: Event, claims_count: int, include_metadata: bool = False) -> dict:

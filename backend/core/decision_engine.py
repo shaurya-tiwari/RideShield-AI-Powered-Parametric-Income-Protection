@@ -2,12 +2,9 @@
 Decision engine for routing claims to approve, delay, or reject.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Dict
-
-
-def utc_now_naive() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+from backend.utils.time import utc_now_naive
 
 
 class DecisionEngine:

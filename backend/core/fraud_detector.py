@@ -2,7 +2,7 @@
 Fraud detection pipeline for automated claim review.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from decimal import Decimal
 from typing import Dict
 
@@ -11,10 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config import settings
 from backend.db.models import Claim, Event, FraudLog, Policy, Worker, WorkerActivity
-
-
-def utc_now_naive() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+from backend.utils.time import utc_now_naive
 
 
 class FraudDetector:

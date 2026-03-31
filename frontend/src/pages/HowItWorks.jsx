@@ -56,7 +56,7 @@ export default function HowItWorks() {
             verifies coverage, scores confidence and fraud risk, then decides and pays automatically where possible.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/onboarding" className="button-secondary !bg-white !text-[#173126]">
+            <Link to="/onboarding" className="button-secondary !bg-white !text-primary">
               Explore onboarding
               <ArrowRight size={18} />
             </Link>
@@ -69,13 +69,13 @@ export default function HowItWorks() {
         <div className="space-y-4">
           <div className="panel p-6">
             <p className="eyebrow">Core promise</p>
-            <p className="mt-3 text-2xl font-bold leading-tight text-[#173126]">
+            <p className="mt-3 text-2xl font-bold leading-tight text-primary">
               Workers should understand why money arrived, not wonder whether a form was lost.
             </p>
           </div>
           <div className="panel-quiet p-6">
             <p className="text-sm text-ink/55">What makes it different</p>
-            <p className="mt-2 text-lg font-semibold text-[#173126]">
+            <p className="mt-2 text-lg font-semibold text-primary">
               Zero manual filing, incident-first logic, fraud-aware decisions, and visible worker/admin reasoning.
             </p>
           </div>
@@ -92,7 +92,7 @@ export default function HowItWorks() {
           {workerFlow.map((step, index) => (
             <div key={step} className="panel p-5">
               <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-ink/45">Step {index + 1}</p>
-              <p className="mt-3 text-sm leading-7 text-[#173126]">{step}</p>
+              <p className="mt-3 text-sm leading-7 text-primary">{step}</p>
             </div>
           ))}
         </div>

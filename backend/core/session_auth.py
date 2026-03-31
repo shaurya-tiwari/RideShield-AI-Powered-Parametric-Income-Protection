@@ -1,7 +1,4 @@
-"""
-Lightweight signed session tokens for Sprint 3 demo auth.
-Uses only the standard library and keeps the backend stateless.
-"""
+"""Lightweight signed session tokens using only the standard library."""
 
 from __future__ import annotations
 
@@ -9,16 +6,13 @@ import base64
 import hashlib
 import hmac
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Any, Dict
 
 from fastapi import Header, HTTPException, status
 
 from backend.config import settings
-
-
-def utc_now_naive() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+from backend.utils.time import utc_now_naive
 
 
 def _b64url_encode(data: bytes) -> str:
@@ -111,6 +105,10 @@ async def get_current_session(authorization: str | None = Header(default=None)) 
     return verify_session_token(token)
 
 
+async def require_authenticated_session(authorization: str | None = Header(default=None)) -> Dict[str, Any]:
+    return verify_session_token(parse_bearer_token(authorization))
+
+
 async def get_admin_session(session: Dict[str, Any] = Header(default=None)):  # type: ignore[assignment]
     raise RuntimeError("Use require_admin_session dependency wrapper instead.")
 
@@ -123,3 +121,14 @@ async def require_admin_session(authorization: str | None = Header(default=None)
             detail="Admin session required.",
         )
     return session
+
+
+def ensure_worker_access(session: Dict[str, Any], worker_id: Any) -> None:
+    if session.get("role") == "admin":
+        return
+    if session.get("role") == "worker" and session.get("worker_id") == str(worker_id):
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="You do not have access to this worker resource.",
+    )

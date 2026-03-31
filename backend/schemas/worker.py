@@ -30,6 +30,13 @@ class WorkerRegisterRequest(BaseModel):
         description="Phone number with country code",
         examples=["+919876543210"]
     )
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=100,
+        description="Account password for worker sign in",
+        examples=["rideshield123"]
+    )
     city: str = Field(
         ...,
         description="City where worker operates",

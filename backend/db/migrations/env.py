@@ -9,10 +9,12 @@ import sys
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 
+from backend.config import settings
 from backend.database import Base
 from backend.db.models import *  # Import all models
 
 config = context.config
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL_SYNC)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

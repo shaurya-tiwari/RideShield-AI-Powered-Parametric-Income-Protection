@@ -1,7 +1,4 @@
-"""
-RideShield Configuration
-Loads all settings from environment variables with sensible defaults.
-"""
+"""RideShield configuration."""
 
 import os
 from typing import Any, Optional
@@ -18,14 +15,17 @@ class Settings(BaseSettings):
     # Application
     APP_NAME: str = "RideShield"
     APP_VERSION: str = "0.1.0"
-    DEBUG: bool = True
+    DEBUG: bool = ENV != "prod"
     SQL_ECHO: bool = False
     HOST: str = "0.0.0.0"
     PORT: int = 8000
-    SESSION_SECRET: str = "rideshield-sprint3-demo-secret"
+    SESSION_SECRET: str
     SESSION_DURATION_HOURS: int = 72
     ADMIN_USERNAME: str = "admin"
-    ADMIN_PASSWORD: str = "rideshield-admin"
+    ADMIN_PASSWORD: str
+    CORS_ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
+    AUTH_RATE_LIMIT_ATTEMPTS: int = 5
+    AUTH_RATE_LIMIT_WINDOW_SECONDS: int = 60
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://rideshield:rideshield123@localhost:5433/rideshield_db"
@@ -74,6 +74,10 @@ class Settings(BaseSettings):
             return False
 
         return bool(value)
+
+    @property
+    def cors_allowed_origins(self) -> list[str]:
+        return [item.strip() for item in self.CORS_ALLOWED_ORIGINS.split(",") if item.strip()]
 
     # City Risk Profiles
     CITY_RISK_PROFILES: dict = {

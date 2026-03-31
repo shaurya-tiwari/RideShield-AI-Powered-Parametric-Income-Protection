@@ -9,7 +9,6 @@ Endpoints:
     GET  /api/workers/          -> List all workers (admin)
 """
 
-from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
@@ -20,10 +19,13 @@ from sqlalchemy.orm import selectinload
 
 from backend.config import settings
 from backend.core.location_service import location_service
+from backend.core.password_auth import hash_password
 from backend.core.premium_calculator import premium_calculator
 from backend.core.risk_scorer import risk_scorer
+from backend.core.session_auth import ensure_worker_access, require_admin_session, require_authenticated_session
 from backend.database import get_db
 from backend.db.models import AuditLog, TrustScore, Worker
+from backend.utils.time import utc_now_naive
 from backend.schemas.worker import (
     PlanOption,
     RiskScoreBreakdown,
@@ -35,10 +37,6 @@ from backend.schemas.worker import (
 )
 
 router = APIRouter(prefix="/api/workers", tags=["Workers"])
-
-
-def utc_now_naive() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def get_active_policy(worker, now):
@@ -107,6 +105,7 @@ async def register_worker(
     worker = Worker(
         name=request.name,
         phone=request.phone,
+        password_hash=hash_password(request.password),
         city_id=zone_record.city_id,
         zone_id=zone_record.id,
         city=request.city,
@@ -194,8 +193,11 @@ async def register_worker(
 async def get_worker_profile(
     worker_id: UUID,
     db: AsyncSession = Depends(get_db),
+    session: dict = Depends(require_authenticated_session),
 ):
     """Get complete worker profile with active policy and claim stats."""
+
+    ensure_worker_access(session, worker_id)
 
     result = await db.execute(
         select(Worker)
@@ -247,8 +249,11 @@ async def update_worker(
     worker_id: UUID,
     update: WorkerUpdateRequest,
     db: AsyncSession = Depends(get_db),
+    session: dict = Depends(require_authenticated_session),
 ):
     """Update worker details. Recalculates risk score if zone changes."""
+
+    ensure_worker_access(session, worker_id)
 
     result = await db.execute(
         select(Worker)
@@ -312,6 +317,7 @@ async def list_workers(
     skip: int = 0,
     limit: int = 50,
     db: AsyncSession = Depends(get_db),
+    _: dict = Depends(require_admin_session),
 ):
     """List all workers. Admin endpoint."""
 
@@ -375,8 +381,11 @@ async def list_workers(
 async def get_risk_score(
     worker_id: UUID,
     db: AsyncSession = Depends(get_db),
+    session: dict = Depends(require_authenticated_session),
 ):
     """Get detailed risk score breakdown for a worker."""
+
+    ensure_worker_access(session, worker_id)
 
     result = await db.execute(select(Worker).options(selectinload(Worker.zone_ref)).where(Worker.id == worker_id))
     worker = result.scalar_one_or_none()

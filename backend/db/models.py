@@ -1,10 +1,6 @@
-"""
-SQLAlchemy ORM Models for RideShield.
-All 8 tables defined here with relationships and constraints.
-"""
+"""SQLAlchemy ORM models for RideShield."""
 
 import uuid
-from datetime import datetime
 from sqlalchemy import (
     Column, String, Boolean, Integer, DateTime,
     ForeignKey, Text, Index, UniqueConstraint, Numeric
@@ -12,6 +8,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
 from sqlalchemy.orm import relationship
 from backend.database import Base
+from backend.utils.time import utc_now_naive
 
 
 def generate_uuid():
@@ -25,6 +22,7 @@ class Worker(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
     name = Column(String(100), nullable=False)
     phone = Column(String(15), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=True)
     city_id = Column(UUID(as_uuid=True), ForeignKey("cities.id"), nullable=True, index=True)
     zone_id = Column(UUID(as_uuid=True), ForeignKey("zones.id"), nullable=True, index=True)
     city = Column(String(50), nullable=False, index=True)
@@ -38,8 +36,8 @@ class Worker(Base):
     consent_timestamp = Column(DateTime, nullable=True)
     risk_score = Column(Numeric(4, 3), nullable=True)
     status = Column(String(20), default="active", index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_naive)
+    updated_at = Column(DateTime, default=utc_now_naive, onupdate=utc_now_naive)
 
     # Relationships
     policies = relationship("Policy", back_populates="worker", lazy="selectin")
@@ -68,10 +66,10 @@ class Policy(Base):
     coverage_cap = Column(Numeric(8, 2), nullable=False)
     triggers_covered = Column(ARRAY(String), nullable=False)
     status = Column(String(20), default="pending", index=True)
-    purchased_at = Column(DateTime, default=datetime.utcnow)
+    purchased_at = Column(DateTime, default=utc_now_naive)
     activates_at = Column(DateTime, nullable=False)
     expires_at = Column(DateTime, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_naive)
 
     # Relationships
     worker = relationship("Worker", back_populates="policies")
@@ -79,7 +77,7 @@ class Policy(Base):
 
     @property
     def is_active(self):
-        now = datetime.utcnow()
+        now = utc_now_naive()
         return (
             self.status == "active" and
             self.activates_at <= now <= self.expires_at
@@ -108,8 +106,8 @@ class Event(Base):
     api_source = Column(String(100), nullable=True)
     status = Column(String(20), default="active", index=True)
     metadata_json = Column(JSONB, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_naive)
+    updated_at = Column(DateTime, default=utc_now_naive, onupdate=utc_now_naive)
 
     # Relationships
     claims = relationship("Claim", back_populates="event", lazy="selectin")
@@ -148,8 +146,8 @@ class Claim(Base):
     review_deadline = Column(DateTime, nullable=True)
     reviewed_by = Column(String(100), nullable=True)
     reviewed_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_naive)
+    updated_at = Column(DateTime, default=utc_now_naive, onupdate=utc_now_naive)
 
     # Relationships
     worker = relationship("Worker", back_populates="claims")
@@ -176,7 +174,7 @@ class Payout(Base):
     channel = Column(String(20), nullable=False)
     transaction_id = Column(String(100), nullable=True)
     status = Column(String(20), default="pending")
-    initiated_at = Column(DateTime, default=datetime.utcnow)
+    initiated_at = Column(DateTime, default=utc_now_naive)
     completed_at = Column(DateTime, nullable=True)
 
     # Relationships
@@ -198,7 +196,7 @@ class TrustScore(Base):
     fraud_flags = Column(Integer, default=0)
     account_age_days = Column(Integer, default=0)
     device_stability = Column(Numeric(4, 3), default=0.500)
-    last_updated = Column(DateTime, default=datetime.utcnow)
+    last_updated = Column(DateTime, default=utc_now_naive)
 
     # Relationships
     worker = relationship("Worker", back_populates="trust_score")
@@ -218,7 +216,7 @@ class FraudLog(Base):
     confidence = Column(Numeric(4, 3), nullable=True)
     signals = Column(JSONB, nullable=True)
     action_taken = Column(String(20), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_naive)
 
     def __repr__(self):
         return f"<FraudLog {self.fraud_type} for worker {self.worker_id}>"
@@ -234,7 +232,7 @@ class AuditLog(Base):
     action = Column(String(50), nullable=False)
     details = Column(JSONB, nullable=True)
     performed_by = Column(String(100), default="system")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_naive)
 
     __table_args__ = (
         Index("idx_audit_entity", "entity_type", "entity_id"),
@@ -256,7 +254,7 @@ class WorkerActivity(Base):
     longitude = Column(Numeric(10, 7), nullable=True)
     speed_kmh = Column(Numeric(5, 1), nullable=True)
     has_delivery_stop = Column(Boolean, default=False)
-    recorded_at = Column(DateTime, default=datetime.utcnow)
+    recorded_at = Column(DateTime, default=utc_now_naive)
 
     # Relationships
     worker = relationship("Worker", back_populates="activity_logs")
@@ -279,8 +277,8 @@ class City(Base):
     slug = Column(String(50), nullable=False, unique=True, index=True)
     display_name = Column(String(100), nullable=False)
     active = Column(Boolean, default=True, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_naive)
+    updated_at = Column(DateTime, default=utc_now_naive, onupdate=utc_now_naive)
 
     zones = relationship("Zone", back_populates="city_ref", lazy="selectin")
     workers = relationship("Worker", back_populates="city_ref", lazy="selectin")
@@ -300,8 +298,8 @@ class Zone(Base):
     active = Column(Boolean, default=True, index=True)
     centroid_lat = Column(Numeric(10, 7), nullable=True)
     centroid_lon = Column(Numeric(10, 7), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_naive)
+    updated_at = Column(DateTime, default=utc_now_naive, onupdate=utc_now_naive)
 
     city_ref = relationship("City", back_populates="zones", lazy="selectin")
     threshold_profile = relationship("ZoneThresholdProfile", back_populates="zone_ref", uselist=False, lazy="selectin")
@@ -330,8 +328,8 @@ class ZoneThresholdProfile(Base):
     traffic_threshold = Column(Numeric(4, 3), nullable=False)
     platform_outage_threshold = Column(Numeric(4, 3), nullable=False)
     social_inactivity_threshold = Column(Numeric(4, 3), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_naive)
+    updated_at = Column(DateTime, default=utc_now_naive, onupdate=utc_now_naive)
 
     zone_ref = relationship("Zone", back_populates="threshold_profile", lazy="selectin")
 
@@ -344,7 +342,7 @@ class ZoneRiskProfile(Base):
     zone_id = Column(UUID(as_uuid=True), ForeignKey("zones.id"), nullable=False, unique=True, index=True)
     base_risk = Column(Numeric(4, 3), nullable=False)
     avg_daily_income = Column(Numeric(10, 2), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_naive)
+    updated_at = Column(DateTime, default=utc_now_naive, onupdate=utc_now_naive)
 
     zone_ref = relationship("Zone", back_populates="risk_profile", lazy="selectin")

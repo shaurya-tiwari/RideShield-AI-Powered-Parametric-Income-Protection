@@ -13,7 +13,7 @@ export default function ClaimDetailPanel({ claim }) {
       <div className="panel p-6">
         <div className="mb-5">
           <p className="eyebrow">Claim detail</p>
-          <h3 className="mt-2 text-2xl font-bold text-[#173126]">Select an incident</h3>
+          <h3 className="mt-2 text-2xl font-bold text-primary">Select an incident</h3>
         </div>
         <p className="text-sm leading-6 text-ink/60">
           Pick a claim incident from the worker feed to inspect why it was approved, delayed, or rejected.
@@ -34,7 +34,7 @@ export default function ClaimDetailPanel({ claim }) {
         <p className="eyebrow">Claim detail</p>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <span className={statusPill(claim.status)}>{humanizeSlug(claim.status)}</span>
-          <h3 className="text-2xl font-bold text-[#173126]">{renderTriggerList(incidentTriggers)}</h3>
+          <h3 className="text-2xl font-bold text-primary">{renderTriggerList(incidentTriggers)}</h3>
         </div>
         <p className="mt-2 text-sm text-ink/60">{formatDateTime(claim.created_at)}</p>
       </div>
@@ -48,7 +48,7 @@ export default function ClaimDetailPanel({ claim }) {
         </div>
         <div className="panel-quiet rounded-[24px] p-4">
           <p className="text-sm text-ink/50">Payout impact</p>
-          <p className="mt-3 text-lg font-semibold text-[#173126]">
+          <p className="mt-3 text-lg font-semibold text-primary">
             {formatCurrency(claim.final_payout || claim.calculated_payout)}
           </p>
           <p className="mt-3 text-sm leading-6 text-ink/65">
@@ -60,19 +60,19 @@ export default function ClaimDetailPanel({ claim }) {
       <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <p className="text-sm text-ink/45">Final score</p>
-          <p className="mt-2 font-semibold text-[#173126]">{formatScore(claim.final_score)}</p>
+          <p className="mt-2 font-semibold text-primary">{formatScore(claim.final_score)}</p>
         </div>
         <div>
           <p className="text-sm text-ink/45">Fraud score</p>
-          <p className="mt-2 font-semibold text-[#173126]">{formatScore(claim.fraud_score)}</p>
+          <p className="mt-2 font-semibold text-primary">{formatScore(claim.fraud_score)}</p>
         </div>
         <div>
           <p className="text-sm text-ink/45">Event confidence</p>
-          <p className="mt-2 font-semibold text-[#173126]">{formatScore(claim.event_confidence)}</p>
+          <p className="mt-2 font-semibold text-primary">{formatScore(claim.event_confidence)}</p>
         </div>
         <div>
           <p className="text-sm text-ink/45">Trust score</p>
-          <p className="mt-2 font-semibold text-[#173126]">{formatScore(claim.trust_score)}</p>
+          <p className="mt-2 font-semibold text-primary">{formatScore(claim.trust_score)}</p>
         </div>
       </div>
 

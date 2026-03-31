@@ -2,7 +2,7 @@
 Trigger engine for disruption monitoring and affected worker discovery.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from decimal import Decimal
 from typing import Dict, List, Tuple
 
@@ -12,15 +12,11 @@ from sqlalchemy.orm import selectinload
 
 from backend.config import settings
 from backend.db.models import AuditLog, Event, Worker, Zone
+from backend.utils.time import utc_now_naive
 from simulations.aqi_mock import aqi_simulator
 from simulations.platform_mock import platform_simulator
 from simulations.traffic_mock import traffic_simulator
 from simulations.weather_mock import weather_simulator
-
-
-def utc_now_naive() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
-
 
 class TriggerEngine:
     """Fetches signals, evaluates thresholds, creates events, and finds workers."""
@@ -65,10 +61,7 @@ class TriggerEngine:
         return self.THRESHOLDS
 
     def _calculate_social_signal(self, weather: Dict, traffic: Dict, platform: Dict) -> float:
-        """
-        Approximate a civic-disruption signal from behavioral collapse.
-        Phase 2 keeps this rule-based; Phase 3 can replace it with a proper activity baseline.
-        """
+        """Approximate a civic-disruption signal from behavioral collapse."""
         platform_drop = float(platform.get("order_density_drop", 0) or 0)
         traffic_congestion = float(traffic.get("congestion_index", 0) or 0)
         weather_scenario = weather.get("scenario")

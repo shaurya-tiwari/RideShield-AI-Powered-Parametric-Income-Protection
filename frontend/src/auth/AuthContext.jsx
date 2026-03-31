@@ -53,8 +53,8 @@ export function AuthProvider({ children }) {
       session,
       isAuthenticated: Boolean(session?.token),
       role: session?.session?.role || null,
-      async loginWorker(phone) {
-        const response = await authApi.workerLogin({ phone });
+      async loginWorker(phone, password) {
+        const response = await authApi.workerLogin({ phone, password });
         const next = response.data;
         setSession(next);
         writeStoredSession(next);

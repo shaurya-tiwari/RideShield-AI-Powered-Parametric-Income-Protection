@@ -15,7 +15,7 @@ async def test_admin_overview_requires_admin_token(client):
 async def test_admin_overview_returns_scheduler_and_forecast(client):
     login_response = await client.post(
         "/api/auth/admin/login",
-        json={"username": "admin", "password": "rideshield-admin"},
+        json={"username": "admin", "password": "rideshield-test-admin-password"},
     )
     assert login_response.status_code == 200
     token = login_response.json()["token"]

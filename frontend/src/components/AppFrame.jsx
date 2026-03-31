@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Bell, BrainCircuit, LayoutDashboard, LogOut, PlaySquare, Search, Settings, Shield, ShieldCheck, Siren, Sparkles } from "lucide-react";
+import { Bell, BrainCircuit, LayoutDashboard, LogOut, PlaySquare, Settings, Shield, ShieldCheck, Siren, Sparkles } from "lucide-react";
 
 import { useAuth } from "../auth/AuthContext";
 
@@ -18,7 +18,6 @@ export default function AppFrame({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { session, role, logout } = useAuth();
-  const [searchValue, setSearchValue] = useState("");
 
   const navItems = role === "admin" ? adminNav : workerNav;
   const title =
@@ -30,7 +29,6 @@ export default function AppFrame({ children }) {
         ? "System Oversight"
         : "Worker Dashboard";
   const userLabel = session?.session?.name || session?.session?.username || "RideShield user";
-  const searchPlaceholder = role === "admin" ? "Search claims, zones, or reviews..." : "Search incidents or payouts...";
   const initials = useMemo(
     () =>
       userLabel
@@ -124,15 +122,8 @@ export default function AppFrame({ children }) {
             </div>
 
             <div className="hidden items-center gap-4 md:flex">
-              <div className="relative">
-                <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70" />
-                <input
-                  type="text"
-                  value={searchValue}
-                  onChange={(event) => setSearchValue(event.target.value)}
-                  placeholder={searchPlaceholder}
-                  className="field !w-72 !rounded-full !bg-surface-container-low !py-2 !pl-10 !pr-4 text-sm"
-                />
+              <div className="rounded-full bg-surface-container-low px-4 py-2 text-sm font-medium text-on-surface-variant">
+                {role === "admin" ? "Operational review mode" : "Worker coverage mode"}
               </div>
               <button type="button" className="button-secondary !rounded-full !bg-tertiary-container !px-4 !py-2 !text-on-primary" aria-label="Emergency alert">
                 <Siren size={16} />
@@ -145,7 +136,7 @@ export default function AppFrame({ children }) {
           </div>
         </header>
 
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</div>
+        <div className="mx-auto max-w-7xl px-4 py-8 pb-24 sm:px-6 lg:px-8 lg:pb-8">{children}</div>
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-black/5 bg-surface-container-lowest/95 px-4 py-3 backdrop-blur-xl lg:hidden">

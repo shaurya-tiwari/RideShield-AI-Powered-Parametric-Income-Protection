@@ -1,12 +1,11 @@
-"""
-Schemas for lightweight Sprint 3 auth/session endpoints.
-"""
+"""Schemas for auth/session endpoints."""
 
 from pydantic import BaseModel, Field
 
 
 class WorkerLoginRequest(BaseModel):
     phone: str = Field(..., min_length=10, max_length=15)
+    password: str = Field(..., min_length=8, max_length=100)
 
 
 class AdminLoginRequest(BaseModel):

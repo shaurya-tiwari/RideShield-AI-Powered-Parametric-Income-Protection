@@ -11,6 +11,7 @@ export default function Auth() {
   const [tab, setTab] = useState("worker");
   const [loading, setLoading] = useState(false);
   const [workerPhone, setWorkerPhone] = useState("");
+  const [workerPassword, setWorkerPassword] = useState("");
   const [adminUsername, setAdminUsername] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
 
@@ -24,7 +25,7 @@ export default function Auth() {
     event.preventDefault();
     setLoading(true);
     try {
-      const result = await loginWorker(workerPhone);
+      const result = await loginWorker(workerPhone, workerPassword);
       navigate(redirectTarget || `/dashboard/${result.session.worker_id}`, { replace: true });
     } finally {
       setLoading(false);
@@ -66,11 +67,25 @@ export default function Auth() {
               <label className="label">Registered phone number</label>
               <input className="field" value={workerPhone} onChange={(e) => setWorkerPhone(e.target.value)} placeholder="+919876543210" required />
             </div>
+            <div>
+              <label className="label">Password</label>
+              <input
+                className="field"
+                type="password"
+                value={workerPassword}
+                onChange={(e) => setWorkerPassword(e.target.value)}
+                placeholder="Enter worker password"
+                required
+              />
+            </div>
             <button type="submit" className="button-primary w-full" disabled={loading}>
               {loading ? "Signing in..." : "Continue as worker"}
             </button>
             <p className="text-sm text-ink/60">
               New here? <Link to="/onboarding" className="font-semibold text-storm">Create a worker profile</Link>
+            </p>
+            <p className="text-sm text-ink/55">
+              Worker access now uses phone number plus password. Seeded demo accounts use the password assigned during the latest seed run.
             </p>
           </form>
         ) : (

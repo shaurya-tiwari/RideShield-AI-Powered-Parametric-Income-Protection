@@ -5,6 +5,9 @@ Test configuration and fixtures.
 import os
 
 os.environ["ENV"] = "test"
+os.environ.setdefault("SESSION_SECRET", "rideshield-test-secret")
+os.environ.setdefault("ADMIN_PASSWORD", "rideshield-test-admin-password")
+os.environ.setdefault("ADMIN_USERNAME", "admin")
 
 import pytest
 import pytest_asyncio
@@ -44,7 +47,7 @@ async def client():
 async def admin_headers(client):
     response = await client.post(
         "/api/auth/admin/login",
-        json={"username": "admin", "password": "rideshield-admin"},
+        json={"username": "admin", "password": "rideshield-test-admin-password"},
     )
     assert response.status_code == 200
     token = response.json()["token"]
@@ -56,6 +59,7 @@ def valid_worker_data():
     return {
         "name": "Test Worker",
         "phone": "+919999999999",
+        "password": "testworker123",
         "city": "delhi",
         "zone": "south_delhi",
         "platform": "zomato",

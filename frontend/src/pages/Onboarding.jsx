@@ -15,6 +15,8 @@ import { PLATFORM_OPTIONS, STORAGE_KEYS } from "../utils/constants";
 const initialForm = {
   name: "",
   phone: "",
+  password: "",
+  confirm_password: "",
   city: "delhi",
   zone: "south_delhi",
   platform: "zomato",
@@ -36,6 +38,10 @@ export default function Onboarding() {
   const [selectedPlan, setSelectedPlan] = useState("");
   const [policyPurchase, setPolicyPurchase] = useState(null);
   const selectedPlanData = registration?.available_plans?.find((plan) => plan.plan_name === selectedPlan);
+
+  useEffect(() => {
+    document.title = "Onboarding | RideShield";
+  }, []);
 
   useEffect(() => {
     loadCities();
@@ -76,17 +82,27 @@ export default function Onboarding() {
 
   async function handleRegister(event) {
     event.preventDefault();
+    if (form.password !== form.confirm_password) {
+      toast.error("Passwords do not match");
+      return;
+    }
     setLoading(true);
     try {
       const response = await workersApi.register({
-        ...form,
+        password: form.password,
+        name: form.name,
+        phone: form.phone,
+        city: form.city,
+        zone: form.zone,
+        platform: form.platform,
         self_reported_income: Number(form.self_reported_income),
         working_hours: Number(form.working_hours),
+        consent_given: form.consent_given,
       });
       setRegistration(response.data);
       setSelectedPlan(response.data.recommended_plan);
       localStorage.setItem(STORAGE_KEYS.workerId, response.data.worker_id);
-      await loginWorker(form.phone);
+      await loginWorker(form.phone, form.password);
       setStep("plan");
       toast.success("Worker registered");
     } finally {
@@ -166,6 +182,16 @@ export default function Onboarding() {
               <div>
                 <label className="label">Phone number</label>
                 <input className="field" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} required />
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label className="label">Password</label>
+                  <input className="field" type="password" value={form.password} onChange={(e) => updateField("password", e.target.value)} minLength={8} required />
+                </div>
+                <div>
+                  <label className="label">Confirm password</label>
+                  <input className="field" type="password" value={form.confirm_password} onChange={(e) => updateField("confirm_password", e.target.value)} minLength={8} required />
+                </div>
               </div>
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>

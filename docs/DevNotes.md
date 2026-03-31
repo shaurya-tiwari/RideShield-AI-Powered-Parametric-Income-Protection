@@ -767,3 +767,13 @@ Implementation files:
 Working rule:
 - runtime logs are local diagnostics
 - they are intentionally ignored by git
+
+### Security Hardening Update
+
+Confirmed audit fixes now implemented:
+- worker, claim, and payout detail/history endpoints require an authenticated session
+- worker sessions are restricted to their own records; admin sessions retain oversight access
+- auth endpoints now apply baseline in-memory rate limiting
+- CORS now uses configured frontend origins instead of wildcard `*`
+- baseline browser security headers are applied in backend middleware
+- admin password and session secret are env-backed instead of relying on source defaults

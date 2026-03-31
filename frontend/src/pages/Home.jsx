@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Radar, ShieldCheck, Wallet } from "lucide-react";
 
@@ -25,6 +26,10 @@ const pillars = [
 export default function Home() {
   const { booting, isAuthenticated, role, session } = useAuth();
   const displayName = session?.session?.name || session?.session?.username || "there";
+
+  useEffect(() => {
+    document.title = "RideShield";
+  }, []);
 
   let heroTitle = "RideShield turns disruption signals into trustable claim and payout decisions.";
   let heroDescription =
@@ -58,7 +63,7 @@ export default function Home() {
           <p className="mt-5 max-w-2xl text-base leading-8 text-white/78 sm:text-lg">{heroDescription}</p>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link to={primaryCta.to} className="button-secondary !bg-white !text-[#173126]">
+            <Link to={primaryCta.to} className="button-secondary !bg-white !text-primary">
               {primaryCta.label}
               <ArrowRight size={18} />
             </Link>
@@ -89,7 +94,7 @@ export default function Home() {
         <div className="editorial-grid">
           <div className="panel p-6">
             <p className="eyebrow">System promise</p>
-            <p className="mt-3 text-2xl font-bold leading-tight text-[#173126]">
+            <p className="mt-3 text-2xl font-bold leading-tight text-primary">
               Workers are informed. The system does the filing, scoring, and payout orchestration.
             </p>
             <p className="mt-4 text-sm leading-7 text-ink/65">
@@ -101,13 +106,13 @@ export default function Home() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
             <div className="panel-quiet p-6">
               <p className="text-sm text-ink/55">Worker surface</p>
-              <p className="mt-2 text-lg font-semibold text-[#173126]">
+              <p className="mt-2 text-lg font-semibold text-primary">
                 Coverage, incidents, payout history, and decision explanations in one calm, readable view.
               </p>
             </div>
             <div className="panel-quiet p-6">
               <p className="text-sm text-ink/55">Admin surface</p>
-              <p className="mt-2 text-lg font-semibold text-[#173126]">
+              <p className="mt-2 text-lg font-semibold text-primary">
                 Review queue, disruption pressure, fraud visibility, scheduler health, and city-aware monitoring.
               </p>
             </div>
@@ -125,10 +130,10 @@ export default function Home() {
         <div className="grid gap-5 md:grid-cols-3">
           {pillars.map(({ icon: Icon, title, description }) => (
             <div key={title} className="panel p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-[#f4f4ef] text-[#173126]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-surface-container-low text-primary">
                 <Icon size={22} />
               </div>
-              <h3 className="mt-5 text-xl font-bold text-[#173126]">{title}</h3>
+              <h3 className="mt-5 text-xl font-bold text-primary">{title}</h3>
               <p className="mt-3 text-sm leading-7 text-ink/65">{description}</p>
             </div>
           ))}

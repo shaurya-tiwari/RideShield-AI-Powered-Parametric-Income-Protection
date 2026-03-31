@@ -18,7 +18,7 @@ export default function ScenarioCard({ scenario, running, result, thresholds, on
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <p className="eyebrow">Scenario</p>
-          <h3 className="mt-2 text-2xl font-bold text-[#173126]">{scenario.title}</h3>
+          <h3 className="mt-2 text-2xl font-bold text-primary">{scenario.title}</h3>
         </div>
         <button type="button" onClick={() => onRun(scenario.id)} disabled={running} className="button-primary !rounded-xl !px-4 !py-2 text-sm">
           <Play size={16} />
@@ -30,23 +30,23 @@ export default function ScenarioCard({ scenario, running, result, thresholds, on
       <p className="mt-3 text-sm font-medium text-ink/70">{scenario.outcome}</p>
 
       {result ? (
-        <div className="mt-5 space-y-4 rounded-[24px] bg-[#f4f4ef] p-4">
+        <div className="mt-5 space-y-4 rounded-[24px] bg-surface-container-low p-4">
           <div className="grid gap-3 sm:grid-cols-4">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-ink/45">Incidents</p>
-              <p className="mt-2 text-xl font-bold text-[#173126]">{result.events_created}</p>
+              <p className="mt-2 text-xl font-bold text-primary">{result.events_created}</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-ink/45">Claims</p>
-              <p className="mt-2 text-xl font-bold text-[#173126]">{result.claims_generated}</p>
+              <p className="mt-2 text-xl font-bold text-primary">{result.claims_generated}</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-ink/45">Approved</p>
-              <p className="mt-2 text-xl font-bold text-[#173126]">{result.claims_approved}</p>
+              <p className="mt-2 text-xl font-bold text-primary">{result.claims_approved}</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-ink/45">Payout</p>
-              <p className="mt-2 text-xl font-bold text-[#173126]">{formatCurrency(result.total_payout || 0)}</p>
+              <p className="mt-2 text-xl font-bold text-primary">{formatCurrency(result.total_payout || 0)}</p>
             </div>
           </div>
 
@@ -86,7 +86,7 @@ export default function ScenarioCard({ scenario, running, result, thresholds, on
             <div className="rounded-[22px] bg-white/90 p-4">
               <p className="text-xs uppercase tracking-[0.2em] text-ink/45">Decision mix</p>
               <p className="mt-2 font-semibold">
-                {result.claims_approved} approved · {result.claims_delayed} delayed · {result.claims_rejected} rejected
+                {result.claims_approved} approved | {result.claims_delayed} delayed | {result.claims_rejected} rejected
               </p>
             </div>
           </div>

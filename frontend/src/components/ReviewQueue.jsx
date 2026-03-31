@@ -10,7 +10,7 @@ export default function ReviewQueue({ claims = [], resolvingId, onResolve }) {
     <div className="panel p-6">
       <div className="mb-5">
         <p className="eyebrow">Admin workflow</p>
-        <h3 className="mt-2 text-2xl font-bold text-[#173126]">Manual review queue</h3>
+        <h3 className="mt-2 text-2xl font-bold text-primary">Manual review queue</h3>
         <p className="mt-2 text-sm leading-6 text-ink/60">
           Delayed claims are grouped by incident so the reviewer sees one disruption narrative with the underlying claim actions still exposed.
         </p>
@@ -24,7 +24,7 @@ export default function ReviewQueue({ claims = [], resolvingId, onResolve }) {
                 <div>
                   <div className="flex flex-wrap items-center gap-3">
                     <span className={statusPill(incident.status)}>{humanizeSlug(incident.status)}</span>
-                    <p className="text-sm font-semibold text-[#173126]">{incident.worker_name}</p>
+                    <p className="text-sm font-semibold text-primary">{incident.worker_name}</p>
                   </div>
                   <p className="mt-2 text-sm text-ink/60">
                     {incident.trigger_types.map(humanizeSlug).join(", ")} · {humanizeSlug(incident.zone)}
@@ -35,7 +35,7 @@ export default function ReviewQueue({ claims = [], resolvingId, onResolve }) {
                 </div>
 
                 <div className="text-right text-sm">
-                  <p className="font-semibold text-[#173126]">{formatCurrency(incident.total_calculated_payout)}</p>
+                  <p className="font-semibold text-primary">{formatCurrency(incident.total_calculated_payout)}</p>
                   <p className="mt-1 text-ink/45">{formatRelative(incident.review_deadline)}</p>
                 </div>
               </div>
@@ -43,15 +43,15 @@ export default function ReviewQueue({ claims = [], resolvingId, onResolve }) {
               <div className="mb-4 grid gap-3 text-sm sm:grid-cols-3">
                 <div>
                   <p className="text-ink/45">Fraud score</p>
-                  <p className="mt-2 font-semibold text-[#173126]">{formatScore(incident.max_fraud_score)}</p>
+                  <p className="mt-2 font-semibold text-primary">{formatScore(incident.max_fraud_score)}</p>
                 </div>
                 <div>
                   <p className="text-ink/45">Final score</p>
-                  <p className="mt-2 font-semibold text-[#173126]">{formatScore(incident.avg_final_score)}</p>
+                  <p className="mt-2 font-semibold text-primary">{formatScore(incident.avg_final_score)}</p>
                 </div>
                 <div>
                   <p className="text-ink/45">Overdue</p>
-                  <p className="mt-2 font-semibold text-[#173126]">{incident.overdue_count ? "Yes" : "No"}</p>
+                  <p className="mt-2 font-semibold text-primary">{incident.overdue_count ? "Yes" : "No"}</p>
                 </div>
               </div>
 

@@ -1,8 +1,6 @@
-"""
-Claims API for history, review queue, and admin resolution.
-"""
+"""Claims API for history, review queue, and admin resolution."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from decimal import Decimal
 from typing import Optional
 from uuid import UUID
@@ -13,16 +11,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from backend.core.payout_executor import payout_executor
-from backend.core.session_auth import require_admin_session
+from backend.core.session_auth import ensure_worker_access, require_admin_session, require_authenticated_session
 from backend.database import get_db
 from backend.db.models import AuditLog, Claim, Event, TrustScore, Worker
 from backend.schemas.claim import ClaimResolveRequest
+from backend.utils.time import utc_now_naive
 
 router = APIRouter(prefix="/api/claims", tags=["Claims"])
-
-
-def utc_now_naive() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def serialize_claim_summary(claim: Claim) -> dict:
@@ -67,7 +62,14 @@ def serialize_claim_summary(claim: Claim) -> dict:
 
 
 @router.get("/worker/{worker_id}")
-async def get_worker_claims(worker_id: UUID, status_filter: Optional[str] = None, days: int = 30, db: AsyncSession = Depends(get_db)):
+async def get_worker_claims(
+    worker_id: UUID,
+    status_filter: Optional[str] = None,
+    days: int = 30,
+    db: AsyncSession = Depends(get_db),
+    session: dict = Depends(require_authenticated_session),
+):
+    ensure_worker_access(session, worker_id)
     worker = (await db.execute(select(Worker).where(Worker.id == worker_id))).scalar_one_or_none()
     if not worker:
         raise HTTPException(status_code=404, detail="Worker not found.")
@@ -105,7 +107,11 @@ async def get_worker_claims(worker_id: UUID, status_filter: Optional[str] = None
 
 
 @router.get("/detail/{claim_id}")
-async def get_claim_detail(claim_id: UUID, db: AsyncSession = Depends(get_db)):
+async def get_claim_detail(
+    claim_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    session: dict = Depends(require_authenticated_session),
+):
     claim = (
         await db.execute(
             select(Claim)
@@ -115,6 +121,7 @@ async def get_claim_detail(claim_id: UUID, db: AsyncSession = Depends(get_db)):
     ).scalar_one_or_none()
     if not claim:
         raise HTTPException(status_code=404, detail="Claim not found.")
+    ensure_worker_access(session, claim.worker_id)
 
     event_info = None
     if claim.event:
@@ -222,7 +229,12 @@ async def resolve_delayed_claim(
 
 
 @router.get("/stats")
-async def get_claim_stats(days: int = 7, city: Optional[str] = None, db: AsyncSession = Depends(get_db)):
+async def get_claim_stats(
+    days: int = 7,
+    city: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(require_admin_session),
+):
     cutoff = utc_now_naive() - timedelta(days=days)
     query = select(Claim).where(Claim.created_at >= cutoff)
     if city:

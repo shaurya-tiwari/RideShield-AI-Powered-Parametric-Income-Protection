@@ -1,6 +1,4 @@
-"""
-Basic Sprint 2 integration tests for trigger-driven claim generation.
-"""
+"""Integration tests for trigger-driven claim generation."""
 
 import pytest
 from scripts.run_scenario import enrich_worker_for_demo
@@ -26,6 +24,14 @@ async def test_trigger_cycle_creates_event_and_claim(client, valid_worker_data, 
     assert payload["claims_generated"] >= 1
 
     claims_response = await client.get(f"/api/claims/worker/{worker_id}")
+    assert claims_response.status_code == 401
+
+    login_response = await client.post(
+        "/api/auth/worker/login",
+        json={"phone": valid_worker_data["phone"], "password": valid_worker_data["password"]},
+    )
+    worker_headers = {"Authorization": f"Bearer {login_response.json()['token']}"}
+    claims_response = await client.get(f"/api/claims/worker/{worker_id}", headers=worker_headers)
     assert claims_response.status_code == 200
     assert claims_response.json()["total"] >= 1
 
@@ -65,12 +71,18 @@ async def test_event_claim_and_payout_detail_endpoints(client, valid_worker_data
     assert zone_response.status_code == 200
     assert zone_response.json()["total"] >= 1
 
-    claims_response = await client.get(f"/api/claims/worker/{worker_id}")
+    login_response = await client.post(
+        "/api/auth/worker/login",
+        json={"phone": valid_worker_data["phone"], "password": valid_worker_data["password"]},
+    )
+    worker_headers = {"Authorization": f"Bearer {login_response.json()['token']}"}
+
+    claims_response = await client.get(f"/api/claims/worker/{worker_id}", headers=worker_headers)
     claim_payload = claims_response.json()
     assert claim_payload["total"] >= 1
 
     claim_id = claim_payload["claims"][0]["id"]
-    claim_detail_response = await client.get(f"/api/claims/detail/{claim_id}")
+    claim_detail_response = await client.get(f"/api/claims/detail/{claim_id}", headers=worker_headers)
     assert claim_detail_response.status_code == 200
     claim_detail = claim_detail_response.json()
     assert claim_detail["id"] == claim_id
@@ -78,7 +90,7 @@ async def test_event_claim_and_payout_detail_endpoints(client, valid_worker_data
 
     if claim_detail["payout"]:
         payout_id = claim_detail["payout"]["id"]
-        payout_detail_response = await client.get(f"/api/payouts/detail/{payout_id}")
+        payout_detail_response = await client.get(f"/api/payouts/detail/{payout_id}", headers=worker_headers)
         assert payout_detail_response.status_code == 200
         payout_detail = payout_detail_response.json()
         assert payout_detail["id"] == payout_id
@@ -127,6 +139,11 @@ async def test_review_queue_and_manual_resolution_flow(client, valid_worker_data
     assert "within_sla" in resolve_data
     assert resolve_data["claim"]["status"] == "approved"
 
-    updated_claim = await client.get(f"/api/claims/detail/{claim_id}")
+    login_response = await client.post(
+        "/api/auth/worker/login",
+        json={"phone": edge_worker_data["phone"], "password": edge_worker_data["password"]},
+    )
+    worker_headers = {"Authorization": f"Bearer {login_response.json()['token']}"}
+    updated_claim = await client.get(f"/api/claims/detail/{claim_id}", headers=worker_headers)
     assert updated_claim.status_code == 200
     assert updated_claim.json()["status"] == "approved"

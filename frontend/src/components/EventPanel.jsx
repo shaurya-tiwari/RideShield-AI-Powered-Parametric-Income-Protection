@@ -5,7 +5,7 @@ export default function EventPanel({ events = [] }) {
     <div className="panel p-6">
       <div className="mb-5">
         <p className="eyebrow">Live disruption feed</p>
-        <h3 className="mt-2 text-2xl font-bold text-[#173126]">Active incidents</h3>
+        <h3 className="mt-2 text-2xl font-bold text-primary">Active incidents</h3>
         <p className="mt-2 text-sm leading-6 text-ink/60">
           RideShield watches signal clusters in the background, merges overlapping triggers into one incident, and turns
           that incident into an explainable claim path.
@@ -24,10 +24,10 @@ export default function EventPanel({ events = [] }) {
                   <div>
                     <div className="flex flex-wrap items-center gap-3">
                       <span className={statusPill(event.status)}>{humanizeSlug(event.status)}</span>
-                      <p className="text-sm font-semibold text-[#173126]">{triggers.map(humanizeSlug).join(", ")}</p>
+                      <p className="text-sm font-semibold text-primary">{triggers.map(humanizeSlug).join(", ")}</p>
                     </div>
                     <p className="mt-2 text-sm text-ink/60">
-                      {humanizeSlug(event.zone)} · {humanizeSlug(event.city)}
+                      {humanizeSlug(event.zone)} | {humanizeSlug(event.city)}
                     </p>
                     <p className="mt-2 text-sm leading-6 text-ink/55">
                       Threshold breaches in the same zone and time window were merged into one incident so the worker
@@ -36,7 +36,7 @@ export default function EventPanel({ events = [] }) {
                   </div>
 
                   <div className="text-right text-sm">
-                    <p className="font-semibold text-[#173126]">{formatPercent((event.disruption_score || 0) * 100)}</p>
+                    <p className="font-semibold text-primary">{formatPercent((event.disruption_score || 0) * 100)}</p>
                     <p className="mt-1 text-ink/45">{formatDateTime(event.started_at)}</p>
                   </div>
                 </div>

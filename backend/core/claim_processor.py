@@ -1,9 +1,6 @@
-"""
-Claim processor orchestrating the zero-touch Sprint 2 pipeline.
-"""
+"""Claim processor orchestrating the zero-touch claim pipeline."""
 
 import logging
-from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Dict, List, Optional
 
@@ -18,17 +15,13 @@ from backend.core.location_service import location_service
 from backend.core.payout_executor import payout_executor
 from backend.core.trigger_engine import trigger_engine
 from backend.db.models import AuditLog, Claim, Event, Policy, TrustScore, Worker
+from backend.utils.time import utc_now_naive
 from simulations.aqi_mock import aqi_simulator
 from simulations.platform_mock import platform_simulator
 from simulations.traffic_mock import traffic_simulator
 from simulations.weather_mock import weather_simulator
 
 logger = logging.getLogger("rideshield.cycles")
-
-
-def utc_now_naive() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
-
 
 class ClaimProcessor:
     async def run_trigger_cycle(
@@ -39,9 +32,6 @@ class ClaimProcessor:
         scenario: Optional[str] = None,
         demo_run_id: Optional[str] = None,
     ) -> Dict:
-        if scenario:
-            self._set_scenario(scenario)
-
         if not zones:
             zones = [zone.slug for zone in await location_service.get_active_zones(db, city_slug=city)]
 
@@ -63,45 +53,49 @@ class ClaimProcessor:
             "details": [],
         }
 
-        logger.info(
-            "cycle_start city=%s scenario=%s demo_run_id=%s zones=%s",
-            city,
-            scenario or "live",
-            demo_run_id or "none",
-            ",".join(zones),
-        )
-
-        for zone in zones:
-            zone_result = await self._process_zone(db, zone, city, demo_run_id=demo_run_id)
-            results["details"].append(zone_result)
-            results["triggers_fired"][zone] = zone_result["triggers_fired"]
-            results["events_created"] += zone_result["events_created"]
-            results["events_extended"] += zone_result["events_extended"]
-            results["claims_generated"] += zone_result["claims_processed"]
-            results["claims_approved"] += zone_result["claims_approved"]
-            results["claims_delayed"] += zone_result["claims_delayed"]
-            results["claims_rejected"] += zone_result["claims_rejected"]
-            results["claims_duplicate"] += zone_result["claims_duplicate"]
-            results["total_payout"] += zone_result["total_payout"]
-
-        logger.info(
-            "cycle_done city=%s events_created=%s events_extended=%s claims_generated=%s claims_approved=%s claims_delayed=%s claims_rejected=%s claims_duplicate=%s total_payout=%s",
-            city,
-            results["events_created"],
-            results["events_extended"],
-            results["claims_generated"],
-            results["claims_approved"],
-            results["claims_delayed"],
-            results["claims_rejected"],
-            results["claims_duplicate"],
-            round(results["total_payout"], 2),
-        )
-
         if scenario:
-            self._set_scenario("normal")
+            self._set_scenario(scenario)
 
-        await db.flush()
-        return results
+        try:
+            logger.info(
+                "cycle_start city=%s scenario=%s demo_run_id=%s zones=%s",
+                city,
+                scenario or "live",
+                demo_run_id or "none",
+                ",".join(zones),
+            )
+
+            for zone in zones:
+                zone_result = await self._process_zone(db, zone, city, demo_run_id=demo_run_id)
+                results["details"].append(zone_result)
+                results["triggers_fired"][zone] = zone_result["triggers_fired"]
+                results["events_created"] += zone_result["events_created"]
+                results["events_extended"] += zone_result["events_extended"]
+                results["claims_generated"] += zone_result["claims_processed"]
+                results["claims_approved"] += zone_result["claims_approved"]
+                results["claims_delayed"] += zone_result["claims_delayed"]
+                results["claims_rejected"] += zone_result["claims_rejected"]
+                results["claims_duplicate"] += zone_result["claims_duplicate"]
+                results["total_payout"] += zone_result["total_payout"]
+
+            logger.info(
+                "cycle_done city=%s events_created=%s events_extended=%s claims_generated=%s claims_approved=%s claims_delayed=%s claims_rejected=%s claims_duplicate=%s total_payout=%s",
+                city,
+                results["events_created"],
+                results["events_extended"],
+                results["claims_generated"],
+                results["claims_approved"],
+                results["claims_delayed"],
+                results["claims_rejected"],
+                results["claims_duplicate"],
+                round(results["total_payout"], 2),
+            )
+
+            await db.flush()
+            return results
+        finally:
+            if scenario:
+                self._set_scenario("normal")
 
     async def _process_zone(self, db: AsyncSession, zone: str, city: str, demo_run_id: Optional[str] = None) -> Dict:
         zone_result = {

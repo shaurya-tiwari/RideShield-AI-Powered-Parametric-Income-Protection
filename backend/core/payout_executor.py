@@ -3,17 +3,13 @@ Payout executor for simulated wallet and UPI transfers.
 """
 
 import uuid
-from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Dict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import AuditLog, Claim, Payout, Worker
-
-
-def utc_now_naive() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+from backend.utils.time import utc_now_naive
 
 
 class PayoutExecutor:

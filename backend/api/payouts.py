@@ -1,22 +1,18 @@
-"""
-Payouts API for history and admin statistics.
-"""
+"""Payout history and admin statistics APIs."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import and_, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.core.session_auth import ensure_worker_access, require_admin_session, require_authenticated_session
 from backend.database import get_db
 from backend.db.models import Claim, Payout, Worker
+from backend.utils.time import utc_now_naive
 
 router = APIRouter(prefix="/api/payouts", tags=["Payouts"])
-
-
-def utc_now_naive() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def serialize_payout(payout: Payout, worker_name: str | None = None) -> dict:
@@ -35,7 +31,13 @@ def serialize_payout(payout: Payout, worker_name: str | None = None) -> dict:
 
 
 @router.get("/worker/{worker_id}")
-async def get_worker_payouts(worker_id: UUID, days: int = 30, db: AsyncSession = Depends(get_db)):
+async def get_worker_payouts(
+    worker_id: UUID,
+    days: int = 30,
+    db: AsyncSession = Depends(get_db),
+    session: dict = Depends(require_authenticated_session),
+):
+    ensure_worker_access(session, worker_id)
     worker = (await db.execute(select(Worker).where(Worker.id == worker_id))).scalar_one_or_none()
     if not worker:
         raise HTTPException(status_code=404, detail="Worker not found.")
@@ -73,10 +75,15 @@ async def get_worker_payouts(worker_id: UUID, days: int = 30, db: AsyncSession =
 
 
 @router.get("/detail/{payout_id}")
-async def get_payout_detail(payout_id: UUID, db: AsyncSession = Depends(get_db)):
+async def get_payout_detail(
+    payout_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    session: dict = Depends(require_authenticated_session),
+):
     payout = (await db.execute(select(Payout).where(Payout.id == payout_id))).scalar_one_or_none()
     if not payout:
         raise HTTPException(status_code=404, detail="Payout not found.")
+    ensure_worker_access(session, payout.worker_id)
     claim = (await db.execute(select(Claim).where(Claim.id == payout.claim_id))).scalar_one_or_none()
     worker = (await db.execute(select(Worker).where(Worker.id == payout.worker_id))).scalar_one_or_none()
     return {
@@ -90,7 +97,11 @@ async def get_payout_detail(payout_id: UUID, db: AsyncSession = Depends(get_db))
 
 
 @router.get("/stats")
-async def get_payout_stats(days: int = 7, db: AsyncSession = Depends(get_db)):
+async def get_payout_stats(
+    days: int = 7,
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(require_admin_session),
+):
     cutoff = utc_now_naive() - timedelta(days=days)
     payouts = (await db.execute(select(Payout).where(Payout.initiated_at >= cutoff))).scalars().all()
     total_amount = sum(float(payout.amount) for payout in payouts)

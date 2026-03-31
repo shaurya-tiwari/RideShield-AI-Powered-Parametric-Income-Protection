@@ -14,7 +14,7 @@ export default function ClaimStatus({ claim }) {
     <div className="panel-quiet rounded-[24px] p-5">
       <div className="flex flex-wrap items-center gap-3">
         <span className={statusPill(claim.status)}>{humanizeSlug(claim.status)}</span>
-        <p className="font-semibold text-[#173126]">{triggers.map(humanizeSlug).join(", ")}</p>
+        <p className="font-semibold text-primary">{triggers.map(humanizeSlug).join(", ")}</p>
       </div>
       <h3 className="mt-4 text-lg font-bold text-primary">Why was this claim {humanizeSlug(claim.status)}?</h3>
       <p className="mt-3 text-sm leading-6 text-ink/60">
