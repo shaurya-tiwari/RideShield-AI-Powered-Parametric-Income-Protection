@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RideShield | Worker Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary-fixed-dim": "#afcbd8",
+              "on-tertiary-fixed-variant": "#673d00",
+              "inverse-on-surface": "#f1f1ee",
+              "on-tertiary": "#ffffff",
+              "surface-bright": "#f9f9f6",
+              "on-primary-container": "#85bdbc",
+              "surface-container-highest": "#e2e3e0",
+              "surface": "#f9f9f6",
+              "surface-container-high": "#e8e8e5",
+              "primary-fixed": "#b4edec",
+              "on-secondary-fixed-variant": "#304a55",
+              "tertiary-container": "#643c00",
+              "inverse-primary": "#98d1d0",
+              "surface-variant": "#e2e3e0",
+              "on-background": "#1a1c1b",
+              "primary": "#003535",
+              "error": "#ba1a1a",
+              "inverse-surface": "#2f312f",
+              "on-surface-variant": "#404848",
+              "on-tertiary-fixed": "#2b1700",
+              "on-error": "#ffffff",
+              "surface-dim": "#dadad7",
+              "surface-container": "#eeeeeb",
+              "on-secondary": "#ffffff",
+              "primary-fixed-dim": "#98d1d0",
+              "tertiary-fixed": "#ffddba",
+              "outline-variant": "#bfc8c8",
+              "surface-container-low": "#f4f4f1",
+              "on-tertiary-container": "#f4a135",
+              "on-primary-fixed-variant": "#104f4f",
+              "secondary-fixed": "#cbe7f5",
+              "secondary-container": "#cbe7f5",
+              "on-primary": "#ffffff",
+              "outline": "#707978",
+              "error-container": "#ffdad6",
+              "surface-tint": "#2e6767",
+              "on-secondary-fixed": "#021f29",
+              "surface-container-lowest": "#ffffff",
+              "tertiary": "#462800",
+              "on-primary-fixed": "#002020",
+              "secondary": "#48626e",
+              "primary-container": "#0d4d4d",
+              "on-surface": "#1a1c1b",
+              "on-error-container": "#93000a",
+              "tertiary-fixed-dim": "#ffb866",
+              "background": "#f9f9f6",
+              "on-secondary-container": "#4e6874"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+      body { font-family: 'Inter', sans-serif; background-color: #f9f9f6; color: #1a1c1b; }
+      .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+      .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+      .glass-header { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased">
+<!-- SideNavBar Component -->
+<aside class="fixed left-0 top-0 bottom-0 z-40 h-screen w-64 flex flex-col border-r-0 bg-stone-50 dark:bg-stone-900 font-['Plus_Jakarta_Sans'] antialiased">
+<div class="p-6">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-sm">shield</span>
+</div>
+<h1 class="text-xl font-bold text-emerald-950 dark:text-emerald-50">RideShield</h1>
+</div>
+<button class="w-full bg-primary text-on-primary py-3 px-4 rounded-xl font-semibold mb-8 flex items-center justify-center gap-2 transition-all active:opacity-80 active:scale-95">
+<span class="material-symbols-outlined text-sm">add</span>
+                New Claim Request
+            </button>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-emerald-900 dark:text-emerald-400 font-semibold bg-stone-100 dark:bg-stone-800/50" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                    Worker Dashboard
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-stone-500 dark:text-stone-400 hover:bg-stone-200/50 dark:hover:bg-stone-800" href="#">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+                    Admin Panel
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-stone-500 dark:text-stone-400 hover:bg-stone-200/50 dark:hover:bg-stone-800" href="#">
+<span class="material-symbols-outlined">biotech</span>
+                    Demo Runner
+                </a>
+</nav>
+</div>
+<div class="mt-auto p-6 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-stone-500 dark:text-stone-400 hover:bg-stone-200/50 dark:hover:bg-stone-800" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-stone-500 dark:text-stone-400 hover:bg-stone-200/50 dark:hover:bg-stone-800" href="#">
+<span class="material-symbols-outlined">help</span>
+                Support
+            </a>
+<div class="pt-4 mt-4 border-t border-stone-200 dark:border-stone-800 flex items-center gap-3">
+<img alt="User Profile" class="w-10 h-10 rounded-full object-cover" data-alt="professional portrait of a confident delivery professional in a clean uniform with soft natural lighting and neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZr-uEgD5NA8SPzkz2S-5nrp4fr52KlqcBzHxryS-Nrpl772fbbdud-oxsCNu10cyaS_mpUoy7bsX0fsxuB1N0w_NgJeVPVBhRIKdCHngCMurQDSzpw92IEVWZtaeRf9XNq5nio0bQbG8kqkvzAAjla49VNdtLGk3rKQVSX32RuC4aODgvyYUyEeWn7CXldBgLV5kErJRjjIxkq7cIHFaK6KZ1_u18heQt1rw7VMGpYv-IDoEcljgexdsadqh8h1sxtC0S1f5cr2I"/>
+<div>
+<p class="text-sm font-bold text-on-surface">Alex Rivera</p>
+<p class="text-xs text-on-surface-variant italic">Parametric Protection</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopAppBar Component -->
+<header class="fixed top-0 right-0 left-0 z-30 flex justify-between items-center h-16 pl-72 pr-8 ml-auto bg-white/80 dark:bg-stone-900/80 backdrop-blur-md shadow-sm dark:shadow-none font-['Inter'] font-medium text-sm">
+<div class="flex items-center gap-8">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-stone-400">search</span>
+<input class="bg-surface-container-highest border-none rounded-full pl-10 pr-4 py-1.5 w-64 text-xs focus:ring-1 focus:ring-outline transition-all" placeholder="Search claims or zones..." type="text"/>
+</div>
+<nav class="flex gap-6">
+<a class="text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-700 py-5" href="#">Network Status</a>
+<a class="text-stone-600 dark:text-stone-400 hover:text-emerald-800 dark:hover:text-emerald-300 transition-all py-5" href="#">Zone Map</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-error text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider active:translate-y-px duration-150">
+                Emergency Alert
+            </button>
+<span class="material-symbols-outlined text-stone-500 cursor-pointer">notifications</span>
+<span class="material-symbols-outlined text-stone-500 cursor-pointer">account_circle</span>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-64 pt-16 min-h-screen">
+<div class="max-w-7xl mx-auto p-8">
+<!-- Dashboard Header Section -->
+<section class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<div class="flex items-center gap-2 text-secondary mb-1">
+<span class="material-symbols-outlined text-base">location_on</span>
+<span class="font-label text-sm font-medium">San Francisco - Zone A</span>
+</div>
+<h2 class="text-4xl font-headline font-extrabold text-primary tracking-tight">Worker Dashboard</h2>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl flex items-center gap-6 shadow-sm">
+<div class="flex flex-col">
+<span class="text-xs font-label text-on-surface-variant uppercase tracking-widest">Active Policy</span>
+<span class="text-lg font-bold text-primary">Standard Weekly Protection</span>
+</div>
+<div class="h-10 w-px bg-surface-container-highest"></div>
+<div class="flex items-center gap-2 px-3 py-1.5 bg-primary-container/10 text-primary rounded-full">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="text-sm font-semibold">Active &amp; Shielded</span>
+</div>
+</div>
+</section>
+<!-- Main Bento Grid -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Automated Protection Explanation (Large) -->
+<section class="col-span-12 lg:col-span-8 bg-primary rounded-full p-8 text-white relative overflow-hidden flex flex-col justify-center min-h-[320px]">
+<div class="absolute top-0 right-0 w-1/2 h-full opacity-20">
+<img alt="Digital Network Map" class="w-full h-full object-cover" data-alt="abstract digital network visualization with glowing connections and data nodes in deep teal and cyan tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkIpIaFf5obyPCrb2OT0PyijE5IM93jEjYQ45VYsF483wY_wv__snLJKefLaJJfYx0jtPjogTwzhPqNnWgoALuh9I12RPhKtFfa4kmwYOCqdDb72FpP5NpMC-QMZ1glp1ifTqmHYMRS1IBZ6YbAuH32bS_1ISSOxtqqNu4tlY1Jr_up9UkrWDItUw3xxvrs2p1E3fQTV3bvXFHZ7MUDZ1aGBrvZsVrmaU2uop3vtGBo0GEfKfZaqnDxOaWY-PYx82Gqh-ZdkDUNwQ"/>
+</div>
+<div class="relative z-10 max-w-lg">
+<div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full mb-6">
+<span class="material-symbols-outlined text-sm">auto_awesome</span>
+<span class="text-xs font-bold uppercase tracking-widest">Zero-Touch Claims</span>
+</div>
+<h3 class="text-3xl font-headline font-bold mb-4">Hands-Free Automated Protection</h3>
+<p class="text-on-primary-container text-lg leading-relaxed mb-6">
+                            Our parametric engine monitors real-time transit data and weather feeds. If a disruption is detected in Zone A, your claim is filed, approved, and paid instantly—no forms, no calls, no wait.
+                        </p>
+<div class="flex gap-4">
+<div class="flex flex-col">
+<span class="text-2xl font-bold">1.2s</span>
+<span class="text-xs text-on-primary-container/80 uppercase">Detection Speed</span>
+</div>
+<div class="w-px h-8 bg-white/20"></div>
+<div class="flex flex-col">
+<span class="text-2xl font-bold">100%</span>
+<span class="text-xs text-on-primary-container/80 uppercase">Auto-Filing Rate</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Disruption Alerts Sidebar -->
+<section class="col-span-12 lg:col-span-4 space-y-4">
+<h4 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest px-1">Nearby Alerts</h4>
+<div class="bg-tertiary-container/10 p-5 rounded-xl border-l-4 border-tertiary">
+<div class="flex items-start justify-between mb-2">
+<div class="flex items-center gap-2 text-tertiary">
+<span class="material-symbols-outlined">warning</span>
+<span class="font-bold">Severe Weather</span>
+</div>
+<span class="text-xs font-medium text-tertiary/60">Active</span>
+</div>
+<p class="text-sm text-on-surface mb-3">Heavy rain predicted in Zone B (3.2 miles away). 15% payout threshold likely.</p>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full w-3/4"></div>
+</div>
+</div>
+<div class="bg-surface-container-low p-5 rounded-xl">
+<div class="flex items-start justify-between mb-2">
+<div class="flex items-center gap-2 text-secondary">
+<span class="material-symbols-outlined">traffic</span>
+<span class="font-bold">Transit Congestion</span>
+</div>
+<span class="text-xs font-medium text-on-surface-variant">Cleared</span>
+</div>
+<p class="text-sm text-on-surface-variant">Major incident on Highway 101 resolved. Impact on Zone A normalized.</p>
+</div>
+</section>
+<!-- Recent Disruption & Payout Cards -->
+<div class="col-span-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-b-4 border-emerald-700">
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest block mb-4">Latest Payout</span>
+<div class="flex items-baseline gap-1 mb-2">
+<span class="text-3xl font-headline font-extrabold text-primary">$42.50</span>
+<span class="text-sm text-on-surface-variant">USD</span>
+</div>
+<div class="flex items-center gap-2 text-emerald-700">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+<span class="text-xs font-bold">Credited to Wallet</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-b-4 border-secondary">
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest block mb-4">Disruption Detected</span>
+<p class="text-lg font-bold text-on-surface mb-1">Severe Weather</p>
+<p class="text-xs text-on-surface-variant font-medium">Zone A • Oct 24, 14:12</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-b-4 border-primary">
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest block mb-4">Protection Status</span>
+<p class="text-lg font-bold text-on-surface mb-1">Fully Shielded</p>
+<p class="text-xs text-on-surface-variant font-medium">Auto-pilot active</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-b-4 border-outline">
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest block mb-4">Total Weekly Payouts</span>
+<div class="flex items-baseline gap-1 mb-2">
+<span class="text-3xl font-headline font-extrabold text-on-surface">$128.00</span>
+</div>
+<p class="text-xs text-on-surface-variant font-medium">3 Automated Claims</p>
+</div>
+</div>
+<!-- Claims History & Trust Score Grid -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-low rounded-xl p-8">
+<div class="flex items-center justify-between mb-8">
+<h4 class="text-xl font-headline font-bold text-primary">Claims History</h4>
+<button class="text-primary text-sm font-semibold flex items-center gap-1 hover:underline">
+                            View All History
+                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/30">
+<th class="pb-4 font-label text-xs uppercase tracking-widest text-on-surface-variant">Event / ID</th>
+<th class="pb-4 font-label text-xs uppercase tracking-widest text-on-surface-variant">Zone</th>
+<th class="pb-4 font-label text-xs uppercase tracking-widest text-on-surface-variant">Trigger</th>
+<th class="pb-4 font-label text-xs uppercase tracking-widest text-on-surface-variant">Status</th>
+<th class="pb-4 font-label text-xs uppercase tracking-widest text-on-surface-variant text-right">Amount</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20">
+<tr>
+<td class="py-5">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-on-surface">Severe Rainstorm</span>
+<span class="text-xs text-on-surface-variant">#RS-882193</span>
+</div>
+</td>
+<td class="py-5">
+<span class="text-xs font-semibold px-2 py-1 bg-surface-container-highest rounded">Zone A</span>
+</td>
+<td class="py-5">
+<span class="text-sm text-on-surface-variant">Precipitation &gt; 5mm/h</span>
+</td>
+<td class="py-5">
+<div class="flex items-center gap-2 text-emerald-700">
+<span class="material-symbols-outlined text-base">verified</span>
+<span class="text-sm font-bold">Auto-Paid</span>
+</div>
+</td>
+<td class="py-5 text-right font-bold text-on-surface">$42.50</td>
+</tr>
+<tr>
+<td class="py-5">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-on-surface">Transit Gridlock</span>
+<span class="text-xs text-on-surface-variant">#RS-881044</span>
+</div>
+</td>
+<td class="py-5">
+<span class="text-xs font-semibold px-2 py-1 bg-surface-container-highest rounded">Zone A</span>
+</td>
+<td class="py-5">
+<span class="text-sm text-on-surface-variant">Avg. Speed &lt; 12mph</span>
+</td>
+<td class="py-5">
+<div class="flex items-center gap-2 text-emerald-700">
+<span class="material-symbols-outlined text-base">verified</span>
+<span class="text-sm font-bold">Auto-Paid</span>
+</div>
+</td>
+<td class="py-5 text-right font-bold text-on-surface">$35.00</td>
+</tr>
+<tr>
+<td class="py-5">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-on-surface">Zone B Flooding</span>
+<span class="text-xs text-on-surface-variant">#RS-879921</span>
+</div>
+</td>
+<td class="py-5">
+<span class="text-xs font-semibold px-2 py-1 bg-surface-container-highest rounded text-stone-400">Zone B</span>
+</td>
+<td class="py-5">
+<span class="text-sm text-on-surface-variant">Flood Alert Lv. 2</span>
+</td>
+<td class="py-5">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-base">info</span>
+<span class="text-sm font-bold">Not Eligible</span>
+</div>
+</td>
+<td class="py-5 text-right font-bold text-on-surface-variant">$0.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- System Trust Score -->
+<section class="col-span-12 lg:col-span-4 bg-surface-container-lowest rounded-xl p-8 flex flex-col shadow-sm">
+<h4 class="text-xl font-headline font-bold text-primary mb-6">System Trust Score</h4>
+<div class="flex items-center justify-center mb-8 relative">
+<svg class="w-40 h-40 transform -rotate-90">
+<circle class="text-surface-container-high" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-width="12"></circle>
+<circle class="text-primary" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-dasharray="440" stroke-dashoffset="44" stroke-width="12"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-4xl font-headline font-extrabold text-primary">98</span>
+<span class="text-xs font-bold text-on-surface-variant uppercase">Excellent</span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-4 mb-8">
+<div class="text-center">
+<p class="text-xs font-label text-on-surface-variant mb-1 uppercase tracking-tighter">Trust</p>
+<p class="text-lg font-bold text-primary">High</p>
+</div>
+<div class="text-center">
+<p class="text-xs font-label text-on-surface-variant mb-1 uppercase tracking-tighter">Risk</p>
+<p class="text-lg font-bold text-secondary">Low</p>
+</div>
+<div class="text-center">
+<p class="text-xs font-label text-on-surface-variant mb-1 uppercase tracking-tighter">Fraud</p>
+<p class="text-lg font-bold text-secondary">0.0%</p>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-xl border-l-2 border-primary">
+<p class="text-xs font-bold text-on-surface-variant mb-2 uppercase tracking-widest">Why was my claim approved?</p>
+<p class="text-sm text-on-surface leading-relaxed italic">
+                            "Your recent claim #RS-882193 was approved because the NOAA weather station in San Francisco confirmed precipitation exceeded 5.2mm at 14:00, meeting your parametric threshold."
+                        </p>
+</div>
+</section>
+</div>
+</div>
+</main>
+</body></html>

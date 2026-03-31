@@ -36,6 +36,7 @@ build/
 dist/
 node_modules/
 frontend/dist/
+logs/runtime/*.txt
 *.egg-info/
 .eggs/
 
