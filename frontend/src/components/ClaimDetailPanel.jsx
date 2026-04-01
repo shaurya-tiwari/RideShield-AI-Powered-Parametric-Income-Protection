@@ -10,7 +10,7 @@ function renderTriggerList(triggers = []) {
 export default function ClaimDetailPanel({ claim }) {
   if (!claim) {
     return (
-      <div className="panel p-6">
+      <div className="context-panel p-6">
         <div className="mb-5">
           <p className="eyebrow">Claim detail</p>
           <h3 className="mt-2 text-2xl font-bold text-primary">Select an incident</h3>
@@ -29,7 +29,7 @@ export default function ClaimDetailPanel({ claim }) {
   const coveredTriggers = inputs.covered_triggers || claim.decision_breakdown?.covered_triggers || [];
 
   return (
-    <div className="panel p-6">
+    <div className="context-panel p-6">
       <div className="mb-5">
         <p className="eyebrow">Claim detail</p>
         <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -52,7 +52,7 @@ export default function ClaimDetailPanel({ claim }) {
             {formatCurrency(claim.final_payout || claim.calculated_payout)}
           </p>
           <p className="mt-3 text-sm leading-6 text-ink/65">
-            Hours affected: {claim.disruption_hours ?? "--"} · Peak multiplier: {claim.peak_multiplier ?? "--"}
+            Hours affected: {claim.disruption_hours ?? "--"} - Peak multiplier: {claim.peak_multiplier ?? "--"}
           </p>
         </div>
       </div>

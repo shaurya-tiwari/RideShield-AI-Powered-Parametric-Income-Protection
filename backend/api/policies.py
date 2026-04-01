@@ -19,6 +19,7 @@ from sqlalchemy.orm import selectinload
 
 from backend.config import settings
 from backend.core.premium_calculator import premium_calculator
+from backend.core.risk_scorer import risk_scorer
 from backend.core.session_auth import require_admin_session
 from backend.database import get_db
 from backend.db.models import AuditLog, Policy, Worker
@@ -54,8 +55,10 @@ async def list_plans(
             detail="Worker not found.",
         )
 
-    risk_score = float(worker.risk_score) if worker.risk_score else 0.50
-    plans, recommended = premium_calculator.calculate_all_plans(risk_score)
+    risk_result = risk_scorer.calculate_risk_score(city=worker.city, zone=worker.zone)
+    risk_score = risk_result["risk_score"]
+    risk_meta = risk_result["breakdown"]
+    plans, recommended = premium_calculator.calculate_all_plans(risk_score, risk_meta=risk_meta)
 
     return {
         "worker_id": str(worker.id),
@@ -131,7 +134,8 @@ async def create_policy(
                 f"Wait for it to expire or cancel it first.",
             )
 
-    risk_score = float(worker.risk_score) if worker.risk_score else 0.50
+    risk_result = risk_scorer.calculate_risk_score(city=worker.city, zone=worker.zone)
+    risk_score = risk_result["risk_score"]
 
     previous_premium = None
     expired_policies = [
@@ -145,6 +149,7 @@ async def create_policy(
         plan_name=request.plan_name,
         risk_score=risk_score,
         previous_premium=previous_premium,
+        risk_meta=risk_result["breakdown"],
     )
 
     purchased_at = utc_now_naive()

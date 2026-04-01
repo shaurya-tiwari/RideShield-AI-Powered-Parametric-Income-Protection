@@ -9,17 +9,20 @@ const pillars = [
   {
     icon: ShieldCheck,
     title: "Parametric coverage",
-    description: "Workers buy weekly coverage once. They do not file claims when disruption hits because the system detects incidents in the background.",
+    description:
+      "Workers buy weekly coverage once. They do not file claims when disruption hits because the system detects incidents in the background.",
   },
   {
     icon: Radar,
     title: "Incident-first monitoring",
-    description: "Rain, heat, AQI, traffic, platform outages, and civic disruption signals are merged into one explainable incident instead of noisy duplicate events.",
+    description:
+      "Rain, heat, AQI, traffic, platform outages, and civic disruption signals are merged into one explainable incident instead of noisy duplicate events.",
   },
   {
     icon: Wallet,
     title: "Visible payout engine",
-    description: "Eligible claims move through fraud checks, decisioning, and wallet payout simulation with a transparent system story for workers and admins.",
+    description:
+      "Eligible claims move through fraud checks, decisioning, and wallet payout simulation with a transparent system story for workers and admins.",
   },
 ];
 
@@ -57,7 +60,7 @@ export default function Home() {
   return (
     <div className="space-y-12">
       <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="hero-glow rounded-[36px] p-8 sm:p-10">
+        <div className="hero-glow hero-mesh rounded-[36px] p-8 sm:p-10">
           <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/60">RideShield system</p>
           <h1 className="mt-4 max-w-4xl text-4xl font-bold leading-tight sm:text-5xl">{heroTitle}</h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-white/78 sm:text-lg">{heroDescription}</p>
@@ -92,7 +95,7 @@ export default function Home() {
         </div>
 
         <div className="editorial-grid">
-          <div className="panel p-6">
+          <div className="context-panel p-6">
             <p className="eyebrow">System promise</p>
             <p className="mt-3 text-2xl font-bold leading-tight text-primary">
               Workers are informed. The system does the filing, scoring, and payout orchestration.
@@ -104,13 +107,13 @@ export default function Home() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-            <div className="panel-quiet p-6">
+            <div className="context-panel p-6">
               <p className="text-sm text-ink/55">Worker surface</p>
               <p className="mt-2 text-lg font-semibold text-primary">
                 Coverage, incidents, payout history, and decision explanations in one calm, readable view.
               </p>
             </div>
-            <div className="panel-quiet p-6">
+            <div className="context-panel p-6">
               <p className="text-sm text-ink/55">Admin surface</p>
               <p className="mt-2 text-lg font-semibold text-primary">
                 Review queue, disruption pressure, fraud visibility, scheduler health, and city-aware monitoring.
@@ -120,23 +123,29 @@ export default function Home() {
         </div>
       </section>
 
-      <section>
+      <section className="hero-glow hero-mesh rounded-[32px] p-8 sm:p-10 text-white">
         <SectionHeader
           eyebrow="Core flow"
           title="How the backend becomes a visible product"
           description="The frontend does not mock product logic. It makes the real engine legible so workers trust outcomes and admins understand why those outcomes happened."
+          invert
         />
 
-        <div className="grid gap-5 md:grid-cols-3">
-          {pillars.map(({ icon: Icon, title, description }) => (
-            <div key={title} className="panel p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-surface-container-low text-primary">
-                <Icon size={22} />
+        <div className="mt-8 grid gap-5 grid-cols-12">
+          {pillars.map(({ icon: Icon, title, description }, idx) => {
+            const colSpan =
+              idx === 0 ? "col-span-12 md:col-span-7" : idx === 1 ? "col-span-12 md:col-span-5" : "col-span-12";
+            const cardHeight = idx === 0 ? "min-h-64" : "";
+            return (
+              <div key={title} className={`${colSpan} rounded-[28px] bg-white/10 p-8 backdrop-blur-sm ${cardHeight}`}>
+                <div className="flex h-14 w-14 items-center justify-center rounded-[20px] bg-white/10 text-white transition-smooth hover:scale-110">
+                  <Icon size={26} />
+                </div>
+                <h3 className="mt-6 text-2xl font-bold leading-tight">{title}</h3>
+                <p className="mt-4 text-base leading-7 text-white/78">{description}</p>
               </div>
-              <h3 className="mt-5 text-xl font-bold text-primary">{title}</h3>
-              <p className="mt-3 text-sm leading-7 text-ink/65">{description}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
     </div>

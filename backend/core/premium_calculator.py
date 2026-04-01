@@ -1,13 +1,4 @@
-"""
-Premium Calculator
-Computes weekly premium based on plan, risk score, and constraints.
-
-Formula: weekly_premium = base_price * plan_factor * risk_score
-Constraints:
-    - Never below base_price
-    - Week-over-week change capped at +/-20%
-    - Rounded to nearest integer
-"""
+"""Premium calculator with optional ML-backed risk metadata."""
 
 from typing import Optional
 
@@ -24,6 +15,8 @@ class PremiumCalculator:
         plan_name: str,
         risk_score: float,
         previous_premium: Optional[float] = None,
+        risk_meta: Optional[dict] = None,
+        forecast_surcharge: float = 0.0,
     ) -> dict:
         """
         Calculate premium for a given plan and risk score.
@@ -43,7 +36,7 @@ class PremiumCalculator:
         base_price = plan["base_price"]
         plan_factor = plan["plan_factor"]
 
-        raw_premium = base_price * plan_factor * risk_score
+        raw_premium = (base_price * plan_factor * risk_score) + forecast_surcharge
         raw_premium = max(raw_premium, base_price)
 
         if previous_premium is not None:
@@ -59,22 +52,26 @@ class PremiumCalculator:
             "base_price": base_price,
             "plan_factor": plan_factor,
             "risk_score": risk_score,
+            "forecast_surcharge": round(forecast_surcharge, 2),
             "raw_premium": round(raw_premium, 2),
             "final_premium": final_premium,
             "coverage_cap": plan["coverage_cap"],
             "formula": f"{base_price} * {plan_factor} * {risk_score} = INR {final_premium}",
+            "model_version": (risk_meta or {}).get("model_version", "rule-based"),
+            "fallback_used": bool((risk_meta or {}).get("fallback_used", False)),
+            "top_factors": list((risk_meta or {}).get("top_factors", [])),
             "premium_capped": previous_premium is not None
-            and (raw_premium != base_price * plan_factor * risk_score),
+            and (raw_premium != (base_price * plan_factor * risk_score) + forecast_surcharge),
         }
 
-    def calculate_all_plans(self, risk_score: float) -> list:
+    def calculate_all_plans(self, risk_score: float, risk_meta: Optional[dict] = None) -> list:
         """
         Calculate premiums for all plans given a risk score.
         Returns sorted list with recommendation.
         """
         plans = []
         for plan_name, plan_def in settings.PLAN_DEFINITIONS.items():
-            calc = self.calculate(plan_name, risk_score)
+            calc = self.calculate(plan_name, risk_score, risk_meta=risk_meta)
             plans.append(
                 {
                     "plan_name": plan_name,

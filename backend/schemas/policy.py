@@ -49,6 +49,12 @@ class PremiumCalculation(BaseModel):
     raw_premium: float
     final_premium: int
     formula: str
+    model_version: Optional[str] = None
+    fallback_used: Optional[bool] = None
+    forecast_surcharge: Optional[float] = None
+    top_factors: Optional[List[dict]] = None
+
+    model_config = ConfigDict(protected_namespaces=())
 
 
 class PolicyResponse(BaseModel):

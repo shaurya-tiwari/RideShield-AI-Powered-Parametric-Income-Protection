@@ -5,21 +5,23 @@ import { formatCurrency, formatRelative, formatScore, humanizeSlug, statusPill }
 
 export default function ReviewQueue({ claims = [], resolvingId, onResolve }) {
   const incidents = groupClaimsByIncident(claims, { bucketMinutes: 90 });
+  const hasActiveQueue = incidents.length > 0;
 
   return (
-    <div className="panel p-6">
+    <div className="decision-panel p-6">
       <div className="mb-5">
         <p className="eyebrow">Admin workflow</p>
         <h3 className="mt-2 text-2xl font-bold text-primary">Manual review queue</h3>
         <p className="mt-2 text-sm leading-6 text-ink/60">
-          Delayed claims are grouped by incident so the reviewer sees one disruption narrative with the underlying claim actions still exposed.
+          Delayed claims are grouped by incident so the reviewer sees one disruption narrative with the underlying claim
+          actions still exposed.
         </p>
       </div>
 
       <div className="space-y-3">
-        {incidents.length ? (
+        {hasActiveQueue ? (
           incidents.map((incident) => (
-            <div key={incident.id} className="group panel-quiet rounded-[24px] p-4">
+            <div key={incident.id} className="group context-panel rounded-[24px] p-4">
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-3">
@@ -27,10 +29,12 @@ export default function ReviewQueue({ claims = [], resolvingId, onResolve }) {
                     <p className="text-sm font-semibold text-primary">{incident.worker_name}</p>
                   </div>
                   <p className="mt-2 text-sm text-ink/60">
-                    {incident.trigger_types.map(humanizeSlug).join(", ")} · {humanizeSlug(incident.zone)}
+                    {incident.trigger_types.map(humanizeSlug).join(", ")} - {humanizeSlug(incident.zone)}
                   </p>
                   <p className="mt-1 text-xs text-ink/45">
-                    {incident.claim_count > 1 ? `${incident.claim_count} linked claims in one disruption incident` : "Single delayed claim"}
+                    {incident.claim_count > 1
+                      ? `${incident.claim_count} linked claims in one disruption incident`
+                      : "Single delayed claim"}
                   </p>
                 </div>
 
@@ -59,7 +63,7 @@ export default function ReviewQueue({ claims = [], resolvingId, onResolve }) {
                 <div className="flex flex-wrap gap-2">
                   {incident.claims.map((claim) => (
                     <span key={claim.id} className="pill bg-white text-ink/65">
-                      {humanizeSlug(claim.trigger_type)} · {claim.id.slice(0, 6)}
+                      {humanizeSlug(claim.trigger_type)} - {claim.id.slice(0, 6)}
                     </span>
                   ))}
                 </div>
@@ -92,7 +96,13 @@ export default function ReviewQueue({ claims = [], resolvingId, onResolve }) {
             </div>
           ))
         ) : (
-          <p className="text-sm text-ink/55">No delayed claims waiting for review.</p>
+          <div className="rounded-[24px] border border-primary/10 bg-white/75 p-5">
+            <p className="text-sm font-semibold text-primary">No delayed claims waiting for review.</p>
+            <p className="mt-2 text-sm leading-6 text-ink/55">
+              The current filters do not surface any blocked incidents. The next decision panel should stay quiet until
+              a reviewable claim appears.
+            </p>
+          </div>
         )}
       </div>
     </div>

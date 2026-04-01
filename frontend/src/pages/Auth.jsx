@@ -45,18 +45,26 @@ export default function Auth() {
 
   return (
     <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-      <div className="panel p-8">
+      <div className="context-panel p-8">
         <SectionHeader
           eyebrow="Access"
           title="Sign in to RideShield"
-          description="Worker and admin sessions are separate so protection flows and operations controls stay clean."
+          description="Worker and admin sessions are separate so protection flows and operational controls stay clean."
         />
 
         <div className="mb-6 flex gap-2 rounded-2xl bg-black/[0.04] p-1">
-          <button type="button" className={`flex-1 rounded-2xl px-4 py-3 text-sm font-semibold ${tab === "worker" ? "bg-white shadow" : ""}`} onClick={() => setTab("worker")}>
+          <button
+            type="button"
+            className={`flex-1 rounded-2xl px-4 py-3 text-sm font-semibold ${tab === "worker" ? "bg-white shadow" : ""}`}
+            onClick={() => setTab("worker")}
+          >
             Worker sign in
           </button>
-          <button type="button" className={`flex-1 rounded-2xl px-4 py-3 text-sm font-semibold ${tab === "admin" ? "bg-white shadow" : ""}`} onClick={() => setTab("admin")}>
+          <button
+            type="button"
+            className={`flex-1 rounded-2xl px-4 py-3 text-sm font-semibold ${tab === "admin" ? "bg-white shadow" : ""}`}
+            onClick={() => setTab("admin")}
+          >
             Admin sign in
           </button>
         </div>
@@ -84,9 +92,10 @@ export default function Auth() {
             <p className="text-sm text-ink/60">
               New here? <Link to="/onboarding" className="font-semibold text-storm">Create a worker profile</Link>
             </p>
-            <p className="text-sm text-ink/55">
-              Worker access now uses phone number plus password. Seeded demo accounts use the password assigned during the latest seed run.
-            </p>
+            <div className="rounded-[20px] bg-surface-container-low p-4 text-sm leading-7 text-on-surface-variant">
+              After login, workers land on their decision surface: current protection, current claim, why a payout was
+              approved or delayed, and recent payout history.
+            </div>
           </form>
         ) : (
           <form className="space-y-5" onSubmit={handleAdminLogin}>
@@ -101,14 +110,15 @@ export default function Auth() {
             <button type="submit" className="button-primary w-full" disabled={loading}>
               {loading ? "Signing in..." : "Continue as admin"}
             </button>
-            <p className="text-sm text-ink/60">
-              Local demo access uses the configured admin credentials from the project environment.
-            </p>
+            <div className="rounded-[20px] bg-surface-container-low p-4 text-sm leading-7 text-on-surface-variant">
+              After login, admins land on the operational control surface: review queue, incident pressure, scheduler
+              state, and demo scenario controls.
+            </div>
           </form>
         )}
       </div>
 
-      <div className="panel p-8">
+      <div className="context-panel p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-on-surface-variant">Why RideShield</p>
         <h2 className="mt-2 text-3xl font-bold text-primary">Income protection that feels automatic, not bureaucratic.</h2>
         <div className="mt-6 space-y-4 text-sm text-ink/65">

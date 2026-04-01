@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     CORS_ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
     AUTH_RATE_LIMIT_ATTEMPTS: int = 5
     AUTH_RATE_LIMIT_WINDOW_SECONDS: int = 60
+    ML_ENABLED: bool = True
+    ML_ARTIFACT_DIR: str = "backend/ml/artifacts"
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://rideshield:rideshield123@localhost:5433/rideshield_db"

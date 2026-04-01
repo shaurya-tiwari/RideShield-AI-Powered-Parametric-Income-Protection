@@ -1,24 +1,24 @@
 import { humanizeSlug } from "../utils/formatters";
 
 const ZONE_COORDS = {
-  south_delhi: { top: "62%", left: "42%" },
-  north_delhi: { top: "18%", left: "48%" },
-  east_delhi: { top: "44%", left: "72%" },
-  west_delhi: { top: "42%", left: "20%" },
-  central_delhi: { top: "40%", left: "46%" },
-  south_mumbai: { top: "78%", left: "36%" },
-  western_suburbs: { top: "42%", left: "24%" },
-  eastern_suburbs: { top: "46%", left: "64%" },
-  navi_mumbai: { top: "36%", left: "78%" },
-  koramangala: { top: "62%", left: "46%" },
-  whitefield: { top: "32%", left: "76%" },
-  indiranagar: { top: "42%", left: "58%" },
-  jayanagar: { top: "70%", left: "40%" },
-  electronic_city: { top: "84%", left: "52%" },
-  t_nagar: { top: "50%", left: "40%" },
-  anna_nagar: { top: "28%", left: "44%" },
-  adyar: { top: "68%", left: "64%" },
-  velachery: { top: "72%", left: "52%" },
+  south_delhi: { top: "62%", left: "42%", label: "mt-3" },
+  north_delhi: { top: "18%", left: "48%", label: "mt-3" },
+  east_delhi: { top: "44%", left: "72%", label: "mt-3" },
+  west_delhi: { top: "42%", left: "18%", label: "mt-8 -translate-x-10 text-left" },
+  central_delhi: { top: "40%", left: "46%", label: "mt-3" },
+  south_mumbai: { top: "78%", left: "36%", label: "mt-3" },
+  western_suburbs: { top: "42%", left: "22%", label: "-mt-6 -translate-x-10 text-left" },
+  eastern_suburbs: { top: "46%", left: "64%", label: "mt-6 translate-x-7 text-left" },
+  navi_mumbai: { top: "28%", left: "78%", label: "-mt-2 translate-x-7 text-left" },
+  koramangala: { top: "62%", left: "46%", label: "mt-3" },
+  whitefield: { top: "32%", left: "76%", label: "mt-3 translate-x-6 text-left" },
+  indiranagar: { top: "42%", left: "58%", label: "mt-3 translate-x-4 text-left" },
+  jayanagar: { top: "70%", left: "40%", label: "mt-3 -translate-x-4 text-left" },
+  electronic_city: { top: "84%", left: "52%", label: "mt-3" },
+  t_nagar: { top: "50%", left: "40%", label: "mt-3 -translate-x-4 text-left" },
+  anna_nagar: { top: "28%", left: "44%", label: "mt-3" },
+  adyar: { top: "68%", left: "64%", label: "mt-3 translate-x-4 text-left" },
+  velachery: { top: "72%", left: "52%", label: "mt-3 translate-x-6 text-left" },
 };
 
 function intensityClass(score) {
@@ -70,7 +70,7 @@ export default function DisruptionMap({ events = [], city = "delhi" }) {
           <div className="absolute inset-[18%] rounded-[1.75rem] bg-[radial-gradient(circle_at_25%_30%,rgba(255,255,255,0.8),transparent_18%),radial-gradient(circle_at_70%_62%,rgba(255,255,255,0.55),transparent_16%),linear-gradient(135deg,rgba(68,72,72,0.10),rgba(68,72,72,0.03))]" />
           {zoneSummary.length ? (
             zoneSummary.map((zone) => {
-              const coord = ZONE_COORDS[zone.zone] || { top: "50%", left: "50%" };
+              const coord = ZONE_COORDS[zone.zone] || { top: "50%", left: "50%", label: "mt-3" };
               return (
                 <div
                   key={zone.zone}
@@ -78,8 +78,10 @@ export default function DisruptionMap({ events = [], city = "delhi" }) {
                   style={{ top: coord.top, left: coord.left }}
                 >
                   <div className={`mx-auto h-4 w-4 rounded-full ring-4 ring-white/70 shadow-[0_0_0_10px_rgba(255,255,255,0.12)] ${intensityClass(zone.severity)}`} />
-                  <p className="mt-2 text-xs font-semibold">{humanizeSlug(zone.zone)}</p>
-                  <p className="text-[11px] text-ink/55">{zone.count} incidents</p>
+                  <div className={coord.label}>
+                    <p className="text-xs font-semibold leading-tight">{humanizeSlug(zone.zone)}</p>
+                    <p className="text-[11px] text-ink/55">{zone.count} incidents</p>
+                  </div>
                 </div>
               );
             })

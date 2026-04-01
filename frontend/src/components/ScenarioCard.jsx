@@ -31,7 +31,7 @@ export default function ScenarioCard({ scenario, running, result, thresholds, on
 
       {result ? (
         <div className="mt-5 space-y-4 rounded-[24px] bg-surface-container-low p-4">
-          <div className="grid gap-3 sm:grid-cols-4">
+          <div className="grid gap-3 lg:grid-cols-4">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-ink/45">Incidents</p>
               <p className="mt-2 text-xl font-bold text-primary">{result.events_created}</p>
@@ -72,7 +72,7 @@ export default function ScenarioCard({ scenario, running, result, thresholds, on
             </div>
           </div>
 
-          <div className="grid gap-3 text-sm sm:grid-cols-3">
+          <div className="grid gap-3 text-sm lg:grid-cols-3">
             <div className="rounded-[22px] bg-white/90 p-4">
               <p className="text-xs uppercase tracking-[0.2em] text-ink/45">Incident step</p>
               <p className="mt-2 font-semibold">

@@ -5,11 +5,31 @@ import { Activity, ArrowRight, CalendarDays, Clock3, MapPin, Radar, ShieldCheck,
 import SectionHeader from "../components/SectionHeader";
 
 const workerFlow = [
-  "Worker registers and buys a weekly policy.",
-  "RideShield monitors disruption signals in the worker zone.",
-  "Signals are merged into one incident instead of multiple stacked events.",
-  "Covered workers get claims created automatically.",
-  "Fraud checks, decisioning, and payout logic run in the background.",
+  {
+    step: "Step 1",
+    title: "Input",
+    body: "Worker registers, selects a city and zone, and buys weekly cover linked to the right disruption classes.",
+  },
+  {
+    step: "Step 2",
+    title: "Processing",
+    body: "RideShield monitors weather, AQI, traffic, platform, and civic signals in that worker's operating zone.",
+  },
+  {
+    step: "Step 3",
+    title: "Incident creation",
+    body: "Threshold crossings are merged into one incident so the worker sees a coherent story instead of stacked duplicate events.",
+  },
+  {
+    step: "Step 4",
+    title: "Decision",
+    body: "Coverage, confidence, trust, and fraud pressure determine whether the claim is approved, delayed, or rejected.",
+  },
+  {
+    step: "Step 5",
+    title: "Settlement",
+    body: "Approved claims turn into payout records immediately in simulation mode, with the reasoning still visible in the UI.",
+  },
 ];
 
 const policyEngine = [
@@ -46,14 +66,14 @@ export default function HowItWorks() {
   return (
     <div className="space-y-12">
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="hero-glow rounded-[36px] p-8 sm:p-10">
+        <div className="hero-glow hero-mesh rounded-[36px] p-8 sm:p-10">
           <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/60">How RideShield works</p>
           <h1 className="mt-4 max-w-4xl text-4xl font-bold leading-tight sm:text-5xl">
             A policy engine, trigger engine, and payout engine stitched into one clear product.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-white/78 sm:text-lg">
-            RideShield is not a manual claims form. It is a parametric protection system that watches disruption signals,
-            verifies coverage, scores confidence and fraud risk, then decides and pays automatically where possible.
+            This page should feel like a journey through the system, not a stack of documentation boxes. Inputs become
+            incidents, incidents become decisions, and decisions become payouts.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to="/onboarding" className="button-secondary !bg-white !text-primary">
@@ -67,13 +87,13 @@ export default function HowItWorks() {
         </div>
 
         <div className="space-y-4">
-          <div className="panel p-6">
+          <div className="context-panel p-6">
             <p className="eyebrow">Core promise</p>
             <p className="mt-3 text-2xl font-bold leading-tight text-primary">
               Workers should understand why money arrived, not wonder whether a form was lost.
             </p>
           </div>
-          <div className="panel-quiet p-6">
+          <div className="context-panel p-6">
             <p className="text-sm text-ink/55">What makes it different</p>
             <p className="mt-2 text-lg font-semibold text-primary">
               Zero manual filing, incident-first logic, fraud-aware decisions, and visible worker/admin reasoning.
@@ -82,17 +102,19 @@ export default function HowItWorks() {
         </div>
       </section>
 
-      <section>
+      <section className="hero-glow hero-mesh rounded-[32px] p-8 sm:p-10 text-white">
         <SectionHeader
           eyebrow="Worker flow"
           title="From coverage purchase to payout"
-          description="This is the actual user-facing sequence RideShield is built around."
+          description="This is the actual sequence RideShield is built around. Each step should feel like something is happening."
+          invert
         />
         <div className="grid gap-4 md:grid-cols-5">
-          {workerFlow.map((step, index) => (
-            <div key={step} className="panel p-5">
-              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-ink/45">Step {index + 1}</p>
-              <p className="mt-3 text-sm leading-7 text-primary">{step}</p>
+          {workerFlow.map((item) => (
+            <div key={item.step} className="rounded-[24px] bg-white/10 p-5 backdrop-blur-sm">
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/55">{item.step}</p>
+              <h3 className="mt-3 text-xl font-bold">{item.title}</h3>
+              <p className="mt-3 text-sm leading-7 text-white/78">{item.body}</p>
             </div>
           ))}
         </div>
@@ -102,19 +124,19 @@ export default function HowItWorks() {
         <SectionHeader
           eyebrow="Policy engine"
           title="What the policy layer is actually doing"
-          description="The site needed a dedicated explanation surface for the policy model instead of leaving it implicit in onboarding."
+          description="Coverage logic should be visible here instead of staying implicit inside onboarding."
         />
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {policyEngine.map((item, index) => {
             const Icon = [CalendarDays, Zap, Clock3, MapPin][index];
             return (
-            <div key={item.title} className="panel p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-surface-container-low text-primary">
-                <Icon size={22} />
+              <div key={item.title} className="context-panel p-6">
+                <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-surface-container-low text-primary">
+                  <Icon size={22} />
+                </div>
+                <h3 className="mt-5 text-xl font-bold text-primary">{item.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-ink/65">{item.detail}</p>
               </div>
-              <h3 className="mt-5 text-xl font-bold text-primary">{item.title}</h3>
-              <p className="mt-3 text-sm leading-7 text-ink/65">{item.detail}</p>
-            </div>
             );
           })}
         </div>
@@ -130,11 +152,11 @@ export default function HowItWorks() {
           {engineSections.map(({ title, text }, index) => {
             const Icon = [Radar, Activity, ShieldCheck, Wallet][index];
             return (
-              <div key={title} className="panel p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-surface-container-low text-primary">
-                <Icon size={22} />
-              </div>
-              <h3 className="mt-5 text-xl font-bold text-primary">{title}</h3>
+              <div key={title} className="context-panel p-6">
+                <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-surface-container-low text-primary">
+                  <Icon size={22} />
+                </div>
+                <h3 className="mt-5 text-xl font-bold text-primary">{title}</h3>
                 <p className="mt-3 text-sm leading-7 text-ink/65">{text}</p>
               </div>
             );

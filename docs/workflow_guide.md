@@ -1,90 +1,91 @@
 # RideShield Workflow Guide
 
-This guide is the practical companion to the main [README](../README.md). The README explains the product and architecture. This file explains how to run it, what each role does, and how to exercise the system end to end.
+This guide is the practical runbook for the current repo.
 
-## What RideShield Does
+It does not restate the final product narrative from `README.md`. It focuses on:
+- how to run the stack
+- what each role can do
+- what is real today
+- what is still simulated or deferred
 
-RideShield is a parametric income-protection system for gig delivery workers.
-
-The operating loop is:
+## Operating Loop
 
 ```text
-Observe disruption signals -> detect incident -> verify worker coverage -> score risk -> decide -> pay or review
+Observe signals -> detect incident -> verify policy -> score decision -> pay or review
 ```
 
 Important product rule:
-
 - workers do not file claims manually
-- the system generates claims when a real disruption is detected
+- the system generates claims from validated incidents
 
 ## Current System Shape
 
-### Mocked input layer
+### Simulated Inputs
+- `simulations/weather_mock.py`
+- `simulations/aqi_mock.py`
+- `simulations/traffic_mock.py`
+- `simulations/platform_mock.py`
 
-These files simulate external signals:
+### Real Core Engine
+- `backend/core/trigger_engine.py`
+- `backend/core/claim_processor.py`
+- `backend/core/fraud_detector.py`
+- `backend/core/decision_engine.py`
+- `backend/core/income_verifier.py`
+- `backend/core/payout_executor.py`
 
-- [weather_mock.py](/c:/Users/satvi/Desktop/RideShield_work/simulations/weather_mock.py)
-- [aqi_mock.py](/c:/Users/satvi/Desktop/RideShield_work/simulations/aqi_mock.py)
-- [traffic_mock.py](/c:/Users/satvi/Desktop/RideShield_work/simulations/traffic_mock.py)
-- [platform_mock.py](/c:/Users/satvi/Desktop/RideShield_work/simulations/platform_mock.py)
+### ML / Forecast Layer
+- `backend/core/risk_model_service.py`
+- `backend/core/forecast_engine.py`
+- `backend/ml/risk_model.py`
+- `backend/ml/features/risk_features.py`
+- `backend/ml/explainability.py`
 
-### Real engine layer
-
-These are the actual product core:
-
-- [trigger_engine.py](/c:/Users/satvi/Desktop/RideShield_work/backend/core/trigger_engine.py)
-- [claim_processor.py](/c:/Users/satvi/Desktop/RideShield_work/backend/core/claim_processor.py)
-- [fraud_detector.py](/c:/Users/satvi/Desktop/RideShield_work/backend/core/fraud_detector.py)
-- [decision_engine.py](/c:/Users/satvi/Desktop/RideShield_work/backend/core/decision_engine.py)
-- [income_verifier.py](/c:/Users/satvi/Desktop/RideShield_work/backend/core/income_verifier.py)
-- [payout_executor.py](/c:/Users/satvi/Desktop/RideShield_work/backend/core/payout_executor.py)
-
-### Orchestration layer
-
-- automatic monitoring: [trigger_scheduler.py](/c:/Users/satvi/Desktop/RideShield_work/backend/core/trigger_scheduler.py)
-- manual demo control: [triggers.py](/c:/Users/satvi/Desktop/RideShield_work/backend/api/triggers.py)
-
-### Frontend surfaces
-
-- worker and onboarding flow
-- admin operations
+### Frontend Surfaces
+- worker onboarding
+- worker dashboard
+- admin oversight
 - demo runner
 - how-it-works explainer
 - intelligence overview
 
+## Current Truth
+
+### Integrated now
+- weekly policy purchase and activation
+- trigger monitoring and scheduler
+- incident-centric claim generation
+- payout execution
+- DB-backed geography
+- risk-model-backed risk surface with fallback
+- forecast analytics and model-status endpoints
+
+### Still rule-based
+- fraud scoring
+- claim fraud routing
+
+### Not integrated yet
+- runtime fraud ML model
+- blended ML fraud score in claim processing
+
 ## Local Setup
 
 ### 1. Start the full stack
-
-From the repo root:
 
 ```powershell
 .\scripts\run_all.ps1
 ```
 
 This starts:
-
 - Docker Postgres
 - FastAPI backend
-- React frontend
+- Vite frontend
 
 ### 2. Seed demo data
 
 ```powershell
 .\venv\Scripts\python.exe -m scripts.seed_data
 ```
-
-Seeded demo workers:
-
-- Rahul: `+919876543210`
-- Vikram: `+919876543211`
-- Arun: `+919876543212`
-- Priya: `+919876543213`
-- Aman: `+919876543214`
-- Farhan: `+919876543215`
-- Sneha: `+919876543216`
-- Neha: `+919876543217`
-- Rohit: `+919876543218`
 
 ### 3. Open the app
 
@@ -93,128 +94,84 @@ Seeded demo workers:
 
 ## Auth And Roles
 
-### Worker sign-in
+### Worker
+- sign in at `/auth`
+- phone + password based session
+- sees onboarding, dashboard, payouts, claims, risk
 
-- go to `/auth`
-- enter worker phone number
-- session is restored on refresh
-
-### Admin sign-in
-
-- go to `/auth`
-- switch to admin sign-in
-- credentials:
-  - username: `admin`
-  - password: `rideshield-admin`
-
-Note:
-- the auth page no longer autofills admin credentials
-- it now treats those demo credentials as local access information rather than silently filling the form
+### Admin
+- sign in at `/auth`
+- separate admin session
+- sees admin oversight, intelligence page, demo runner, review queue
 
 ## Worker Workflow
 
-### A. New worker path
-
+### New worker
 1. Open `/onboarding`
 2. Register worker profile
-3. View risk score and recommended plans
-4. Inspect premium formula panel
-5. Buy a weekly policy
-6. Open worker dashboard
+3. Receive risk score and plan options
+4. Buy weekly plan
+5. Open `/dashboard`
 
-### B. Returning worker path
-
+### Returning worker
 1. Open `/auth`
-2. Sign in with phone
-3. Go to dashboard
-4. Review:
+2. Sign in
+3. Review:
    - active policy
-   - grouped incidents
-   - claim status and reasoning
-   - payout history
-   - nearby disruptions
+   - claim decision cluster
+   - payouts
+   - risk score and explanation
+   - nearby incidents
 
 ## Admin Workflow
 
 1. Sign in as admin
 2. Open `/admin`
 3. Review:
-   - claims in window
-   - fraud rate
-   - payout totals
-   - loss ratio
-   - worker activity index
-   - live and recent disruptions
-   - duplicate and extension audit log
-   - next-week forecast
-   - scheduler status
-4. Resolve delayed claims from the review queue
-5. Open `/intelligence` when you want the system-level explanation surface instead of the operations queue
+   - KPI strip
+   - review queue / next decision
+   - scheduler state
+   - model status
+   - incident feed
+   - integrity preview
+   - forecast horizon
+   - disruption map
+4. Use city/zone filters to narrow the decision surface
+5. Resolve delayed claims when present
 
 ## Demo Runner Workflow
 
 1. Sign in as admin
 2. Open `/demo`
-3. Create a demo worker if needed
-4. Run a scenario
-5. Watch the frontend explain:
-   - which signals crossed threshold
-   - whether an incident was created or extended
-   - how many claims were processed
-   - how many were approved, delayed, or rejected
-6. Open worker dashboard or admin panel to inspect downstream results
+3. Select city
+4. Click `Create demo worker` if needed
+5. Run a scenario
+6. Review:
+   - result summary
+   - live activity log
+   - cause-and-effect flow
+   - signal snapshots
 7. Reset simulators when done
 
-## Product Explanation Pages
+Notes:
+- demo worker creation now sends the full worker registration payload, including password
+- demo failures should surface inline in the page instead of failing silently
 
-### How It Works
+## Intelligence Overview Workflow
 
-Route:
-- `/how-it-works`
+Use `/intelligence` as the explanation surface.
 
-Use it to explain:
-- weekly policy logic
-- trigger-aware coverage
-- waiting period behavior
-- worker flow from signup to payout
-- how the backend layers fit together
-
-### Intelligence Overview
-
-Route:
-- `/intelligence`
-
-Use it to explain:
+It is for:
 - scheduler posture
 - monitored geography
 - trigger layers
-- trust, fraud, and decision relationships
-- current system indicators and forecast bands
+- fraud/trust/decision relationships
+- current system indicators
+- forecast bands and KPI interpretation
 
-## How Triggering Works Right Now
+It is not the same thing as the admin decision queue.
 
-The external world is mocked, but the trigger logic is real.
-
-Flow:
-
-1. Scheduler or manual demo call starts a trigger cycle
-2. Trigger engine fetches data from the simulator layer
-3. Thresholds are evaluated
-4. Matching signals are merged into one incident event for the zone and time window
-5. Covered workers are identified
-6. One claim per worker per incident is created
-7. Fraud and decision logic run
-8. Approved claims pay out, delayed claims go to admin review
-
-## Geography And Locations
-
-RideShield is no longer only driven by hardcoded frontend geography constants.
-
-Current location model:
-- cities and zones are bootstrapped into the database
-- thresholds and baseline risk profiles are attached to zones
-- onboarding, demo runner, and admin filters fetch location data from `/api/locations/*`
-- scheduler reads active cities/zones from the DB first
+## Geography Rule
 
 Current supported cities:
 - Delhi
@@ -222,43 +179,30 @@ Current supported cities:
 - Bengaluru
 - Chennai
 
-Current important rule:
-- `zone_id` is the backend source of truth
-- city/zone strings remain for compatibility and display
+Selectors should be driven from:
+- `/api/locations/cities`
+- `/api/locations/zones`
 
-Current practical consequence:
-- adding a supported zone within the current model is now a data/bootstrap concern, not only a frontend constant edit
-
-## Current Product Guarantees
-
-- claims are system-generated, not manually filed
-- incident-based same-window claims do not stack into repeated payouts for the same worker
-- duplicate and extension behavior is audited
-- tests are isolated from the live dev database
-- seed data can be rerun safely
-- scheduler state is visible in health/admin surfaces
-- location data is API-driven in the main user/admin flows
-- public-facing explanation pages now exist for policy and intelligence framing
+The frontend should not treat hardcoded city constants as the source of truth.
 
 ## Runtime Logs
 
-Useful local log files after starting the backend:
+Useful local logs:
 - `logs/runtime/app_runtime.txt`
 - `logs/runtime/trigger_cycles.txt`
 
-Use `trigger_cycles.txt` when you want to review:
-- each scheduler run
-- zone-level signal values
-- triggers fired
-- incident created vs extended
+Use `trigger_cycles.txt` to inspect:
+- scheduler runs
+- zone-level signals
+- trigger outcomes
+- incident create vs extend behavior
 - claim counts
-- duplicate counts
 - payout totals
 
 ## Useful Docs
 
-- [README.md](../README.md)
-- [architecture.md](/c:/Users/satvi/Desktop/RideShield_work/docs/architecture.md)
-- [api_reference.md](/c:/Users/satvi/Desktop/RideShield_work/docs/api_reference.md)
-- [manual_review_script.md](/c:/Users/satvi/Desktop/RideShield_work/docs/manual_review_script.md)
-- [DevNotes.md](/c:/Users/satvi/Desktop/RideShield_work/docs/DevNotes.md)
+- `docs/api_reference.md`
+- `docs/manual_review_script.md`
+- `docs/pitch_deck_outline.md`
+- `docs/SPRINT_4A_EXECUTION.md`
+- `docs/DevNotes.md`

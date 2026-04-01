@@ -162,6 +162,7 @@ async def get_review_queue(
         claims_data.append(
             {
                 **serialize_claim_summary(claim),
+                "city": claim.event.city if claim.event else None,
                 "zone": claim.event.zone if claim.event else None,
                 "event_type": claim.event.event_type if claim.event else None,
                 "is_overdue": is_overdue,

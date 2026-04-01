@@ -1,6 +1,6 @@
 # RideShield Manual Review Checklist
 
-Use this checklist to review the current Sprint 1, Sprint 2, and Sprint 3 product behavior end to end.
+Use this checklist to validate the current repo manually after local startup.
 
 ## 1. Start The Stack
 
@@ -21,145 +21,120 @@ Use this checklist to review the current Sprint 1, Sprint 2, and Sprint 3 produc
 .\venv\Scripts\python.exe -m scripts.seed_data
 ```
 
-- [ ] Confirm the seeded worker phones are:
-  - Rahul: `+919876543210`
-  - Vikram: `+919876543211`
-  - Arun: `+919876543212`
-  - Priya: `+919876543213`
+- [ ] Confirm demo workers exist
 
-## 3. Worker Sign-In Review
+## 3. Worker Review
 
-- [ ] Open `http://localhost:3000/auth`
-- [ ] Sign in as worker with `+919876543210`
-- [ ] Confirm redirect to `/dashboard`
+- [ ] Open `/auth`
+- [ ] Sign in as worker
+- [ ] Confirm `/dashboard` loads
 - [ ] Confirm the dashboard shows:
   - [ ] active policy
-  - [ ] trust badge
-  - [ ] grouped incidents
+  - [ ] decision panel / selected claim
+  - [ ] risk score card
   - [ ] payout history
-  - [ ] nearby disruption events
+  - [ ] nearby alerts
 - [ ] Refresh the page
 - [ ] Confirm the session persists
-- [ ] Open `/onboarding`
-- [ ] Confirm logged-in worker is redirected away
-- [ ] Open `/`
-- [ ] Confirm the home page reflects logged-in worker state
 
-## 4. Worker Onboarding Review
+## 4. Onboarding Review
 
 - [ ] Sign out
 - [ ] Open `/onboarding`
 - [ ] Register a new worker
-- [ ] Confirm the onboarding flow shows:
-  - [ ] worker registration fields
+- [ ] Confirm the flow shows:
+  - [ ] registration fields
   - [ ] risk score
   - [ ] available plans
-  - [ ] premium formula panel
+  - [ ] premium explanation
 - [ ] Purchase a plan
-- [ ] Confirm the completion state appears
-- [ ] Open `/dashboard`
-- [ ] Confirm the new worker dashboard loads
+- [ ] Confirm completion state appears
 
-## 5. Admin Sign-In Review
+## 5. Admin Review
 
 - [ ] Open `/auth`
-- [ ] Switch to admin sign-in
-- [ ] Sign in with:
-  - username: `admin`
-  - password: `rideshield-admin`
+- [ ] Sign in as admin
 - [ ] Confirm redirect to `/admin`
 - [ ] Confirm the admin panel shows:
   - [ ] KPI cards
-  - [ ] decision chart
-  - [ ] event panel
   - [ ] review queue
-  - [ ] disruption heat-view
-  - [ ] duplicate or extension log
-  - [ ] forecast panel
+  - [ ] next decision panel
   - [ ] scheduler state
+  - [ ] model status
+  - [ ] disruption feed
+  - [ ] integrity preview
+  - [ ] forecast horizon
+  - [ ] disruption map
+
+- [ ] Change city filter
+- [ ] Confirm review and supporting panels react to the filter
+- [ ] Change zone filter
+- [ ] Confirm the same
+
+## 6. Intelligence Review
 
 - [ ] Open `/intelligence`
-- [ ] Confirm the intelligence page shows:
+- [ ] Confirm the page shows:
   - [ ] scheduler posture
   - [ ] monitored cities
-  - [ ] system indicators
+  - [ ] KPI interpretation text
   - [ ] forecast bands
+  - [ ] threshold notes
 
-## 6. Demo Runner Review
+- [ ] Confirm loss ratio reads as a percentage and includes interpretation
+- [ ] Confirm forecast bands use:
+  - [ ] low
+  - [ ] guarded
+  - [ ] elevated
+  - [ ] critical
 
-- [ ] While signed in as admin, open `/demo`
+## 7. Demo Runner Review
+
+- [ ] Open `/demo`
 - [ ] Click `Create demo worker`
+- [ ] Confirm worker creation succeeds without a 422 validation error
 - [ ] Run `Heavy Rain`
-- [ ] Confirm the result card updates
-- [ ] Confirm claim and payout totals update
-- [ ] Run the same scenario again
-- [ ] Confirm the demo run still produces a fresh run instead of silently doing nothing
+- [ ] Confirm result summary updates
+- [ ] Confirm live activity log updates
+- [ ] Confirm signal snapshots update
+- [ ] Run another scenario
+- [ ] Confirm the result card updates again
 - [ ] Click `Reset simulators`
 
-## 7. Manual Review Queue Review
+## 8. Review Queue Flow
 
 - [ ] Use a scenario that produces delayed claims
 - [ ] Open `/admin`
-- [ ] Confirm the review queue shows:
-  - [ ] grouped incident card
-  - [ ] trigger list
-  - [ ] fraud score
-  - [ ] final score
-  - [ ] review deadline
-- [ ] Approve one delayed claim
-- [ ] Confirm the queue refreshes
-- [ ] Reject one delayed claim
-- [ ] Confirm the queue refreshes again
+- [ ] Confirm the queue shows grouped incident context
+- [ ] Approve a delayed claim
+- [ ] Confirm queue refresh
+- [ ] Reject a delayed claim
+- [ ] Confirm queue refresh again
 
-## 8. Duplicate And Extension Review
+## 9. Analytics API Spot Checks
 
-- [ ] Run the same scenario repeatedly without a full reset where incident extension is expected
-- [ ] Open `/admin`
-- [ ] Confirm the duplicate or extension log shows:
-  - [ ] duplicate stopped
-  - [ ] incident extended
-  - [ ] zone context
-  - [ ] trigger context
-
-## 9. Scheduler Review
-
-- [ ] Open backend docs or call `GET /health/config`
-- [ ] Confirm scheduler fields show:
-  - [ ] enabled or disabled state
-  - [ ] interval seconds
-  - [ ] run count
-  - [ ] last started time
-  - [ ] last finished time
-
-- [ ] Optional: open `logs/runtime/trigger_cycles.txt`
-- [ ] Confirm cycle logs show:
-  - [ ] scheduler run start
-  - [ ] scheduler run done
-  - [ ] zone signals
-  - [ ] zone outcome summaries
-
-## 10. API Spot Checks
-
-- [ ] Verify these endpoints in Swagger:
-  - [ ] `GET /health`
-  - [ ] `GET /health/db`
-  - [ ] `GET /api/workers/`
-  - [ ] `GET /api/events/active`
-  - [ ] `GET /api/events/history`
-  - [ ] `GET /api/claims/stats`
-  - [ ] `GET /api/payouts/stats`
+- [ ] In Swagger, verify:
   - [ ] `GET /api/analytics/admin-overview`
+  - [ ] `GET /api/analytics/forecast`
+  - [ ] `GET /api/analytics/zone-risk`
+  - [ ] `GET /api/analytics/models`
 
-## 11. Final Acceptance
+- [ ] Confirm `models` shows:
+  - [ ] risk model status
+  - [ ] version
+  - [ ] trained timestamp when available
+  - [ ] metrics
 
-Mark the manual review as passed only if all of the following are true:
+## 10. Final Acceptance
 
-- [ ] worker auth and session restore work
-- [ ] admin auth and session restore work
+Mark manual review as passed only if all are true:
+
+- [ ] worker auth works
+- [ ] admin auth works
 - [ ] onboarding works end to end
-- [ ] policy purchase works
+- [ ] demo worker creation works
 - [ ] scheduler is visible and understandable
-- [ ] demo runner works repeatedly
-- [ ] grouped incidents appear on worker side
-- [ ] delayed claims can be resolved on admin side
-- [ ] payouts and analytics update correctly
+- [ ] admin filters affect the actual decision surface
+- [ ] intelligence page KPI interpretation is readable and correct
+- [ ] claims and payouts update correctly
+- [ ] no obvious white-on-light or collapsed-card regressions remain

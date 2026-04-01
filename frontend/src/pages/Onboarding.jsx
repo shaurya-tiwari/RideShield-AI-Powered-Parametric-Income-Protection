@@ -1,16 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 import { useAuth } from "../auth/AuthContext";
+import { locationsApi } from "../api/locations";
+import { policiesApi } from "../api/policies";
+import { workersApi } from "../api/workers";
 import PlanCard from "../components/PlanCard";
 import PremiumCalculator from "../components/PremiumCalculator";
 import RiskGauge from "../components/RiskGauge";
 import SectionHeader from "../components/SectionHeader";
-import { locationsApi } from "../api/locations";
-import { policiesApi } from "../api/policies";
-import { workersApi } from "../api/workers";
 import { PLATFORM_OPTIONS, STORAGE_KEYS } from "../utils/constants";
+import { humanizeSlug } from "../utils/formatters";
 
 const initialForm = {
   name: "",
@@ -25,6 +26,12 @@ const initialForm = {
   consent_given: false,
 };
 
+const steps = [
+  { id: "register", label: "Worker profile" },
+  { id: "plan", label: "Policy choice" },
+  { id: "complete", label: "Ready" },
+];
+
 export default function Onboarding() {
   const navigate = useNavigate();
   const { loginWorker } = useAuth();
@@ -37,7 +44,10 @@ export default function Onboarding() {
   const [registration, setRegistration] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState("");
   const [policyPurchase, setPolicyPurchase] = useState(null);
+
   const selectedPlanData = registration?.available_plans?.find((plan) => plan.plan_name === selectedPlan);
+  const stepIndex = steps.findIndex((item) => item.id === step);
+  const progressWidth = `${((stepIndex + 1) / steps.length) * 100}%`;
 
   useEffect(() => {
     document.title = "Onboarding | RideShield";
@@ -129,6 +139,10 @@ export default function Onboarding() {
     }
   }
 
+  const summaryLine = useMemo(() => {
+    return `${humanizeSlug(form.city)} - ${humanizeSlug(form.zone)} - ${humanizeSlug(form.platform)}`;
+  }, [form.city, form.zone, form.platform]);
+
   if (step === "complete" && registration && policyPurchase) {
     return (
       <div className="mx-auto max-w-3xl space-y-6">
@@ -137,14 +151,16 @@ export default function Onboarding() {
           title="Worker onboarding completed"
           description="The worker profile is registered, the policy is created, and the session is ready for dashboard access."
         />
-        <div className="panel p-8">
+        <div className="decision-panel p-8">
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-3xl bg-black/[0.03] p-5">
+            <div className="rounded-3xl bg-white/80 p-5">
               <p className="text-sm text-ink/55">Worker</p>
               <p className="mt-2 text-2xl font-bold">{registration.name}</p>
-              <p className="mt-2 text-sm text-ink/60">{registration.city} · {registration.zone} · {registration.platform}</p>
+              <p className="mt-2 text-sm text-ink/60">
+                {registration.city} - {registration.zone} - {registration.platform}
+              </p>
             </div>
-            <div className="rounded-3xl bg-forest/10 p-5">
+            <div className="rounded-3xl bg-white/80 p-5">
               <p className="text-sm text-ink/55">Policy</p>
               <p className="mt-2 text-2xl font-bold">{policyPurchase.policy.plan_display_name}</p>
               <p className="mt-2 text-sm text-ink/60">{policyPurchase.message}</p>
@@ -171,70 +187,100 @@ export default function Onboarding() {
         description="This flow uses the real worker registration and policy purchase APIs. Admin-only simulation actions stay outside the worker signup flow."
       />
 
+      <div className="context-panel p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap gap-3">
+            {steps.map((item, index) => (
+              <div key={item.id} className={`pill ${index <= stepIndex ? "bg-primary text-white" : "bg-surface-container-low text-on-surface-variant"}`}>
+                {item.label}
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-on-surface-variant">{summaryLine}</p>
+        </div>
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-container-low">
+          <div className="h-full rounded-full bg-primary transition-all" style={{ width: progressWidth }} />
+        </div>
+      </div>
+
       {step === "register" ? (
         <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-          <form className="panel p-6" onSubmit={handleRegister}>
-            <div className="grid gap-5">
+          <form className="context-panel p-6" onSubmit={handleRegister}>
+            <div className="space-y-6">
               <div>
-                <label className="label">Full name</label>
-                <input className="field" value={form.name} onChange={(e) => updateField("name", e.target.value)} required />
+                <p className="eyebrow">Identity</p>
+                <div className="mt-4 grid gap-5">
+                  <div>
+                    <label className="label">Full name</label>
+                    <input className="field" value={form.name} onChange={(e) => updateField("name", e.target.value)} required />
+                  </div>
+                  <div>
+                    <label className="label">Phone number</label>
+                    <input className="field" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} required />
+                  </div>
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <div>
+                      <label className="label">Password</label>
+                      <input className="field" type="password" value={form.password} onChange={(e) => updateField("password", e.target.value)} minLength={8} required />
+                    </div>
+                    <div>
+                      <label className="label">Confirm password</label>
+                      <input className="field" type="password" value={form.confirm_password} onChange={(e) => updateField("confirm_password", e.target.value)} minLength={8} required />
+                    </div>
+                  </div>
+                </div>
               </div>
+
               <div>
-                <label className="label">Phone number</label>
-                <input className="field" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} required />
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2">
-                <div>
-                  <label className="label">Password</label>
-                  <input className="field" type="password" value={form.password} onChange={(e) => updateField("password", e.target.value)} minLength={8} required />
-                </div>
-                <div>
-                  <label className="label">Confirm password</label>
-                  <input className="field" type="password" value={form.confirm_password} onChange={(e) => updateField("confirm_password", e.target.value)} minLength={8} required />
-                </div>
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2">
-                <div>
-                  <label className="label">City</label>
-                  <select className="field" value={form.city} onChange={(e) => updateField("city", e.target.value)} disabled={locationsLoading}>
-                    {cityOptions.map((option) => (
-                      <option key={option.id} value={option.slug}>
-                        {option.display_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="label">Zone</label>
-                  <select className="field" value={form.zone} onChange={(e) => updateField("zone", e.target.value)} disabled={locationsLoading || !zoneOptions.length}>
-                    {zoneOptions.map((zone) => (
-                      <option key={zone.id} value={zone.slug}>
-                        {zone.display_name}
-                      </option>
-                    ))}
-                  </select>
+                <p className="eyebrow">Operating area</p>
+                <div className="mt-4 grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <label className="label">City</label>
+                    <select className="field" value={form.city} onChange={(e) => updateField("city", e.target.value)} disabled={locationsLoading}>
+                      {cityOptions.map((option) => (
+                        <option key={option.id} value={option.slug}>
+                          {option.display_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Zone</label>
+                    <select className="field" value={form.zone} onChange={(e) => updateField("zone", e.target.value)} disabled={locationsLoading || !zoneOptions.length}>
+                      {zoneOptions.map((zone) => (
+                        <option key={zone.id} value={zone.slug}>
+                          {zone.display_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
-              <div className="grid gap-5 sm:grid-cols-2">
-                <div>
-                  <label className="label">Platform</label>
-                  <select className="field" value={form.platform} onChange={(e) => updateField("platform", e.target.value)}>
-                    {PLATFORM_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="label">Working hours per day</label>
-                  <input className="field" type="number" step="0.5" value={form.working_hours} onChange={(e) => updateField("working_hours", e.target.value)} />
-                </div>
-              </div>
+
               <div>
-                <label className="label">Self-reported daily income</label>
-                <input className="field" type="number" value={form.self_reported_income} onChange={(e) => updateField("self_reported_income", e.target.value)} />
+                <p className="eyebrow">Earning profile</p>
+                <div className="mt-4 grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <label className="label">Platform</label>
+                    <select className="field" value={form.platform} onChange={(e) => updateField("platform", e.target.value)}>
+                      {PLATFORM_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Working hours per day</label>
+                    <input className="field" type="number" step="0.5" value={form.working_hours} onChange={(e) => updateField("working_hours", e.target.value)} />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="label">Self-reported daily income</label>
+                    <input className="field" type="number" value={form.self_reported_income} onChange={(e) => updateField("self_reported_income", e.target.value)} />
+                  </div>
+                </div>
               </div>
+
               <label className="flex items-start gap-3 rounded-2xl bg-black/[0.03] p-4 text-sm text-ink/70">
                 <input
                   className="mt-1"
@@ -244,6 +290,7 @@ export default function Onboarding() {
                 />
                 <span>Worker consents to location, behavior, and device data being used for claim validation and fraud checks.</span>
               </label>
+
               <button type="submit" className="button-primary" disabled={loading || locationsLoading || !form.consent_given || !form.zone}>
                 {loading ? "Calculating risk profile..." : "Register worker"}
               </button>
@@ -265,9 +312,10 @@ export default function Onboarding() {
             </div>
             <PremiumCalculator selectedPlan={selectedPlanData} />
           </div>
-          <div className="panel flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="context-panel flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-ink/65">
-              Coverage stays pending until the waiting period ends or an admin activates it in simulation mode. This keeps worker and admin responsibilities separate.
+              Coverage stays pending until the waiting period ends or an admin activates it in simulation mode. This keeps
+              worker and admin responsibilities separate.
             </p>
             <button type="button" className="button-primary" disabled={loading} onClick={handlePurchase}>
               {loading ? "Purchasing..." : "Purchase selected plan"}

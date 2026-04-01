@@ -7,6 +7,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config import settings
+from backend.core.forecast_engine import forecast_engine
+from backend.core.risk_model_service import risk_model_service
 from backend.core.session_auth import require_admin_session
 from backend.core.trigger_scheduler import trigger_scheduler
 from backend.database import get_db
@@ -108,17 +110,22 @@ async def get_admin_overview(
     active_city_counts = {city: count for city, count in active_events_by_city}
 
     forecast = []
-    for city, profile in settings.CITY_RISK_PROFILES.items():
-        base = float(profile["base_risk"])
-        active_pressure = min(0.25, 0.05 * active_city_counts.get(city, 0))
-        projected_score = round(min(1.0, base + active_pressure), 3)
+    for city in settings.CITY_RISK_PROFILES.keys():
+        city_forecast = await forecast_engine.forecast_city(db, city, horizon_hours=168)
+        base = float(settings.CITY_RISK_PROFILES[city]["base_risk"])
+        city_score = round(
+            sum(zone["projected_risk"] for zone in city_forecast["zones"]) / max(1, len(city_forecast["zones"])),
+            3,
+        )
         forecast.append(
             {
                 "city": city,
                 "base_risk": base,
                 "active_incidents": active_city_counts.get(city, 0),
-                "projected_risk": projected_score,
-                "band": forecast_band(projected_score),
+                "projected_risk": city_score,
+                "band": forecast_band(city_score),
+                "top_zone": city_forecast["zones"][0]["zone"] if city_forecast["zones"] else None,
+                "model_version": city_forecast["zones"][0]["model_version"] if city_forecast["zones"] else "rule-based",
             }
         )
 
@@ -134,4 +141,56 @@ async def get_admin_overview(
         "duplicate_claim_log": duplicate_claim_log,
         "scheduler": trigger_scheduler.state,
         "next_week_forecast": forecast,
+    }
+
+
+@router.get("/forecast")
+async def get_forecast(
+    city: str,
+    horizon: int = 24,
+    zone: str | None = None,
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(require_admin_session),
+):
+    if zone:
+        return {
+            "forecast": await forecast_engine.forecast_zone(db, city.lower(), zone.lower(), horizon_hours=horizon)
+        }
+    return {"forecast": await forecast_engine.forecast_city(db, city.lower(), horizon_hours=horizon)}
+
+
+@router.get("/zone-risk")
+async def get_zone_risk(
+    city: str,
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(require_admin_session),
+):
+    return {"city": city.lower(), "zones": await forecast_engine.zone_risk(db, city.lower())}
+
+
+@router.get("/models")
+async def get_models(
+    _: dict = Depends(require_admin_session),
+):
+    risk_info = risk_model_service.get_model_info()
+    return {
+        "models": {
+            "risk_model": {
+                "status": risk_info.get("status"),
+                "version": risk_info.get("version"),
+                "trained_at": risk_info.get("trained_at"),
+                "r2_score": risk_info.get("metrics", {}).get("r2"),
+                "mae": risk_info.get("metrics", {}).get("mae"),
+                "rmse": risk_info.get("metrics", {}).get("rmse"),
+                "model_type": risk_info.get("model_type"),
+                "n_samples": risk_info.get("n_samples"),
+                "fallback_used": risk_info.get("fallback_used"),
+                "last_error": risk_info.get("last_error"),
+            },
+            "forecast_engine": {
+                "status": "active",
+                "version": "forecast-v1",
+                "fallback_active": not risk_model_service.model_available,
+            },
+        }
     }

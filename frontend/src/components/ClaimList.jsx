@@ -46,7 +46,7 @@ export default function ClaimList({ claims = [], onSelect, compact = false }) {
               </p>
               <p className="mt-1 text-sm text-on-surface-variant">
                 {formatDateTime(incident.created_at)}
-                {incident.claim_count > 1 ? " · grouped into one disruption incident" : ""}
+                {incident.claim_count > 1 ? " - grouped into one disruption incident" : ""}
               </p>
               <p className="mt-2 text-sm leading-6 text-on-surface-variant md:hidden">{reasoningLine(incident.status)}</p>
             </div>

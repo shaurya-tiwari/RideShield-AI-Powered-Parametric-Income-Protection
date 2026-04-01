@@ -151,7 +151,10 @@ async def register_worker(
         )
     )
 
-    plans, recommended = premium_calculator.calculate_all_plans(risk_result["risk_score"])
+    plans, recommended = premium_calculator.calculate_all_plans(
+        risk_result["risk_score"],
+        risk_meta=risk_result["breakdown"],
+    )
     plan_options = [
         PlanOption(
             plan_name=plan["plan_name"],
@@ -205,6 +208,7 @@ async def get_worker_profile(
             selectinload(Worker.trust_score),
             selectinload(Worker.policies),
             selectinload(Worker.claims),
+            selectinload(Worker.zone_ref),
         )
         .where(Worker.id == worker_id)
     )
@@ -221,6 +225,11 @@ async def get_worker_profile(
     total_claims = len(worker.claims)
     total_payouts = sum(float(claim.final_payout or 0) for claim in worker.claims if claim.status == "approved")
     trust_val = float(worker.trust_score.score) if worker.trust_score else 0.1
+    risk_result = risk_scorer.calculate_risk_score(
+        city=worker.city,
+        zone=worker.zone,
+        city_base_override=float(worker.zone_ref.risk_profile.base_risk) if worker.zone_ref and worker.zone_ref.risk_profile else None,
+    )
 
     return WorkerProfileResponse(
         id=worker.id,
@@ -238,6 +247,7 @@ async def get_worker_profile(
         consent_given=worker.consent_given,
         created_at=worker.created_at,
         trust_score=trust_val,
+        risk_details=risk_result["breakdown"],
         active_policy=active_policy,
         total_claims=total_claims,
         total_payouts=total_payouts,
@@ -261,6 +271,7 @@ async def update_worker(
             selectinload(Worker.trust_score),
             selectinload(Worker.policies),
             selectinload(Worker.claims),
+            selectinload(Worker.zone_ref),
         )
         .where(Worker.id == worker_id)
     )
@@ -401,7 +412,10 @@ async def get_risk_score(
         zone=worker.zone,
         city_base_override=float(worker.zone_ref.risk_profile.base_risk) if worker.zone_ref and worker.zone_ref.risk_profile else None,
     )
-    plans, recommended = premium_calculator.calculate_all_plans(risk_result["risk_score"])
+    plans, recommended = premium_calculator.calculate_all_plans(
+        risk_result["risk_score"],
+        risk_meta=risk_result["breakdown"],
+    )
 
     return {
         "worker_id": str(worker.id),
@@ -410,6 +424,8 @@ async def get_risk_score(
         "zone": worker.zone,
         "risk_score": risk_result["risk_score"],
         "breakdown": risk_result["breakdown"],
+        "model_version": risk_result["breakdown"].get("model_version"),
+        "fallback_used": risk_result["breakdown"].get("fallback_used"),
         "premium_impact": {
             plan["plan_name"]: {
                 "premium": plan["weekly_premium"],

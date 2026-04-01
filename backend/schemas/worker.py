@@ -122,6 +122,12 @@ class RiskScoreBreakdown(BaseModel):
     final_risk_score: float
     risk_level: str
     explanation: str
+    model_version: Optional[str] = None
+    fallback_used: Optional[bool] = None
+    top_factors: Optional[List[dict]] = None
+    summary: Optional[str] = None
+
+    model_config = ConfigDict(protected_namespaces=())
 
 
 class PlanOption(BaseModel):
@@ -174,6 +180,7 @@ class WorkerProfileResponse(BaseModel):
     consent_given: bool
     created_at: datetime
     trust_score: Optional[float] = None
+    risk_details: Optional[dict] = None
     active_policy: Optional[dict] = None
     total_claims: int = 0
     total_payouts: float = 0

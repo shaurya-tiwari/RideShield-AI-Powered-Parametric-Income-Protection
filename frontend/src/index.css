@@ -7,6 +7,12 @@
 @layer base {
   :root {
     color-scheme: light;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
   }
 
   html {
@@ -32,6 +38,18 @@
 @layer components {
   .panel {
     @apply rounded-[28px] bg-surface-container-lowest shadow-[0_20px_60px_rgba(26,28,25,0.08)] backdrop-blur;
+  }
+
+  .decision-panel {
+    @apply rounded-[28px] border-l-4 border-primary bg-surface-container-lowest shadow-[0_20px_60px_rgba(26,28,25,0.08)] backdrop-blur;
+  }
+
+  .context-panel {
+    @apply rounded-[28px] bg-surface-container-low shadow-[inset_0_1px_0_rgba(255,255,255,0.4)];
+  }
+
+  .passive-panel {
+    @apply rounded-[24px] bg-surface-container-low shadow-[0_12px_30px_rgba(26,28,25,0.04)];
   }
 
   .panel-muted {
@@ -94,5 +112,302 @@
       linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px);
     background-size: 28px 28px;
     mask-image: radial-gradient(circle at top right, black, transparent 72%);
+  }
+
+  /* Bento Grid & Layout */
+  .bento-grid {
+    @apply grid grid-cols-12 gap-6;
+  }
+
+  .bento-full {
+    @apply col-span-12;
+  }
+
+  .bento-2-3 {
+    @apply col-span-12 lg:col-span-8;
+  }
+
+  .bento-1-3 {
+    @apply col-span-12 lg:col-span-4;
+  }
+
+  .bento-1-2 {
+    @apply col-span-12 lg:col-span-6;
+  }
+
+  .bento-1-4 {
+    @apply col-span-12 md:col-span-6 lg:col-span-3;
+  }
+
+  /* Border Accent Patterns */
+  .border-accent-bottom {
+    @apply border-b-4;
+  }
+
+  .border-accent-left {
+    @apply border-l-4;
+  }
+
+  .border-accent-info {
+    @apply border-primary;
+  }
+
+  .border-accent-success {
+    @apply border-emerald-600;
+  }
+
+  .border-accent-warning {
+    @apply border-amber-600;
+  }
+
+  .border-accent-error {
+    @apply border-red-600;
+  }
+
+  .border-success {
+    @apply border-emerald-700;
+  }
+
+  .border-warning {
+    @apply border-amber-500;
+  }
+
+  .border-error {
+    @apply border-red-500;
+  }
+
+  .border-info {
+    @apply border-primary;
+  }
+
+  /* Hero Typography */
+  .hero-display {
+    @apply text-6xl font-extrabold tracking-tighter md:text-7xl lg:text-8xl;
+  }
+
+  .hero-subtitle {
+    @apply text-primary/20 italic;
+  }
+
+  .section-headline {
+    @apply text-3xl font-bold text-primary;
+  }
+
+  /* Card Status Variants */
+  .card-elevated {
+    @apply relative overflow-hidden rounded-2xl border border-transparent shadow-lg;
+  }
+
+  .card-elevated:hover {
+    @apply border-primary/5;
+  }
+
+  .card-primary {
+    @apply shadow-lg border-l-4;
+  }
+
+  .card-secondary {
+    @apply shadow-md;
+  }
+
+  .card-passive {
+    @apply opacity-80;
+  }
+
+  /* Motion & Animation Primitives */
+  @keyframes breathing-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px 0px rgba(6, 78, 59, 0.1);
+    }
+    50% {
+      box-shadow: 0 0 35px 10px rgba(6, 78, 59, 0.2);
+    }
+  }
+
+  @keyframes fade-in-up {
+    0% {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scale-pop {
+    0% {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .pulse-glow {
+    animation: breathing-glow 4s ease-in-out infinite;
+  }
+
+  .fade-in-up {
+    animation: fade-in-up 0.6s ease-out;
+  }
+
+  .scale-pop {
+    animation: scale-pop 0.4s ease-out;
+  }
+
+  /* Hover & Transition Effects */
+  .transition-smooth {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .group-hover-scale {
+    @apply transition-transform duration-300 ease-out group-hover:scale-105;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-2xl hover:scale-[1.02];
+  }
+}
+
+@layer utilities {
+  /* Glassmorphism utilities */
+  .glass-light {
+    @apply bg-white/10 backdrop-blur-md;
+  }
+
+  .glass-dark {
+    @apply bg-surface-container-low/70 backdrop-blur-lg;
+  }
+
+  /* Alert & Forecast Styling */
+  .alert-critical {
+    @apply border-l-4 border-red-600 bg-red-50/60 text-red-900;
+  }
+
+  .alert-warning {
+    @apply border-l-4 border-amber-600 bg-amber-50/60 text-amber-900;
+  }
+
+  .alert-info {
+    @apply border-l-4 border-blue-600 bg-blue-50/60 text-blue-900;
+  }
+
+  .alert-success {
+    @apply border-l-4 border-emerald-600 bg-emerald-50/60 text-emerald-900;
+  }
+
+  .forecast-band-high {
+    @apply border-b-4 border-red-500 bg-red-50/40;
+  }
+
+  .forecast-band-medium {
+    @apply border-b-4 border-amber-500 bg-amber-50/40;
+  }
+
+  .forecast-band-low {
+    @apply border-b-4 border-blue-500 bg-blue-50/40;
+  }
+
+  .progress-critical {
+    @apply bg-red-600;
+  }
+
+  .progress-warning {
+    @apply bg-amber-600;
+  }
+
+  .progress-info {
+    @apply bg-blue-600;
+  }
+
+  .progress-success {
+    @apply bg-emerald-600;
+  }
+
+  /* Status Badges */
+  .badge-active {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold;
+  }
+
+  .badge-pending {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 bg-amber-100 text-amber-800 text-xs font-bold;
+  }
+
+  .badge-error {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 bg-red-100 text-red-800 text-xs font-bold;
+  }
+
+  /* Responsive typography */
+  @responsive {
+    .text-hero {
+      @apply text-5xl font-extrabold tracking-tight md:text-7xl;
+    }
+  }
+
+  /* Negative margin helpers for overlapping layouts */
+  .overlap-left {
+    @apply lg:-ml-12;
+  }
+
+  .overlap-top {
+    @apply lg:-mt-12;
+  }
+
+  /* Additional Motion & Animation Utilities */
+  @keyframes slide-in-left {
+    0% {
+      transform: translateX(-24px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-in-right {
+    0% {
+      transform: translateX(24px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes pulse-ring {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.8;
+    }
+  }
+
+  .slide-in-left {
+    animation: slide-in-left 0.5s ease-out;
+  }
+
+  .slide-in-right {
+    animation: slide-in-right 0.5s ease-out;
+  }
+
+  .pulse-ring {
+    animation: pulse-ring 2s ease-in-out infinite;
+  }
+
+  /* Color transition utilities */
+  .color-transition {
+    @apply transition-colors duration-300;
+  }
+
+  .bg-transition {
+    @apply transition-[background-color] duration-300;
   }
 }

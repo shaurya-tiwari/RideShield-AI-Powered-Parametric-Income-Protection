@@ -30,3 +30,12 @@ async def test_admin_overview_returns_scheduler_and_forecast(client):
     assert "scheduler" in data
     assert "next_week_forecast" in data
     assert isinstance(data["next_week_forecast"], list)
+
+
+@pytest.mark.asyncio
+async def test_models_endpoint_returns_status(client, admin_headers):
+    response = await client.get("/api/analytics/models", headers=admin_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert "models" in data
+    assert "risk_model" in data["models"]

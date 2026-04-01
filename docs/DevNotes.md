@@ -2,6 +2,19 @@
 
 This file is the implementation baseline for the current repo, not a copy of the sprint markdowns. `Sprint_1.md`, `Sprint_2.md`, and `Sprint_3.md` were used as planning references, but the codebase has intentionally diverged where correctness, maintainability, Windows compatibility, and demo clarity required it.
 
+### Latest Repo Notes
+
+- Risk-model scaffolding and runtime risk-model service now exist.
+- Forecast engine and analytics model-status endpoints now exist.
+- Frontend includes model/risk/forecast visibility surfaces.
+- Fraud ML is still not integrated into the claim path.
+- Several local-only scratch files are intentionally ignored:
+  - `DEMO_SCRIPT.md`
+  - `FRONTEND_AUDIT_REPORT.md`
+  - `test_model.py`
+  - `test_phase2_ml_integration.py`
+- ML artifact files under `backend/ml/artifacts/` are local outputs and should not be treated as committed source.
+
 ### Current Baseline
 
 - Sprint 1 foundation is implemented and working.

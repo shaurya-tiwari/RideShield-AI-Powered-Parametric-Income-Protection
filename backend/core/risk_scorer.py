@@ -8,6 +8,8 @@ Phase 3: ML model replaces this
 from datetime import datetime, timezone
 
 from backend.config import settings
+from backend.core.risk_model_service import risk_model_service
+from backend.ml.explainability import summarize_risk
 
 
 class RiskScorer:
@@ -64,7 +66,7 @@ class RiskScorer:
         "velachery": 0.08,
     }
 
-    def calculate_risk_score(
+    def _rule_based_risk_score(
         self,
         city: str,
         zone: str = None,
@@ -124,6 +126,51 @@ class RiskScorer:
                 "explanation": explanation,
             },
         }
+
+    def calculate_risk_score(
+        self,
+        city: str,
+        zone: str = None,
+        reference_date: datetime = None,
+        city_base_override: float | None = None,
+    ) -> dict:
+        reference_date = reference_date or datetime.now(timezone.utc)
+        rule_result = self._rule_based_risk_score(
+            city=city,
+            zone=zone,
+            reference_date=reference_date,
+            city_base_override=city_base_override,
+        )
+        month = reference_date.month
+        base_risk = city_base_override if city_base_override is not None else rule_result["breakdown"]["city_base_risk"]
+        zone_mod = rule_result["breakdown"]["zone_modifier"]
+        ml_result = risk_model_service.score(
+            {
+                "city": city,
+                "month": month,
+                "city_base_risk": base_risk,
+                "zone_profile_risk": max(0.02, min(0.98, base_risk + zone_mod)),
+            }
+        )
+        if ml_result["fallback_used"]:
+            merged_score = rule_result["risk_score"]
+            explanation = [{"factor": "fallback", "label": "rule-based baseline", "value": merged_score, "text": "ML artifact unavailable, so the rule baseline is active."}]
+            model_version = "rule-based"
+        else:
+            merged_score = ml_result["risk_score"]
+            explanation = ml_result["explanation"]
+            model_version = ml_result["model_version"]
+
+        rule_result["risk_score"] = merged_score
+        rule_result["breakdown"].update(
+            {
+                "model_version": model_version,
+                "fallback_used": ml_result["fallback_used"],
+                "top_factors": explanation,
+                "summary": summarize_risk(merged_score, explanation),
+            }
+        )
+        return rule_result
 
 
 risk_scorer = RiskScorer()

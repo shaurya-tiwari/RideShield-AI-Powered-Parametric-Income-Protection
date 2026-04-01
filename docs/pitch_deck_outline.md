@@ -1,43 +1,105 @@
 # RideShield Pitch Deck Outline
 
+Use this outline for the current repo state, not the older sprint markdown claims.
+
 ## 1. Problem
 
-- Gig delivery workers lose income during rain, heat, AQI spikes, traffic collapse, platform outages, and civic disruption.
-- Traditional insurance is too manual and too slow for income continuity.
+- Gig delivery workers lose income from:
+  - rain
+  - heat
+  - AQI
+  - traffic collapse
+  - platform outage
+  - civic disruption
+- Traditional claims-based insurance is too slow and too manual for weekly income continuity
 
 ## 2. Product
 
-- Weekly parametric income protection.
-- Zero-touch claims: the system detects, validates, decides, and pays.
+- Weekly parametric income protection
+- Zero-touch claim generation
+- Incident-centric decisioning
+- Automatic payout or bounded manual review
 
 ## 3. Persona Story
 
-- Rahul: legitimate disruption and instant payout.
-- Vikram: suspicious attempt rejected.
-- Arun: borderline case delayed and reviewed inside SLA.
+- legitimate worker: instant approval and payout
+- suspicious worker: delayed or rejected
+- borderline worker: routed to review queue with explanation
 
-## 4. Architecture
+## 4. System Architecture
 
-- Worker onboarding and weekly plan purchase.
-- Trigger engine checking signals on a fixed schedule.
-- Event-centric claim generation.
-- Fraud detection, decision engine, payout executor, audit trail.
+- worker onboarding and weekly policy purchase
+- trigger engine and scheduler
+- incident creation / extension
+- rule-based fraud detection today
+- decision engine and payout executor
+- DB-backed geography and audit trail
 
-## 5. Dashboard Story
+## 5. Current ML Story
 
-- Worker dashboard: active policy, grouped incidents, payouts, trust, explainability.
-- Admin dashboard: queue, payout metrics, loss-ratio view, disruption heatmap, duplicate log, scheduler state.
+- risk model:
+  - integrated with fallback
+  - used for risk surfaces and premium metadata
+- forecast engine:
+  - integrated into analytics
+  - exposed in admin and intelligence surfaces
+- fraud ML:
+  - planned next
+  - not currently integrated into runtime claim decisions
 
-## 6. Business Viability
+Keep this section honest. Do not present fraud ML as finished.
 
-- Weekly premiums
-- Coverage caps
-- Loss-ratio framing
-- Simulation-first sandbox approach
+## 6. Worker Surface Story
 
-## 7. Roadmap
+- active policy
+- decision-first dashboard
+- claim explanation
+- payout history
+- risk score and contributing factors
 
-- Sprint 1: backend foundation
-- Sprint 2: trigger, fraud, decision, payout engine
-- Sprint 3: product UI, auth/session, analytics, demo runner
-- Sprint 4+: ML training artifacts, predictive models, deeper forecasting
+## 7. Admin Surface Story
+
+- review queue
+- next decision
+- KPI overview
+- disruption feed
+- forecast horizon
+- model status
+- scheduler visibility
+
+## 8. Demo Story
+
+- create demo worker
+- run scenario
+- show signals crossing thresholds
+- show incident creation
+- show claim decision
+- show payout or review outcome
+
+## 9. Business Viability
+
+- weekly premium framing
+- coverage caps
+- loss ratio
+- simulated but auditable operating model
+
+## 10. What Is Real vs Simulated
+
+### Real now
+- decision pipeline
+- scheduler
+- claims and payouts
+- admin/worker surfaces
+- risk-model service
+- forecast engine
+
+### Simulated now
+- weather / AQI / traffic / platform source feeds
+- payout rail as sandbox/demo behavior
+
+## 11. Next Technical Step
+
+- ML fraud feature pipeline
+- fraud model service
+- blended rule + ML claim fraud score
+- explainable fraud review UI

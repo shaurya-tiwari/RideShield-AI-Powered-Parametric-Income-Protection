@@ -40,8 +40,17 @@ stitch/
 logs/runtime/*.txt
 *.egg-info/
 .eggs/
+backend/ml/artifacts/*
+!backend/ml/artifacts/.gitkeep
 
 # Project-local planning docs that should not be pushed
 /Sprint_*.md
 /Architecture.md
 /DevNotes.md
+DEMO_SCRIPT.md
+FRONTEND_AUDIT_REPORT.md
+test_model.py
+test_phase2_ml_integration.py
+other/
+DEVTrails_2026_Usecase_Document (1).pdf
+RideShield_stitch_backup
