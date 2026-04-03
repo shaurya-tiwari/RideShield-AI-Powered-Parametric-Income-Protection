@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     SESSION_SECRET: str
     SESSION_DURATION_HOURS: int = 72
+    SESSION_COOKIE_SAMESITE: str = "none" if ENV == "prod" else "lax"
     ADMIN_USERNAME: str = "admin"
     ADMIN_PASSWORD: str
     CORS_ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
@@ -82,6 +83,14 @@ class Settings(BaseSettings):
     @property
     def cors_allowed_origins(self) -> list[str]:
         return [item.strip() for item in self.CORS_ALLOWED_ORIGINS.split(",") if item.strip()]
+
+    @field_validator("SESSION_COOKIE_SAMESITE", mode="before")
+    @classmethod
+    def validate_cookie_samesite(cls, value: Any) -> str:
+        normalized = str(value or "lax").strip().lower()
+        if normalized not in {"lax", "strict", "none"}:
+            raise ValueError("SESSION_COOKIE_SAMESITE must be one of: lax, strict, none")
+        return normalized
 
     # City Risk Profiles
     CITY_RISK_PROFILES: dict = {
