@@ -21,7 +21,9 @@ from backend.api.payouts import router as payouts_router
 from backend.api.triggers import router as triggers_router
 from backend.api.workers import router as workers_router
 from backend.config import settings
+from backend.core.fraud_model_service import fraud_model_service
 from backend.core.location_service import location_service
+from backend.core.risk_model_service import risk_model_service
 from backend.core.runtime_logging import configure_logging
 from backend.core.trigger_scheduler import trigger_scheduler
 from backend.database import async_session_factory, close_db, init_db
@@ -61,6 +63,24 @@ async def lifespan(app: FastAPI):
         logger.info("Trigger scheduler enabled")
     else:
         logger.info("Trigger scheduler disabled")
+
+    # Log ML model load status — visible in Render logs
+    fraud_info = fraud_model_service.get_model_info()
+    risk_info = risk_model_service.get_model_info()
+    logger.info(
+        "ML fraud model: %s (version=%s, fallback=%s, error=%s)",
+        fraud_info["status"],
+        fraud_info["version"],
+        fraud_info["fallback_used"],
+        fraud_info["last_error"],
+    )
+    logger.info(
+        "ML risk model: %s (version=%s, fallback=%s, error=%s)",
+        risk_info["status"],
+        risk_info["version"],
+        risk_info["fallback_used"],
+        risk_info["last_error"],
+    )
 
     logger.info("Server ready at http://%s:%s", display_host, settings.PORT)
 
@@ -138,6 +158,7 @@ async def root():
         "description": "Parametric AI Insurance for Gig Delivery Workers",
         "docs": "/docs",
         "health": "/health",
+        "model_status": "/health/models",
         "demo_flow": {
             "step_1": "POST /api/workers/register",
             "step_2": "POST /api/policies/create",

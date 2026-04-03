@@ -11,7 +11,9 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config import settings
+from backend.core.fraud_model_service import fraud_model_service
 from backend.core.location_service import location_service
+from backend.core.risk_model_service import risk_model_service
 from backend.core.trigger_scheduler import trigger_scheduler
 from backend.database import get_db
 
@@ -71,4 +73,24 @@ async def config_check(db: AsyncSession = Depends(get_db)):
         "available_cities": [city.slug for city in cities] or list(settings.CITY_RISK_PROFILES.keys()),
         "city_zone_map": city_map,
         "available_plans": list(settings.PLAN_DEFINITIONS.keys()),
+    }
+
+
+@router.get("/health/models")
+async def model_health_check():
+    """ML model status — shows whether fraud/risk models loaded or are running rule-based fallback."""
+    fraud_info = fraud_model_service.get_model_info()
+    risk_info = risk_model_service.get_model_info()
+
+    all_active = fraud_info["status"] == "active" and risk_info["status"] == "active"
+    any_fallback = fraud_info["fallback_used"] or risk_info["fallback_used"]
+
+    overall = "fully_operational" if all_active else ("degraded_rule_based_fallback" if any_fallback else "partial")
+
+    return {
+        "overall_status": overall,
+        "ml_enabled": settings.ML_ENABLED,
+        "fraud_model": fraud_info,
+        "risk_model": risk_info,
+        "checked_at": datetime.now(timezone.utc).isoformat(),
     }
