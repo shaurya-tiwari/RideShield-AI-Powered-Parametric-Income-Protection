@@ -63,6 +63,7 @@ async def worker_login(
         httponly=True,
         secure=SESSION_COOKIE_SECURE,
         samesite="lax",
+        path="/",
     )
     return {
         "token": token,
@@ -107,6 +108,7 @@ async def admin_login(request: AdminLoginRequest, http_request: Request, respons
         httponly=True,
         secure=SESSION_COOKIE_SECURE,
         samesite="lax",
+        path="/",
     )
     return {
         "token": token,
@@ -136,5 +138,6 @@ async def logout(response: Response):
         httponly=True,
         secure=SESSION_COOKIE_SECURE,
         samesite="lax",
+        path="/",
     )
     return {"message": "Session cleared."}

@@ -103,7 +103,12 @@ def parse_bearer_token(authorization: str | None) -> str:
 def parse_cookie_or_bearer(cookie_token: str | None, authorization: str | None) -> str:
     if cookie_token:
         return cookie_token
-    return parse_bearer_token(authorization)
+    if authorization:
+        return parse_bearer_token(authorization)
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Authentication required.",
+    )
 
 
 async def get_current_session(

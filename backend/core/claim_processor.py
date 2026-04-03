@@ -1,6 +1,7 @@
 """Claim processor orchestrating the zero-touch claim pipeline."""
 
 import logging
+from datetime import timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional
 
@@ -24,6 +25,25 @@ from simulations.weather_mock import weather_simulator
 logger = logging.getLogger("rideshield.cycles")
 
 class ClaimProcessor:
+    async def _find_incident_window_claim(self, db: AsyncSession, worker: Worker, event: Event) -> Claim | None:
+        hour_start = event.started_at.replace(minute=0, second=0, microsecond=0)
+        hour_end = hour_start + timedelta(hours=1)
+        return (
+            await db.execute(
+                select(Claim)
+                .join(Event, Claim.event_id == Event.id)
+                .where(
+                    and_(
+                        Claim.worker_id == worker.id,
+                        Claim.event_id != event.id,
+                        Event.started_at >= hour_start,
+                        Event.started_at < hour_end,
+                    )
+                )
+                .order_by(Claim.created_at.desc())
+            )
+        ).scalars().first()
+
     async def run_trigger_cycle(
         self,
         db: AsyncSession,
@@ -249,6 +269,8 @@ class ClaimProcessor:
                     details={
                         "worker_id": str(worker.id),
                         "worker_name": worker.name,
+                        "duplicate_scope": "event",
+                        "existing_claim_id": str(existing_claim.id),
                         "event_id": str(event.id),
                         "event_type": event.event_type,
                         "zone": event.zone,
@@ -259,6 +281,39 @@ class ClaimProcessor:
             )
             result["status"] = "duplicate"
             result["details"] = {"message": "Claim already exists for this event. Extended if applicable."}
+            return result
+
+        incident_window_claim = await self._find_incident_window_claim(db, worker, event)
+        if incident_window_claim:
+            db.add(
+                AuditLog(
+                    entity_type="claim",
+                    entity_id=incident_window_claim.id,
+                    action="duplicate_detected",
+                    details={
+                        "worker_id": str(worker.id),
+                        "worker_name": worker.name,
+                        "duplicate_scope": "incident_window",
+                        "existing_claim_id": str(incident_window_claim.id),
+                        "existing_event_id": str(incident_window_claim.event_id),
+                        "event_id": str(event.id),
+                        "event_type": event.event_type,
+                        "zone": event.zone,
+                        "incident_window_start": event.started_at.replace(
+                            minute=0,
+                            second=0,
+                            microsecond=0,
+                        ).isoformat(),
+                        "covered_triggers": covered_triggers,
+                        "incident_triggers": fired_triggers,
+                    },
+                )
+            )
+            result["status"] = "duplicate"
+            result["details"] = {
+                "message": "Claim already exists for this incident window.",
+                "existing_claim_id": str(incident_window_claim.id),
+            }
             return result
 
         fraud_result = await fraud_detector.compute_fraud_score(db, worker, event, policy, trust_score)
