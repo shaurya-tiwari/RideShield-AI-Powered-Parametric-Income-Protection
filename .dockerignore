@@ -1,0 +1,50 @@
+# Git
+.git
+.gitignore
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__
+*.py[cod]
+*.so
+.Python
+.venv
+venv/
+ENV/
+.eggs/
+*.egg-info/
+dist/
+build/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Frontend
+frontend/node_modules/
+frontend/.vite/
+frontend/dist/
+frontend/.turbo/
+
+# Docs
+*.md
+!README.md
+
+# Misc
+.DS_Store
+Thumbs.db
+*.log
+simulations/

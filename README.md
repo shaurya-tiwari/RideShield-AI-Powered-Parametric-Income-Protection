@@ -2,11 +2,14 @@
 
 # 🛵 RideShield — Parametric AI Insurance for Gig Delivery Workers
 
+<<<<<<< HEAD
 > [!TIP]
 > **View Repo Content:** &nbsp;  &nbsp; | &nbsp; 🏗️ **[Architecture & Roadmap](README2.md)**
 
 ---
 
+=======
+>>>>>>> 6a2eb6a77d6162e55ae21d81f1b903de49598d8b
 > **"Claims are automatically initiated by the system. Delivery partners never file claims."**
 
 A recharge-style, AI-powered parametric insurance system that protects gig delivery workers' income in real-time — triggered by rain, extreme heat, pollution, platform outages, and curfews — using multi-signal fraud detection, duplicate claim prevention, and zero-touch payouts.
@@ -989,12 +992,15 @@ Building an automated financial system without human intervention in the loop su
 **Regulation and privacy are product constraints, not afterthoughts.** Any credible parametric insurance concept in India needs IRDAI sandbox positioning and DPDPA compliance. We built these in from the start rather than bolting them on as appendices.
 
 ---
+<<<<<<< HEAD
 # 🏗️ RideShield — Architecture Plan & Implementation Roadmap
 
 > [!TIP]
 > **View Repo Content:** &nbsp; 📜 **[Project Overview](README.md)** &nbsp; | &nbsp; 🏗️ **[Architecture & Roadmap](README2.md)**
 
 ---
+=======
+>>>>>>> 6a2eb6a77d6162e55ae21d81f1b903de49598d8b
 
 ## 🔮 What's Next
 

@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+logs/
+
+# OS / local noise
+.DS_Store
+Thumbs.db
+
+# Build / packaging
+build/
+dist/
+node_modules/
+frontend/dist/
+stitch/
+logs/runtime/*.txt
+*.egg-info/
+.eggs/
+backend/ml/artifacts/*
+!backend/ml/artifacts/.gitkeep
+
+# Project-local planning docs that should not be pushed
+/Sprint_*.md
+/Architecture.md
+/DevNotes.md
+DEMO_SCRIPT.md
+FRONTEND_AUDIT_REPORT.md
+CODE_AUDIT_REPORT.md
+FRONTEND_IMPROVEMENT_PLAN.md
+test_model.py
+test_phase2_ml_integration.py
+realtime_api_migration_plan.md
+nul
+other/
+DEVTrails_2026_Usecase_Document (1).pdf
+RideShield_stitch_backup
