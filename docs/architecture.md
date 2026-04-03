@@ -1,21 +1,50 @@
 # RideShield Architecture Reference
 
-This is the repo-local architecture note for the current implementation.
-It is intentionally shorter and more operational than the root `Architecture.md`.
+This is the repo-local architecture note for the current stable Phase 2 system.
+
+It focuses on what is implemented now, not on future expansion work.
 
 ## Current Architecture Shape
 
-RideShield is a layered system with:
+RideShield is a layered web application with:
 - a React frontend
 - a FastAPI backend
 - PostgreSQL persistence
-- simulated disruption inputs
-- real policy, incident, claim, payout, and scheduler logic
-- runtime ML services with explicit fallback paths
+- mock disruption inputs
+- real incident, claim, review, and payout orchestration inside the app
+
+The key product rule is unchanged:
+- workers do not manually file claims
+- the system creates claims from validated disruption incidents
+
+## Stable Runtime Boundary
+
+### Mock signal layer
+
+Phase 2 uses simulated inputs for:
+- weather
+- AQI
+- traffic
+- platform disruption
+
+These inputs are mock-based by design for the current demo and judging flow.
+
+### Real product core
+
+The core runtime remains real within the application:
+- trigger evaluation
+- incident creation and extension
+- claim generation
+- fraud scoring
+- trust-aware decisioning
+- payout routing
+- admin review flow
+- scheduler-driven monitoring
 
 ## Backend Layers
 
 ### API layer
+
 Current route groups:
 - auth
 - workers
@@ -28,7 +57,8 @@ Current route groups:
 - health
 - locations
 
-### Core runtime layer
+### Core decision layer
+
 Current core services:
 - `backend/core/trigger_engine.py`
 - `backend/core/claim_processor.py`
@@ -41,74 +71,104 @@ Current core services:
 - `backend/core/risk_scorer.py`
 - `backend/core/premium_calculator.py`
 
-### ML and forecast layer
-Current runtime additions:
-- `backend/core/risk_model_service.py`
-- `backend/core/fraud_model_service.py`
-- `backend/core/forecast_engine.py`
-- `backend/ml/risk_model.py`
-- `backend/ml/fraud_model.py`
-- `backend/ml/features/risk_features.py`
-- `backend/ml/features/fraud_features.py`
-- `backend/ml/explainability.py`
-
 ### Data layer
-- PostgreSQL-backed worker, policy, event, claim, payout, trust, audit, and geography models
-- DB-backed cities and zones
-- zone threshold profiles and zone risk profiles
 
-## Current Decisioning Truth
+The database stores:
+- workers
+- policies
+- incidents and events
+- claims
+- payouts
+- trust state
+- audit logs
+- geography records for cities and zones
 
-### Real today
-- trigger evaluation
-- incident creation and extension
-- claim generation
-- payout execution
-- scheduler loop
-- audit logging
+## End-To-End Flow
 
-### Hybrid ML today
-- risk scoring uses ML-first behavior with safe fallback
-- premium calculation surfaces expose ML-derived risk metadata
-- forecast analytics use the forecast engine plus risk-model-backed projections
-- fraud scoring blends rule signals and fraud-model output with fallback
+```text
+Mock signals -> trigger engine -> zone incident
+-> eligible workers filtered
+-> fraud + trust + payout-aware decisioning
+-> approve / review / reject
+-> payout or admin action
+```
 
-### Still rule-controlled today
-- the final approve, delay, and reject thresholds in `decision_engine.py`
-- most operational thresholds and scheduler behavior
-- payout rail behavior, which is still sandboxed and simulated
+Important runtime behavior:
+- incidents are grouped by disruption window
+- overlapping trigger evidence contributes to one incident story
+- the system avoids stacked same-window payouts for the same worker
 
-## Claims Model
+## Decisioning Model
 
-RideShield is incident-centric, not trigger-stack-centric.
+RideShield is not a raw rules-only flow and not a self-learning system.
 
-Meaning:
-- one incident window should produce one claim path per worker
-- overlapping trigger signals are evidence on one incident
-- they are not separate stacked payouts for the same lost window
+Current decision behavior combines:
+- disruption context
+- fraud score
+- worker trust score
+- decision confidence
+- payout exposure
 
-This is reflected in:
-- trigger engine behavior
-- grouped claim views
-- admin review queue grouping
-- payout execution rules
+### Weak vs strong suspicious signals
 
-## Auth And Session Model
+Weak signals such as:
+- movement anomaly
+- weak pre-event activity
+- event confidence
 
-Current auth shape:
-- signed session payloads are generated in `backend/core/session_auth.py`
-- worker and admin logins both return a token and set an httpOnly cookie
-- protected APIs accept cookie or bearer token
-- the frontend treats the cookie as the primary session transport
-- local storage keeps only minimal role metadata for boot UX
+should not behave like hard fraud evidence on their own.
 
-## Geography Foundation
+The decision layer is tuned so:
+- clean, trusted claims can pass through the zero-touch lane
+- ambiguous claims move to bounded manual review
+- harder suspicious patterns can still be rejected
 
-The repo has moved past hardcoded frontend-only geography.
+## Zero-Touch And Review Design
 
-Current rule:
-- `zone_id` is the backend source of truth
-- legacy `city` and `zone` strings remain for compatibility and display
+The product is built around two lanes:
+
+### Zero-touch lane
+
+Used for low-risk claims where the system has enough signal support to act automatically.
+
+### Review lane
+
+Used for ambiguity, not as the default path.
+
+The admin queue is incident-centric and operationally prioritized using:
+- wait time
+- payout exposure
+- urgency
+- confidence
+- primary review driver
+
+Explainability is surfaced directly in the admin product through:
+- next decision context
+- queue pressure
+- review driver summaries
+- confidence and reason fields
+
+## Frontend Surface Split
+
+Current major surfaces:
+- `Home.jsx`
+- `Auth.jsx`
+- `Onboarding.jsx`
+- `HowItWorks.jsx`
+- `Dashboard.jsx`
+- `AdminPanel.jsx`
+- `DemoRunner.jsx`
+- `IntelligenceOverview.jsx`
+
+Functional split:
+- worker dashboard = worker-facing claims and policy view
+- admin panel = operational decision and oversight surface
+- demo runner = controlled scenario and cause-and-effect surface
+- intelligence page = system interpretation and model context surface
+
+## Geography And Auth
+
+### Geography
 
 Current supported cities:
 - Delhi
@@ -116,81 +176,45 @@ Current supported cities:
 - Bengaluru
 - Chennai
 
-Current source-of-truth endpoints:
-- `GET /api/locations/cities`
-- `GET /api/locations/zones`
-- `GET /api/locations/config`
+Backend geography is DB-backed.
 
-## Frontend Surface Architecture
+Current rule:
+- `zone_id` is the backend source of truth
+- legacy `city` and `zone` strings remain for display and compatibility
 
-Current major pages:
-- `Home.jsx`
-- `Auth.jsx`
-- `Onboarding.jsx`
-- `HowItWorks.jsx`
-- `IntelligenceOverview.jsx`
-- `Dashboard.jsx`
-- `AdminPanel.jsx`
-- `DemoRunner.jsx`
+### Auth
 
-Current surface split:
-- worker dashboard = worker decision surface
-- admin panel = operational decision surface
-- demo runner = scenario control and cause-and-effect surface
-- home, how-it-works, intelligence = explanation surfaces
-
-## Analytics Architecture
-
-Current analytics routes:
-- `GET /api/analytics/admin-overview`
-- `GET /api/analytics/forecast`
-- `GET /api/analytics/zone-risk`
-- `GET /api/analytics/models`
-
-Current intent:
-- `admin-overview` = KPI and oversight payload
-- `forecast` = city or zone projection reads
-- `zone-risk` = ranked city-zone view
-- `models` = runtime model metadata and fallback state
+Current auth shape:
+- worker and admin sessions are separated
+- httpOnly cookies are the primary browser auth path
+- bearer token support remains available for API tooling and tests
 
 ## Runtime Observability
 
 Current local observability includes:
-- `logs/runtime/app_runtime.txt`
-- `logs/runtime/trigger_cycles.txt`
-- scheduler state in `/health/config`
-- scheduler and model visibility in admin and intelligence surfaces
+- runtime diagnostics during development
+- scheduler state in health and admin analytics
 
-Use these to inspect:
+These logs are local diagnostics for:
 - trigger cadence
-- zone-level signal values
-- incident create vs extend behavior
-- claim volumes
+- signal values
+- incident creation vs extension
+- claim volume
 - payout totals
 
-## Security Posture
+## Phase 2 Boundaries
 
-Current enforcement:
-- worker and admin sessions are separated
-- worker-owned routes enforce ownership checks
-- analytics and policy utility routes remain admin-only
-- auth endpoints are rate limited in memory with lazy cleanup
-- CORS is origin-restricted
-- baseline browser security headers are enabled
+This architecture note describes the stable mock-based Phase 2 system only.
 
-## Known Current Gaps
+It does not claim:
+- real provider integration
+- automated model learning
+- production payout rail integration
+- future expansion work documented separately in the roadmap
 
-- fraud and risk model calibration still depend on synthetic or simplified training assumptions
-- GPS spoofing and stronger telemetry realism are still not implemented
-- runtime logs are plain text rather than structured JSON
-- secrets hygiene in local development files still deserves tightening
-- some dense decision surfaces still have room for spacing and hierarchy cleanup
+## Related Docs
 
-## Next Architecture Step
-
-The next meaningful technical step should be:
-1. improve fraud-data realism and calibration
-2. tighten dev secret handling
-3. broaden admin and demo frontend coverage
-4. improve structured runtime observability
-5. revisit remaining threshold tuning after more realistic scenario data
+- [Phase 2 current state](PHASE2_CURRENT_STATE.md)
+- [Workflow guide](workflow_guide.md)
+- [Developer notes](DevNotes.md)
+- [Phase 3 roadmap](Phase3_Roadmap.md)

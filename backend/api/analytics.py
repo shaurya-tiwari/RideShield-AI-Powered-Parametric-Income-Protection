@@ -6,6 +6,7 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from backend.config import settings
 from backend.core.forecast_engine import forecast_engine
@@ -14,7 +15,7 @@ from backend.core.risk_model_service import risk_model_service
 from backend.core.session_auth import require_admin_session
 from backend.core.trigger_scheduler import trigger_scheduler
 from backend.database import async_session_factory, get_db
-from backend.db.models import AuditLog, Event, Payout, Policy, Worker, WorkerActivity
+from backend.db.models import AuditLog, Claim, Event, Payout, Policy, Worker, WorkerActivity
 from backend.utils.time import utc_now_naive
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
@@ -35,6 +36,137 @@ def forecast_band(score: float) -> str:
     return "critical"
 
 
+def _humanize_label(value: str | None) -> str:
+    if not value:
+        return "signal alignment"
+    return " ".join(part.capitalize() for part in str(value).split("_") if part)
+
+
+def _review_flag_label(value: str | None) -> str:
+    mapping = {
+        "movement": "movement anomaly",
+        "pre_activity": "weak pre-event activity",
+        "timing": "policy timing risk",
+        "duplicate": "duplicate claim pressure",
+        "cluster": "cluster fraud pressure",
+        "income_inflation": "income inflation pressure",
+        "device": "device risk",
+    }
+    if value in mapping:
+        return mapping[value]
+    return _humanize_label(value).lower()
+
+
+def _is_zero_touch_approved(claim: Claim) -> bool:
+    return claim.status == "approved" and not claim.reviewed_by
+
+
+def _review_driver_labels(claim: Claim) -> list[str]:
+    breakdown = claim.decision_breakdown if isinstance(claim.decision_breakdown, dict) else {}
+    labels: list[str] = []
+    seen: set[str] = set()
+
+    def add_label(value: str | None) -> None:
+        if not value:
+            return
+        normalized = str(value).strip()
+        if not normalized or normalized in seen:
+            return
+        seen.add(normalized)
+        labels.append(normalized)
+
+    add_label(breakdown.get("primary_reason"))
+    fraud_model = breakdown.get("fraud_model") if isinstance(breakdown.get("fraud_model"), dict) else {}
+    top_factors = fraud_model.get("top_factors") if isinstance(fraud_model.get("top_factors"), list) else []
+    for factor in top_factors[:3]:
+        add_label(factor.get("label"))
+    inputs = breakdown.get("inputs") if isinstance(breakdown.get("inputs"), dict) else {}
+    flags = inputs.get("fraud_flags") if isinstance(inputs.get("fraud_flags"), list) else []
+    for flag in flags[:3]:
+        add_label(_review_flag_label(flag))
+    event_confidence = inputs.get("event_confidence")
+    try:
+        if event_confidence is not None and float(event_confidence) <= 0.75:
+            add_label("event confidence")
+    except (TypeError, ValueError):
+        pass
+    if not labels:
+        add_label("signal alignment")
+    return labels
+
+
+def _incident_key(claim: Claim) -> str:
+    zone = claim.event.zone if claim.event else "zone"
+    created_at = claim.created_at.isoformat() if claim.created_at else "unknown"
+    bucket = created_at[:13]
+    return f"{claim.worker_id}|{zone}|{bucket}"
+
+
+def _review_insights(driver_counts: dict[str, int], incident_labels: list[set[str]], total_incidents: int) -> dict:
+    weak_signal_labels = {
+        "movement anomaly",
+        "weak pre-event activity",
+        "event confidence",
+        "signal alignment requires review",
+    }
+    low_trust_count = sum(1 for labels in incident_labels if "worker trust score" in labels)
+    weak_signal_count = sum(1 for labels in incident_labels if labels & weak_signal_labels)
+    return {
+        "weak_signal_overlap_share": round((weak_signal_count / max(1, total_incidents)) * 100),
+        "low_trust_share": round((low_trust_count / max(1, total_incidents)) * 100),
+    }
+
+
+def _summarize_review_drivers(claims: list[Claim], *, source: str, window_hours: int | None) -> dict:
+    driver_counts: dict[str, int] = {}
+    seen_incidents: set[str] = set()
+    total_incidents = 0
+    incident_labels: list[set[str]] = []
+
+    for claim in claims:
+        incident_key = _incident_key(claim)
+        if incident_key in seen_incidents:
+            continue
+        seen_incidents.add(incident_key)
+        total_incidents += 1
+        labels = set(_review_driver_labels(claim))
+        incident_labels.append(labels)
+        for label in labels:
+            driver_counts[label] = driver_counts.get(label, 0) + 1
+
+    drivers = [
+        {
+            "label": label,
+            "count": count,
+            "share": round((count / max(1, total_incidents)) * 100),
+        }
+        for label, count in sorted(driver_counts.items(), key=lambda item: (-item[1], item[0]))
+    ][:3]
+
+    return {
+        "source": source,
+        "window_hours": window_hours,
+        "total_incidents": total_incidents,
+        "drivers": drivers,
+        "insights": _review_insights(driver_counts, incident_labels, total_incidents),
+    }
+
+
+def _build_review_driver_summary(recent_claims: list[Claim], active_queue_claims: list[Claim], recent_window_hours: int) -> dict:
+    recent_summary = _summarize_review_drivers(
+        recent_claims,
+        source="recent_activity",
+        window_hours=recent_window_hours,
+    )
+    if recent_summary["total_incidents"] > 0:
+        return recent_summary
+    return _summarize_review_drivers(
+        active_queue_claims,
+        source="active_queue",
+        window_hours=None,
+    )
+
+
 @router.get("/admin-overview")
 async def get_admin_overview(
     days: int = 14,
@@ -44,6 +176,7 @@ async def get_admin_overview(
     now = utc_now_naive()
     cutoff = now - timedelta(days=days)
     recent_activity_cutoff = now - timedelta(hours=6)
+    review_driver_cutoff = now - timedelta(hours=1)
 
     active_policy_rows = (
         await db.execute(
@@ -72,6 +205,32 @@ async def get_admin_overview(
         )
     ).scalar_one()
     payouts_total = float(payouts_total or 0)
+
+    recent_claims = (
+        await db.execute(select(Claim).where(Claim.created_at >= cutoff))
+    ).scalars().all()
+    auto_approved_count = 0
+    delayed_count = 0
+    for claim in recent_claims:
+        if claim.status == "delayed":
+            delayed_count += 1
+        if _is_zero_touch_approved(claim):
+            auto_approved_count += 1
+    claim_total = len(recent_claims)
+    recent_review_claims = (
+        await db.execute(
+            select(Claim)
+            .options(selectinload(Claim.event))
+            .where(Claim.status == "delayed", Claim.created_at >= review_driver_cutoff)
+        )
+    ).scalars().all()
+    delayed_queue_claims = (
+        await db.execute(
+            select(Claim)
+            .options(selectinload(Claim.event))
+            .where(Claim.status == "delayed")
+        )
+    ).scalars().all()
 
     active_workers = (
         await db.execute(select(func.count(Worker.id)).where(Worker.status == "active"))
@@ -149,6 +308,15 @@ async def get_admin_overview(
         "worker_activity_index": worker_activity_index,
         "duplicate_claim_log": duplicate_claim_log,
         "scheduler": trigger_scheduler.state,
+        "decision_health": {
+            "claim_total": claim_total,
+            "auto_approved": auto_approved_count,
+            "auto_approval_rate": round((auto_approved_count / max(1, claim_total)) * 100, 1),
+            "zero_touch_approvals": auto_approved_count,
+            "zero_touch_rate": round((auto_approved_count / max(1, claim_total)) * 100, 1),
+            "review_rate": round((delayed_count / max(1, claim_total)) * 100, 1),
+        },
+        "review_driver_summary": _build_review_driver_summary(recent_review_claims, delayed_queue_claims, recent_window_hours=1),
         "next_week_forecast": forecast,
     }
 

@@ -2,6 +2,31 @@
 
 This file is the implementation baseline for the current repo, not a copy of the sprint markdowns. `Sprint_1.md`, `Sprint_2.md`, and `Sprint_3.md` were used as planning references, but the codebase has intentionally diverged where correctness, maintainability, Windows compatibility, and demo clarity required it.
 
+### Phase 2 Submission Snapshot
+
+- Submission posture:
+  - stable mock-based signal inputs
+  - real incident, claim, and review orchestration inside the app
+  - documentation intentionally excludes future integration and learning work from the Phase 2 claim
+- Signal architecture decision:
+  - Phase 2 keeps disruption inputs isolated from the decision flow so future provider expansion does not require rewriting claims logic
+  - today the product remains mock-driven and demo-safe
+- Decision architecture decision:
+  - trust, hybrid fraud scoring, decision confidence, and payout-aware logic all contribute to approval vs review behavior
+  - zero-touch is the default lane for clean claims; review is the bounded lane for ambiguity
+- Signal interpretation decision:
+  - weak indicators such as movement anomaly, weak pre-event activity, and event confidence should not behave like hard fraud evidence on their own
+  - stronger or mixed patterns are what justify review escalation
+- Recent Phase 2 improvements:
+  - confidence fields and review explainability were fixed so the queue no longer shows placeholder values
+  - decision policy was tuned to reduce false delays on trusted, low-fraud claims
+  - a one-time reconciliation path was added for stale low-risk delayed claims
+  - the review queue is prioritized by operational pressure rather than simple recency
+  - `review_driver_summary` now surfaces usable system-level explainability instead of going blank when the short window is empty
+- Submission-facing docs:
+  - `docs/PHASE2_CURRENT_STATE.md`
+  - `docs/Phase3_Roadmap.md`
+
 ### Latest Repo Notes
 
 - Latest push snapshot date: `2026-04-03`
@@ -23,10 +48,10 @@ This file is the implementation baseline for the current repo, not a copy of the
   - `frontend/src/components/PremiumCalculator.jsx`
   - this was replaced by the simplified onboarding plan-selection flow instead of left as a duplicate pricing surface
 - New docs added in the repo:
+  - `docs/PHASE2_CURRENT_STATE.md`
   - `docs/business_model.md`
-  - `docs/realtime_api_migration_plan.md`
+  - `docs/Phase3_Roadmap.md`
 - Git hygiene reminder:
-  - runtime logs remain local-only and ignored
   - this pass is not dropping any tracked file other than the intentional `PremiumCalculator.jsx` removal above
 
 - Risk-model scaffolding and runtime risk-model service now exist.
@@ -34,14 +59,7 @@ This file is the implementation baseline for the current repo, not a copy of the
 - Frontend includes model/risk/forecast visibility surfaces.
 - Fraud ML is integrated into hybrid claim-path scoring with runtime fallback.
 - The frontend now uses httpOnly cookie sessions with minimal role-only local metadata.
-- Root audit notes were merged into this file and removed from the repo root:
-  - `CODE_AUDIT_REPORT.md`
-  - `FRONTEND_IMPROVEMENT_PLAN.md`
-- Several local-only scratch files are intentionally ignored:
-  - `DEMO_SCRIPT.md`
-  - `test_model.py`
-  - `test_phase2_ml_integration.py`
-- ML artifact files under `backend/ml/artifacts/` are local outputs and should not be treated as committed source.
+- Earlier audit notes were merged into this file so the implementation history stays in one place.
 
 ### Current Baseline
 
@@ -789,9 +807,7 @@ Current frontend backlog still acknowledged:
 
 ### Runtime Logging Update
 
-The backend now writes local plain-text runtime logs to:
-- `logs/runtime/app_runtime.txt`
-- `logs/runtime/trigger_cycles.txt`
+The backend now writes plain-text runtime diagnostics during local development.
 
 Purpose:
 - review scheduler behavior over time
@@ -807,7 +823,6 @@ Implementation files:
 
 Working rule:
 - runtime logs are local diagnostics
-- they are intentionally ignored by git
 
 ### Security Hardening Update
 
@@ -827,11 +842,7 @@ Confirmed audit fixes now implemented:
 
 ### Audit Archive Update (2026-04-02)
 
-This section absorbs the earlier root audit artifacts:
-- `CODE_AUDIT_REPORT.md`
-- `FRONTEND_IMPROVEMENT_PLAN.md`
-
-They are intentionally folded into `docs/DevNotes.md` so the repo keeps one implementation-facing audit history instead of multiple drifting summary files.
+This section absorbs the earlier audit summaries so the repo keeps one implementation-facing audit history instead of multiple drifting summary files.
 
 Snapshot after the audit hardening pass:
 - backend tests: `53 passed`

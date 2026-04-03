@@ -188,7 +188,7 @@ export default function AdminPanel() {
     0,
   );
   const queuePressure = queuePressureState(filteredQueueIncidents.length, queueOverdueCount, queueExposure);
-  const topSystemDrivers = useMemo(() => {
+  const fallbackSystemDrivers = useMemo(() => {
     const counts = new Map();
     for (const incident of filteredQueueIncidents) {
       const seen = new Set();
@@ -213,6 +213,12 @@ export default function AdminPanel() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 3);
   }, [filteredQueueIncidents]);
+  const topSystemDrivers = analytics?.review_driver_summary?.drivers?.length
+    ? analytics.review_driver_summary.drivers
+    : fallbackSystemDrivers;
+  const reviewDriverWindowHours = analytics?.review_driver_summary?.window_hours || 1;
+  const reviewDriverSource = analytics?.review_driver_summary?.source || "active_queue";
+  const reviewInsights = analytics?.review_driver_summary?.insights || {};
 
   if (loading) {
     return <div className="panel p-8 text-center text-on-surface-variant">Loading admin panel...</div>;
@@ -329,10 +335,14 @@ export default function AdminPanel() {
             <KpiTile label="Claims" value={claimStats?.total_claims ?? 0} hint={`Approval ${formatPercent(claimStats?.approval_rate)}`} />
           </div>
           <div className="bento-1-4">
-            <KpiTile label="Approval" value={formatPercent(claimStats?.approval_rate)} hint={`Delayed ${formatPercent(claimStats?.delayed_rate)}`} />
+            <KpiTile
+              label="Approval"
+              value={formatPercent(claimStats?.approval_rate)}
+              hint={`Zero-touch ${formatPercent(claimStats?.zero_touch_rate ?? claimStats?.auto_approval_rate)}`}
+            />
           </div>
           <div className="bento-1-4">
-            <KpiTile label="Delayed" value={claimStats?.delayed ?? 0} hint={`${queue?.overdue_count ?? 0} overdue`} />
+            <KpiTile label="Delayed" value={claimStats?.delayed ?? 0} hint={`Review ${formatPercent(claimStats?.review_rate)} | ${queue?.overdue_count ?? 0} overdue`} />
           </div>
           <div className="bento-1-4">
             <KpiTile label="Fraud rate" value={formatPercent(claimStats?.fraud_rate)} hint="Detection window" />
@@ -387,26 +397,71 @@ export default function AdminPanel() {
           <div className="context-panel p-6">
             <div className="mb-5">
               <p className="eyebrow">System explainability</p>
-              <h3 className="mt-2 text-lg font-bold leading-tight text-primary">Top drivers across the live review queue</h3>
+              <h3 className="mt-2 text-lg font-bold leading-tight text-primary">
+                {reviewDriverSource === "recent_activity"
+                  ? `Top review drivers in the last ${reviewDriverWindowHours}h`
+                  : "Top drivers across the active review queue"}
+              </h3>
               <p className="mt-3 text-xs leading-6 text-on-surface-variant">
-                Surface the factors repeating across delayed incidents so operators can spot whether review pressure is
-                coming from trust, movement, pre-activity, or broader signal drift.
+                {reviewDriverSource === "recent_activity"
+                  ? "Surface the factors repeating across recent delayed incidents so operators can spot whether review pressure is coming from trust, movement, pre-activity, or broader signal drift."
+                  : "No new delayed incidents landed in the last hour, so this panel falls back to the current queue instead of going silent."}
               </p>
             </div>
+            {(reviewInsights.weak_signal_overlap_share || reviewInsights.low_trust_share) ? (
+              <div className="mb-4 rounded-[18px] border border-primary/8 bg-surface-container-low/80 p-4">
+                <p className="text-sm font-semibold text-primary">System insight</p>
+                <p className="mt-2 text-sm leading-6 text-on-surface-variant">
+                  {reviewInsights.weak_signal_overlap_share || 0}% of current review pressure is driven by weak-signal overlap.
+                  {` `}
+                  {reviewInsights.low_trust_share || 0}% is driven by low trust.
+                </p>
+              </div>
+            ) : null}
             <div className="space-y-3">
               {topSystemDrivers.length ? (
                 topSystemDrivers.map((driver) => (
                   <div key={driver.label} className="rounded-[18px] border border-primary/8 bg-surface-container-low/80 p-4">
                     <div className="flex items-center justify-between gap-3">
                       <p className="font-semibold text-primary">{driver.label}</p>
-                      <span className="pill-subtle">{driver.share}% of queue</span>
+                      <span className="pill-subtle">{driver.share}% of recent reviews</span>
                     </div>
-                    <p className="mt-2 text-sm text-on-surface-variant">{driver.count} grouped incidents currently surface this driver.</p>
+                    <p className="mt-2 text-sm text-on-surface-variant">
+                      {driver.count} recent review incidents currently surface this driver.
+                    </p>
                   </div>
                 ))
               ) : (
                 <p className="text-sm text-on-surface-variant">No review drivers are active because the queue is clear.</p>
               )}
+            </div>
+          </div>
+
+          <div className="context-panel p-6">
+            <div className="mb-5">
+              <p className="eyebrow">Decision health</p>
+              <h3 className="mt-2 text-lg font-bold leading-tight text-primary">Is the system trusting itself enough?</h3>
+              <p className="mt-3 text-xs leading-6 text-on-surface-variant">
+                Track how many claims still route into manual review versus cleanly auto-approving in the current window.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-[18px] border border-primary/8 bg-surface-container-low/80 p-4">
+                <p className="text-sm text-on-surface-variant">Zero-touch rate</p>
+                <p className="mt-2 text-2xl font-bold text-primary">
+                  {formatPercent(analytics?.decision_health?.zero_touch_rate ?? analytics?.decision_health?.auto_approval_rate)}
+                </p>
+                <p className="mt-2 text-xs text-on-surface-variant">
+                  {analytics?.decision_health?.zero_touch_approvals ?? analytics?.decision_health?.auto_approved ?? 0} claims were approved without manual review.
+                </p>
+              </div>
+              <div className="rounded-[18px] border border-primary/8 bg-surface-container-low/80 p-4">
+                <p className="text-sm text-on-surface-variant">Review rate</p>
+                <p className="mt-2 text-2xl font-bold text-primary">{formatPercent(analytics?.decision_health?.review_rate)}</p>
+                <p className="mt-2 text-xs text-on-surface-variant">
+                  {analytics?.decision_health?.claim_total ?? 0} claims were evaluated in the current reporting window.
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -25,6 +25,68 @@ from simulations.weather_mock import weather_simulator
 logger = logging.getLogger("rideshield.cycles")
 
 class ClaimProcessor:
+    async def _review_feedback_bias(
+        self,
+        db: AsyncSession,
+        worker: Worker,
+        fraud_flags: list[str],
+        event: Event,
+    ) -> dict:
+        if not fraud_flags:
+            return {
+                "score_adjustment": 0.0,
+                "confidence": 0.0,
+                "approved_matches": 0,
+                "rejected_matches": 0,
+                "source": "manual_review_history",
+            }
+
+        reviewed_claims = (
+            await db.execute(
+                select(Claim)
+                .where(
+                    and_(
+                        Claim.worker_id == worker.id,
+                        Claim.reviewed_at.is_not(None),
+                        Claim.created_at >= event.started_at - timedelta(days=45),
+                    )
+                )
+                .order_by(Claim.reviewed_at.desc())
+                .limit(15)
+            )
+        ).scalars().all()
+
+        current_flags = set(fraud_flags)
+        approved_matches = 0
+        rejected_matches = 0
+        approved_bias = 0.0
+        rejected_bias = 0.0
+
+        for reviewed_claim in reviewed_claims:
+            breakdown = reviewed_claim.decision_breakdown or {}
+            inputs = breakdown.get("inputs") if isinstance(breakdown, dict) else {}
+            historical_flags = set(inputs.get("fraud_flags") or []) if isinstance(inputs, dict) else set()
+            overlap = current_flags & historical_flags
+            if not overlap:
+                continue
+            overlap_weight = len(overlap) / max(1, len(current_flags))
+            if reviewed_claim.status == "approved":
+                approved_matches += 1
+                approved_bias += 0.04 * overlap_weight
+            elif reviewed_claim.status == "rejected":
+                rejected_matches += 1
+                rejected_bias += 0.05 * overlap_weight
+
+        score_adjustment = round(max(-0.08, min(0.08, approved_bias - rejected_bias)), 3)
+        confidence = round(min(1.0, (approved_matches + rejected_matches) / 3), 3)
+        return {
+            "score_adjustment": score_adjustment,
+            "confidence": confidence,
+            "approved_matches": approved_matches,
+            "rejected_matches": rejected_matches,
+            "source": "manual_review_history",
+        }
+
     async def _find_incident_window_claim(self, db: AsyncSession, worker: Worker, event: Event) -> Claim | None:
         hour_start = event.started_at.replace(minute=0, second=0, microsecond=0)
         hour_end = hour_start + timedelta(hours=1)
@@ -317,7 +379,17 @@ class ClaimProcessor:
             return result
 
         fraud_result = await fraud_detector.compute_fraud_score(db, worker, event, policy, trust_score)
-        decision_result = decision_engine.decide(disruption_score, event_confidence, fraud_result, trust_score)
+        review_feedback = await self._review_feedback_bias(db, worker, fraud_result["flags"], event)
+        disruption_hours = decision_engine.estimate_disruption_hours(event.started_at, float(event.severity or 0.5))
+        payout_calc = await income_verifier.calculate_payout(db, worker, policy, disruption_hours, event.started_at.hour)
+        decision_result = decision_engine.decide(
+            disruption_score,
+            event_confidence,
+            fraud_result,
+            trust_score,
+            feedback_result=review_feedback,
+            payout_amount=payout_calc["final_payout"],
+        )
         result["fraud_score"] = fraud_result["adjusted_fraud_score"]
         result["final_score"] = decision_result["final_score"]
         result["status"] = decision_result["decision"]
@@ -327,9 +399,6 @@ class ClaimProcessor:
             if decision_result["review_deadline"]
             else None,
         }
-
-        disruption_hours = decision_engine.estimate_disruption_hours(event.started_at, float(event.severity or 0.5))
-        payout_calc = await income_verifier.calculate_payout(db, worker, policy, disruption_hours, event.started_at.hour)
 
         claim = Claim(
             worker_id=worker.id,
@@ -368,10 +437,12 @@ class ClaimProcessor:
                 "rule_fraud_score": fraud_result.get("rule_fraud_score"),
                 "ml_fraud_score": fraud_result.get("ml_fraud_score"),
                 "fraud_probability": fraud_result.get("fraud_probability"),
+                "confidence": fraud_result.get("ml_confidence"),
                 "model_version": fraud_result.get("model_version"),
                 "fallback_used": fraud_result.get("fallback_used"),
                 "top_factors": fraud_result.get("top_factors", []),
             },
+            "review_feedback": review_feedback,
         }
         if decision_result["decision"] == "rejected":
             claim.rejection_reason = decision_result["explanation"]

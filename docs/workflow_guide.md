@@ -70,7 +70,7 @@ Important product rule:
 - payout rails
 - synthetic fraud-model training data
 - device or GPS telemetry realism
-- plain-text runtime logs
+- local runtime diagnostics
 
 ## Local Setup
 
@@ -206,11 +206,7 @@ The frontend should not treat hardcoded city constants as the source of truth.
 
 ## Runtime Logs
 
-Useful local logs:
-- `logs/runtime/app_runtime.txt`
-- `logs/runtime/trigger_cycles.txt`
-
-Use `trigger_cycles.txt` to inspect:
+Use local runtime diagnostics to inspect:
 - scheduler runs
 - zone-level signals
 - trigger outcomes

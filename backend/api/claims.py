@@ -40,7 +40,12 @@ def _extract_fraud_model_payload(claim: Claim) -> dict:
     return fraud_model if isinstance(fraud_model, dict) else {}
 
 
+def _is_zero_touch_approved(claim: Claim) -> bool:
+    return claim.status == "approved" and not claim.reviewed_by
+
+
 def _build_review_context(claim: Claim, now) -> dict:
+    decision_breakdown = claim.decision_breakdown if isinstance(claim.decision_breakdown, dict) else {}
     fraud_model = _extract_fraud_model_payload(claim)
     fraud_probability = _coerce_float(fraud_model.get("fraud_probability"), _coerce_float(claim.fraud_score))
     payout_amount = _coerce_float(claim.final_payout, _coerce_float(claim.calculated_payout))
@@ -85,27 +90,33 @@ def _build_review_context(claim: Claim, now) -> dict:
 
     event_confidence = _coerce_float(claim.event_confidence)
     trust_score = _coerce_float(claim.trust_score, 0.5)
-    decision_confidence = round(
-        min(
-            1.0,
-            max(
-                0.0,
-                (0.55 * event_confidence)
-                + (0.25 * trust_score)
-                + (0.20 * (1 - max(0.0, min(1.0, fraud_probability)))),
+    stored_decision_confidence = decision_breakdown.get("decision_confidence")
+    if stored_decision_confidence is None:
+        decision_confidence = round(
+            min(
+                1.0,
+                max(
+                    0.0,
+                    (0.55 * event_confidence)
+                    + (0.25 * trust_score)
+                    + (0.20 * (1 - max(0.0, min(1.0, fraud_probability)))),
+                ),
             ),
-        ),
-        3,
-    )
-    if decision_confidence >= 0.75:
-        decision_confidence_band = "high"
-    elif decision_confidence >= 0.55:
-        decision_confidence_band = "moderate"
+            3,
+        )
     else:
-        decision_confidence_band = "low"
+        decision_confidence = _coerce_float(stored_decision_confidence)
+    decision_confidence_band = decision_breakdown.get("decision_confidence_band")
+    if not decision_confidence_band:
+        if decision_confidence >= 0.72:
+            decision_confidence_band = "high"
+        elif decision_confidence >= 0.48:
+            decision_confidence_band = "moderate"
+        else:
+            decision_confidence_band = "low"
 
     top_factors = fraud_model.get("top_factors") if isinstance(fraud_model.get("top_factors"), list) else []
-    primary_factor = top_factors[0]["label"] if top_factors else None
+    primary_factor = decision_breakdown.get("primary_reason") or (top_factors[0]["label"] if top_factors else None)
     secondary_factors = [factor.get("label") for factor in top_factors[1:3] if factor.get("label")]
     fraud_flags = []
     if isinstance(claim.decision_breakdown, dict):
@@ -116,7 +127,10 @@ def _build_review_context(claim: Claim, now) -> dict:
         primary_factor = fraud_flags[0]
         secondary_factors = fraud_flags[1:3]
 
-    if is_overdue:
+    stored_priority_reason = decision_breakdown.get("priority_reason")
+    if stored_priority_reason:
+        priority_reason = stored_priority_reason
+    elif is_overdue:
         priority_reason = "Overdue manual review"
     elif hours_until_deadline is not None and hours_until_deadline <= 6:
         priority_reason = "SLA breach risk"
@@ -398,12 +412,15 @@ async def get_claim_stats(
     approved = sum(1 for claim in claims if claim.status == "approved")
     delayed = sum(1 for claim in claims if claim.status == "delayed")
     rejected = sum(1 for claim in claims if claim.status == "rejected")
+    auto_approved = 0
     fraud_flagged = sum(1 for claim in claims if float(claim.fraud_score or 0) >= 0.4)
     total_payout = sum(float(claim.final_payout or 0) for claim in claims if claim.status == "approved")
     avg_final_score = round(sum(float(claim.final_score or 0) for claim in claims) / max(1, total), 3)
     avg_fraud_score = round(sum(float(claim.fraud_score or 0) for claim in claims) / max(1, total), 3)
     by_trigger = {}
     for claim in claims:
+        if _is_zero_touch_approved(claim):
+            auto_approved += 1
         incident_triggers = (claim.decision_breakdown or {}).get("incident_triggers") or [claim.trigger_type]
         for trigger in incident_triggers:
             by_trigger[trigger] = by_trigger.get(trigger, 0) + 1
@@ -415,6 +432,11 @@ async def get_claim_stats(
         "rejected": rejected,
         "approval_rate": round(approved / max(1, total) * 100, 1),
         "delayed_rate": round(delayed / max(1, total) * 100, 1),
+        "review_rate": round(delayed / max(1, total) * 100, 1),
+        "auto_approved": auto_approved,
+        "auto_approval_rate": round(auto_approved / max(1, total) * 100, 1),
+        "zero_touch_approvals": auto_approved,
+        "zero_touch_rate": round(auto_approved / max(1, total) * 100, 1),
         "fraud_rate": round(fraud_flagged / max(1, total) * 100, 1),
         "avg_final_score": avg_final_score,
         "avg_fraud_score": avg_fraud_score,
