@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     SQL_ECHO: bool = False
     HOST: str = "0.0.0.0"
     PORT: int = 8000
+    FILE_LOGGING_ENABLED: bool = ENV != "prod"
     SESSION_SECRET: str
     SESSION_DURATION_HOURS: int = 72
     SESSION_COOKIE_SAMESITE: str = "none" if ENV == "prod" else "lax"
