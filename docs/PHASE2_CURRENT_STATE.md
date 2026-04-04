@@ -4,6 +4,18 @@ RideShield is a mock-based income protection demo for gig delivery workers. It d
 
 This document describes what the repo does today. It does not cover future integration work or later learning pipelines.
 
+## 💡 Ideation & Innovation (Beyond Must-Haves)
+
+While the system fulfills all mandatory Phase 2 requirements (Zero-touch Claims, Dynamic AI Pricing, Parametric Automation, Fraud Detection), we have built several independent architectural innovations on top to address real-world edge cases for gig workers:
+
+- **Flood-Aware Event Continuation:** Instead of strictly mapping "rain = payout," the system understands that streets remain dangerously waterlogged for hours after rainfall stops. We programmed "event continuation", meaning if order density remains suppressed even after the parametric threshold drops, the protective event stays open. 
+- **Peak-Hour Decision Matrices:** Gig income is not uniform across a 24-hour cycle. We implemented a dynamic `peak_multiplier` which mathematically replaces income significantly higher if a disruption occurs during the prime dinner rush (7-10 PM) compared to a lull at 3 PM.
+- **Explainable "Admin Queue" (Handling Edge Cases):** Rather than using strict algorithms that aggressively reject ambiguous claims, we built a 24-hour SLA review queue. If a worker is detected in a disruptive event without a strong behavioral track record, the system delays the claim into an explainer dashboard where human operators see the exact split of fraud risk vs validation.
+- **Nuanced "Cluster Fraud" Detection:** We engineered protection against coordinated fraud rings (multiple claims from the identical geofence and timestamp). However, to protect legitimate users, the system checks the worker’s long-term `trust_score`. If a high-trust worker gets caught in a fraud cluster radius, they still get paid while spoofers are rejected. 
+- **Anti-Inflation Income Defenses:** Because workers self-report their income during onboarding, they are incentivized to overstate it. The backend mathematically caps their validated income against `1.5x` of their city's demographic average, establishing safety inside the payout pool.
+- **Operating Cost Deduction (Net Profit Mapping):** We explicitly account for the fact that when a worker is grounded by disruptions, they aren't burning petrol or compounding vehicle depreciation. The payout algorithm applies a dynamic `operating_cost_factor` (e.g., a 15% reduction to `0.85`) to ensure the insurance replaces their *true net profit*, preventing a moral hazard where being idle becomes more profitable than delivering.
+- **Event-Centric Duplicate Handling:** The prompt mandates duplicate claim prevention. Instead of simply rejecting subsequent triggers as "duplicates," our backend extends them. If a rainstorm fires the trigger logic 3 consecutive times, the system links them to a *single geographic event* and seamlessly extends the payout duration on the original claim.
+
 ## What Is Working Now
 
 ### Zero-touch claims flow
