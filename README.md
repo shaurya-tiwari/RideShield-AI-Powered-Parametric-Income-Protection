@@ -3,6 +3,34 @@
 RideShield is a Phase 2 demo of parametric income protection for gig delivery workers.
 It watches disruption signals, creates claims automatically for affected workers, and routes each claim through fraud-aware approval, review, or rejection without requiring the worker to file anything.
 
+## 🚀 Quick Access / Demo Credentials
+
+### 🛡️ Admin Dashboard
+Access the system at `http://localhost:3000/auth` (or the deployed URL).
+- **Username**: `admin`
+- **Password**: `admin-integrity-212`
+
+### 👷 Worker Dashboard (Sample Credentials)
+Use these credentials to sign in as a worker to view active policies, protection narrative, and payout history.
+
+| Worker Name | Phone Number | Password | Profile Type |
+| :--- | :--- | :--- | :--- |
+| **Rahul Kumar** | `+919876543210` | `rahul1234` | Active Legit |
+| **Vikram Singh** | `+919876543211` | `vikram1234` | Pending Fraud |
+| **Arun Patel** | `+919876543212` | `arun1234` | Pending Edge |
+| **Priya Sharma** | `+919876543213` | `priya1234` | Active Multi |
+| **Aman Verma** | `+919876543214` | `aman1234` | Mumbai Active |
+| **Farhan Ali** | `+919876543215` | `farhan1234` | Mumbai High Trust |
+| **Sneha Iyer** | `+919876543216` | `sneha1234` | Chennai Active |
+| **Neha Gupta** | `+919876543217` | `neha1234` | Chennai High Trust |
+| **Rohit Yadav** | `+919876543218` | `rohit1234` | Bengaluru Pending |
+
+> [!WARNING]
+> This is a demo environment. Credentials are shared for evaluation purposes only.
+
+---
+
+
 ## Key Features
 
 - Zero-touch claims for validated disruption events
