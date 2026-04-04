@@ -65,18 +65,7 @@ const PLAN_STORIES = {
 };
 
 function getRecommendationReason(planName, cityLabel) {
-  switch (planName) {
-    case "basic_protect":
-      return `Good for riders in ${cityLabel} who want the cheapest weekly safety net.`;
-    case "smart_protect":
-      return `Best for most riders in ${cityLabel}.`;
-    case "assured_plan":
-      return `Strong fit for riders in ${cityLabel} who want broader coverage without jumping to the highest tier.`;
-    case "pro_max":
-      return `Best if this rider is on the road full-time in ${cityLabel} and wants the highest cap.`;
-    default:
-      return `Recommended for this rider in ${cityLabel}.`;
-  }
+  return "Best balance of cost and coverage for your risk level";
 }
 
 function getFeaturedPlans(plans, selectedPlan, recommendedPlan) {
@@ -492,29 +481,29 @@ export default function Onboarding() {
       <div className="mx-auto max-w-3xl space-y-6">
         <SectionHeader
           eyebrow="Ready"
-          title="Worker onboarding completed"
-          description="The worker profile is registered, the policy is created, and the session is ready for dashboard access."
+          title="You're now protected"
+          description="Your income protection is active and monitoring for disruptions."
         />
         <div className="decision-panel p-8">
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-3xl bg-white/80 p-5">
-              <p className="text-sm text-on-surface-variant">Worker</p>
+            <div className="rounded-3xl bg-surface-container-high border border-surface-container-highest p-5">
+              <p className="text-sm font-semibold uppercase tracking-widest text-on-surface-variant">Worker</p>
               <p className="mt-2 text-2xl font-bold">{registration.name}</p>
-              <p className="mt-2 text-sm text-on-surface-variant">
-                {registration.city} - {registration.zone} -{" "}
-                {registration.platform}
+              <p className="mt-2 text-sm text-primary">
+                Active in {humanizeSlug(registration.city)}
               </p>
             </div>
-            <div className="rounded-3xl bg-white/80 p-5">
-              <p className="text-sm text-on-surface-variant">Policy</p>
+            <div className="rounded-3xl bg-surface-container-high border border-surface-container-highest p-5">
+              <p className="text-sm font-semibold uppercase tracking-widest text-on-surface-variant">Policy</p>
               <p className="mt-2 text-2xl font-bold">
                 {policyPurchase.policy.plan_display_name}
               </p>
-              <p className="mt-2 text-sm text-on-surface-variant">
-                {policyPurchase.message}
+              <p className="mt-2 text-sm text-primary">
+                {formatCurrency(selectedPlanData.weekly_premium)}/week • Active
               </p>
             </div>
           </div>
+          
           <div className="mt-6 flex flex-wrap gap-3">
             <button
               type="button"
@@ -522,7 +511,7 @@ export default function Onboarding() {
               disabled={loading}
               onClick={handleOpenDashboard}
             >
-              {loading ? "Opening dashboard..." : "Open worker dashboard"}
+              {loading ? "Opening dashboard..." : "Go to Dashboard"}
             </button>
             <button
               type="button"
@@ -532,6 +521,9 @@ export default function Onboarding() {
               Sign in again later
             </button>
           </div>
+          <p className="mt-6 text-sm text-on-surface-variant text-center">
+            We'll automatically detect disruptions and handle claims for you.
+          </p>
         </div>
       </div>
     );
@@ -1062,34 +1054,21 @@ export default function Onboarding() {
 
       {step === "plan" && registration ? (
         <div className="fixed inset-x-4 bottom-4 z-30 mx-auto max-w-5xl">
-          <div className="panel border-ink/10 bg-white/95 p-4 shadow-2xl backdrop-blur">
+          <div className="panel border-primary/20 bg-surface-container-low p-4 shadow-2xl backdrop-blur-md">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-on-surface-variant">
-                  Selected plan
+              <div className="flex items-center gap-3">
+                <p className="text-lg font-bold text-primary">
+                  Selected Plan:{" "}
+                  {selectedPlanData
+                    ? selectedPlanData.display_name ||
+                      humanizeSlug(selectedPlanData.plan_name)
+                    : "None"}
                 </p>
-                <div className="mt-1 flex flex-wrap items-center gap-3">
-                  <p className="text-xl font-bold text-primary">
-                    {selectedPlanData
-                      ? selectedPlanData.display_name ||
-                        humanizeSlug(selectedPlanData.plan_name)
-                      : "Choose a plan"}
-                  </p>
-                  {selectedPlanData ? (
-                    <span className="pill bg-primary text-white">
-                      {formatCurrency(selectedPlanData.weekly_premium)} / week
-                    </span>
-                  ) : null}
-                  {selectedDailyCost ? (
-                    <span className="text-sm text-on-surface-variant">
-                      About {formatCurrency(selectedDailyCost)} a day
-                    </span>
-                  ) : null}
-                </div>
-                <p className="mt-2 text-sm text-on-surface-variant">
-                  Coverage starts after the waiting period or an admin activates
-                  it in simulation mode.
-                </p>
+                {selectedPlanData ? (
+                  <span className="text-lg font-semibold text-primary">
+                    • {formatCurrency(selectedPlanData.weekly_premium)}/week
+                  </span>
+                ) : null}
               </div>
 
               <button
@@ -1098,7 +1077,7 @@ export default function Onboarding() {
                 disabled={loading || !selectedPlanData}
                 onClick={handlePurchase}
               >
-                {loading ? "Purchasing..." : "Purchase selected plan"}
+                {loading ? "Activating..." : "Activate Protection"}
               </button>
             </div>
           </div>
