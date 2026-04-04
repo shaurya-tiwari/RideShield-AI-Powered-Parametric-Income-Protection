@@ -15,7 +15,6 @@ import { PLATFORM_OPTIONS, STORAGE_KEYS } from "../utils/constants";
 import {
   formatCurrency,
   humanizeSlug,
-  weeklyToDaily,
 } from "../utils/formatters";
 
 const initialForm = {
@@ -64,7 +63,7 @@ const PLAN_STORIES = {
   },
 };
 
-function getRecommendationReason(planName, cityLabel) {
+function getRecommendationReason() {
   return "Best balance of cost and coverage for your risk level";
 }
 
@@ -208,11 +207,6 @@ export default function Onboarding() {
   const passwordStrength = useMemo(
     () => getPasswordStrength(form.password),
     [form.password],
-  );
-  const cityLabel = useMemo(() => humanizeSlug(form.city), [form.city]);
-  const selectedDailyCost = useMemo(
-    () => weeklyToDaily(selectedPlanData?.weekly_premium),
-    [selectedPlanData?.weekly_premium],
   );
   const monitoredCities = cityOptions.length || 4;
 
@@ -522,7 +516,7 @@ export default function Onboarding() {
             </button>
           </div>
           <p className="mt-6 text-sm text-on-surface-variant text-center">
-            We'll automatically detect disruptions and handle claims for you.
+            We&apos;ll automatically detect disruptions and handle claims for you.
           </p>
         </div>
       </div>

@@ -60,7 +60,7 @@ export default function RiskGauge({ score, breakdown }) {
             Your risk profile
           </h3>
           <p className="mt-3 max-w-xl text-sm leading-6 text-on-surface-variant">
-            Based on your activity and location, here's your current risk level. Higher risk means higher chances of income disruption — your plan options are adjusted accordingly.
+            Based on your activity and location, here&apos;s your current risk level. Higher risk means higher chances of income disruption — your plan options are adjusted accordingly.
           </p>
         </div>
         <div className={`rounded-3xl px-5 py-4 ${meta.tone} bg-current/10 text-right`}>
