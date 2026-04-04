@@ -10,51 +10,74 @@ Phase 2 stays focused on the stable mock-based product:
 
 Everything below is future work.
 
-## A. Real Provider Integration
+> **Executive Philosophy for Phase 3**
+> Phase 3 focuses on building a **feedback-driven learning system** where model decisions are continuously evaluated against real-world outcomes before retraining. The upgrade loop ensures: `prediction → decision → human feedback → stored → retrain → evaluate → deploy`. Better models do not come from random hyperparameter tweaking; they come from building a smarter system around the ML engine.
 
-Phase 3 should replace the mock signal layer with real external providers.
+## 🟢 Tier 1: Core Intelligence Backbone (Must Do)
 
-Planned areas:
-- live weather APIs
-- live AQI APIs
-- live traffic APIs
-- replacing mock providers without rewriting the claim flow
-- provider rate limiting
-- fallback behavior when providers are unavailable
-- stale-data handling and freshness rules
+> **"Tier 1 establishes the closed feedback loop required for any meaningful model improvement."**
 
-## B. Learning And Data Pipeline
+### B. Learning And Data Pipeline
 
-Phase 3 should add structured memory for decisions and outcomes.
+Phase 3 should add structured memory for decisions and outcomes. This is the foundation of the ML upgrade loop: learning from messy, real-world decisions rather than synthetic comfort zones.
 
 Planned areas:
 - a `training_events` or decision-log table
-- storing the feature snapshot seen at decision time
-- storing the system decision separately from the final label or human verdict
-- offline retraining workflows rather than automatic self-learning
+- storing the feature snapshot precisely as seen at decision time
+- capturing the automated system decision against the final human Admin verdict (Ground Truth)
+- data validation and anomaly filtering before retraining
+- offline supervised retraining workflows rather than automatic self-learning
 - evaluation and comparison before any model deployment
 
-## C. Advanced Fraud Detection
+### F. Observability And Analytics Expansion
 
-Phase 3 should move beyond the current hybrid baseline.
+Phase 3 should improve how the system measures its own behavior, ensuring it is auditable instead of flying blind post-deployment.
 
 Planned areas:
-- stronger feature engineering
-- fraud-pattern learning from real operating data
+- model and rule drift detection (is distribution changing over time?)
+- false review rate tracking (are we over-sending legitimate claims to the Admin Queue?)
+- stronger zero-touch and auto-approval tracking (are auto-approvals legitimately safe?)
+- better long-window operational summaries
+- richer admin analytics for queue behavior and decision quality
+
+## 🟡 Tier 2: Real-World Hardening (High Value)
+
+### C. Advanced Fraud Detection
+
+Phase 3 should move beyond the current hybrid baseline. Fraud models break if engineered blindly; they must learn from real operational patterns.
+
+Planned areas:
+- stronger feature engineering based on real usage patterns
+- fraud-pattern learning from real operating data (repeated location anomalies, timing inconsistencies)
 - better separation of weak and strong suspicious signals
 - threshold calibration based on review outcomes
 
-## D. System Adaptation
+### A. Real Provider Integration
 
-Phase 3 should make the system better at adapting to operating pressure.
+Phase 3 should replace the mock signal layer with real external providers. Improved input fidelity directly improves model reliability.
 
 Planned areas:
-- dynamic thresholds based on queue pressure
-- stronger confidence calibration
+- live weather APIs (OpenWeather)
+- live AQI APIs (WAQI)
+- live traffic APIs (TomTom)
+- replacing mock providers without rewriting the claim flow
+- provider rate limiting
+- fallback behavior gracefully degrading when providers are unavailable
+- stale-data handling and freshness rules
+
+## 🔵 Tier 3: System Adaptation & Polish
+
+### D. System Adaptation
+
+Phase 3 should make the system better at adapting to operating pressure. Moving from static logic to adaptive systems.
+
+Planned areas:
+- dynamic thresholds based on queue pressure (tensing uncertainty bands if SLAs breach)
+- stronger confidence calibration routing uncertain cases to admin queues
 - better use of review feedback to reduce unnecessary delays
 - safer automation bands for approve, review, and reject behavior
 
-## E. Payout Integration (Simulated)
+### E. Payout Integration (Simulated)
 
 Phase 3 should make payout handling feel more product-complete while still staying safe for demo use.
 
@@ -64,20 +87,10 @@ Planned areas:
 - richer payout status tracking
 - improved payout notifications and audit visibility
 
-## F. Observability And Analytics Expansion
-
-Phase 3 should improve how the system measures its own behavior.
-
-Planned areas:
-- model and rule drift detection
-- false review rate tracking
-- stronger zero-touch and auto-approval tracking
-- better long-window operational summaries
-- richer admin analytics for queue behavior and decision quality
-
 ## Phase 3 Guiding Rule
 
 Phase 3 should expand the system carefully:
 - keep the current stable Phase 2 flow intact
-- evaluate new behavior before deployment
+- build the systemic feedback constraints that logically justify every ML upgrade
+- evaluate new behavior in controlled conditions before deployment
 - avoid presenting future architecture as already implemented
