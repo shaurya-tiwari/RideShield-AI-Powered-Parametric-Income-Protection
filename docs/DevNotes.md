@@ -7,7 +7,13 @@ This file is the implementation baseline for the current repo, not a copy of the
 - Submission posture:
   - stable mock-based signal inputs
   - real incident, claim, and review orchestration inside the app
-  - documentation intentionally excludes future integration and learning work from the Phase 2 claim
+  - framed explicitly around scalability across cities and signal layers
+  - documentation intentionally excludes future integration while noting dual-integration (Live/Mock) readiness
+- Core Architecture Principles (Hackathon to Enterprise pitch framing):
+  - **Determinism & Consistency**: The engine guarantees reproducible, non-random payouts based purely on hard data and behavior.
+  - **Graceful Degradation**: System continues decision-making even under partial signal failure, falling back to heuristics without pipeline collapse.
+  - **Time-Aware Continuity**: Duplicate events extend a continuous geographic claim instead of lazily rejecting sequential triggers.
+  - **Explainability & Fairness**: Admin SLA queues provide white-box breakdown of fraud modeling while trust modifiers and `0.85` operational deductions protect true net-profit for earners.
 - Signal architecture decision:
   - Phase 2 keeps disruption inputs isolated from the decision flow so future provider expansion does not require rewriting claims logic
   - today the product remains mock-driven and demo-safe
