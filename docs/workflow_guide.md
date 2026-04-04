@@ -1,3 +1,79 @@
+# RideShield
+
+RideShield is a Phase 2 demo of parametric income protection for gig delivery workers.
+It watches disruption signals, creates claims automatically for affected workers, and routes each claim through fraud-aware approval, review, or rejection without requiring the worker to file anything.
+
+> **Robustness & Explainability**: We improved model robustness using controlled synthetic scaling and edge-case injection, ensuring strong generalization while maintaining explainability through a policy-driven decision layer.
+
+## 🔑 Quick Access / Demo Credentials
+
+### 🛡️ Admin Dashboard
+Access the system at `http://localhost:3000/auth` (or the deployed URL).
+- **Username**: `admin`
+- **Password**: `admin-integrity-212`
+
+### 👷 Worker Dashboard (Sample Credentials)
+Use these credentials to sign in as a worker to view active policies, protection narrative, and payout history.
+
+| Worker Name | Phone Number | Password | Profile Type |
+| :--- | :--- | :--- | :--- |
+| **Rahul Kumar** | `+919876543210` | `rahul1234` | Active Legit |
+| **Vikram Singh** | `+919876543211` | `vikram1234` | Pending Fraud |
+| **Arun Patel** | `+919876543212` | `arun1234` | Pending Edge |
+| **Priya Sharma** | `+919876543213` | `priya1234` | Active Multi |
+| **Aman Verma** | `+919876543214` | `aman1234` | Mumbai Active |
+| **Farhan Ali** | `+919876543215` | `farhan1234` | Mumbai High Trust |
+| **Sneha Iyer** | `+919876543216` | `sneha1234` | Chennai Active |
+| **Neha Gupta** | `+919876543217` | `neha1234` | Chennai High Trust |
+| **Rohit Yadav** | `+919876543218` | `rohit1234` | Bengaluru Pending |
+
+> [!WARNING]
+> This is a demo environment. Credentials are shared for evaluation purposes only.
+
+---
+
+## Key Features
+
+- Zero-touch claims for validated disruption events
+- Weekly plan purchase and activation flow
+- Mock-based weather, AQI, traffic, platform, and civic disruption inputs
+- Incident-centric claim handling to avoid stacked same-window payouts
+- Fraud-aware decisioning with trust, confidence, and payout exposure signals
+- Worker dashboard, admin review surface, and demo runner
+
+## How It Works
+
+1. A worker registers, gives consent, and buys a weekly plan.
+2. The scheduler monitors mock disruption signals for supported cities and zones.
+3. When thresholds are crossed, the system creates or extends an incident for the affected zone.
+4. Eligible workers inside that incident are evaluated using disruption context, fraud score, trust score, confidence, and payout exposure.
+5. The claim is approved automatically, delayed for review, or rejected with reasons.
+6. Approved claims move to payout execution and appear in the worker and admin surfaces.
+
+## Demo Flow
+
+1. Start the stack and seed demo data.
+2. Open `http://localhost:3000/auth`.
+3. Sign in as admin using the credentials from `.env`.
+4. Open the Demo Runner and create a demo worker in a chosen city.
+5. Run a scenario such as heavy rain, fraud cluster, or curfew edge case.
+6. Open the Admin Panel and show the review queue, decision context, confidence, and incident outcomes.
+7. Optionally sign in as a worker to show onboarding, active policy, claim visibility, and payout history.
+
+## Tech Stack
+
+- Frontend: React, Vite, Tailwind CSS, Recharts
+- Backend: FastAPI, SQLAlchemy, Alembic
+- Database: PostgreSQL
+- Machine Learning: scikit-learn models (RandomForest and GradientBoosting) generating deterministic probabilistic scores for fraud and Risk, bounded by a strict Policy-driven logic. Models are pre-trained on intelligently constrained synthetic data (50k limit) with injected edge cases, keeping generalization gaps tight (< 2%).
+- Demo inputs: local mock simulation modules
+
+## Phase 3
+
+Phase 3 is reserved for work outside this stable demo snapshot: real provider integrations, stronger fraud calibration, and more production-grade payout and observability layers.
+
+---
+
 # RideShield Workflow Guide
 
 This guide is the practical runbook for the current repo.
