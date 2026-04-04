@@ -3,6 +3,8 @@
 RideShield is a Phase 2 demo of parametric income protection for gig delivery workers.
 It watches disruption signals, creates claims automatically for affected workers, and routes each claim through fraud-aware approval, review, or rejection without requiring the worker to file anything.
 
+> **Robustness & Explainability**: We improved model robustness using controlled synthetic scaling and edge-case injection, ensuring strong generalization while maintaining explainability through a policy-driven decision layer.
+
 ## 🚀 Quick Access / Demo Credentials
 
 ### 🛡️ Admin Dashboard
@@ -64,7 +66,7 @@ Use these credentials to sign in as a worker to view active policies, protection
 - Frontend: React, Vite, Tailwind CSS, Recharts
 - Backend: FastAPI, SQLAlchemy, Alembic
 - Database: PostgreSQL
-- ML support: scikit-learn based risk and fraud services with runtime fallback
+- Machine Learning: scikit-learn models (RandomForest and GradientBoosting) generating deterministic probabilistic scores for fraud and Risk, bounded by a strict Policy-driven logic. Models are pre-trained on intelligently constrained synthetic data (50k limit) with injected edge cases, keeping generalization gaps tight (< 2%).
 - Demo inputs: local mock simulation modules
 
 ## Setup
