@@ -3,6 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Bell, BrainCircuit, LayoutDashboard, LogOut, PlaySquare, Settings, Shield, ShieldCheck, Siren, Sparkles } from "lucide-react";
 
 import { useAuth } from "../auth/AuthContext";
+import toast from "react-hot-toast";
 
 const workerNav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -58,7 +59,7 @@ export default function AppFrame({ children }) {
             </div>
           </div>
 
-          <button type="button" className="button-primary mb-6 w-full justify-start rounded-[22px] px-4 py-3">
+          <button type="button" className="button-primary mb-6 w-full justify-start rounded-[22px] px-4 py-3" onClick={() => toast("Live oversight mode is active.", { icon: "✨" })}>
             <Sparkles size={16} />
             {role === "admin" ? "Review live incidents" : "View active protection"}
           </button>
@@ -101,7 +102,7 @@ export default function AppFrame({ children }) {
               <LogOut size={16} />
               Sign out
             </button>
-            <button type="button" className="flex w-full items-center gap-3 rounded-[18px] px-4 py-3 text-sm font-semibold text-on-surface-variant transition hover:bg-surface-container-low">
+            <button type="button" onClick={() => toast("Settings will be available post-launch", { icon: "⚙️" })} className="flex w-full items-center gap-3 rounded-[18px] px-4 py-3 text-sm font-semibold text-on-surface-variant transition hover:bg-surface-container-low">
               <Settings size={16} />
               Settings
             </button>
@@ -125,11 +126,11 @@ export default function AppFrame({ children }) {
               <div className="rounded-full bg-surface-container-high px-4 py-2 text-sm font-medium text-on-surface-variant">
                 {role === "admin" ? "Operational review mode" : "Worker coverage mode"}
               </div>
-              <button type="button" className="inline-flex items-center gap-2 rounded-full bg-tertiary-container px-4 py-2 text-sm font-semibold text-on-tertiary-container transition hover:brightness-110" aria-label="Emergency alert">
+              <button type="button" onClick={() => toast.success("Dispatcher alerted. They will contact you shortly.")} className="inline-flex items-center gap-2 rounded-full bg-tertiary-container px-4 py-2 text-sm font-semibold text-on-tertiary-container transition hover:brightness-110" aria-label="Emergency alert">
                 <Siren size={16} />
                 Alert
               </button>
-              <button type="button" aria-label="Notifications" className="rounded-full bg-surface-container-high p-3 text-on-surface-variant transition hover:bg-surface-container-highest">
+              <button type="button" onClick={() => toast("You have no new notifications", { icon: "🔔" })} aria-label="Notifications" className="rounded-full bg-surface-container-high p-3 text-on-surface-variant transition hover:bg-surface-container-highest">
                 <Bell size={16} />
               </button>
             </div>
