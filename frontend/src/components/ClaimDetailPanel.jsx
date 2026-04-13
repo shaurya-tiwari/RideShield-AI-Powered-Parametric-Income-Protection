@@ -178,14 +178,44 @@ export default function ClaimDetailPanel({ claim }) {
           <p className="mt-2 text-sm leading-7 text-on-surface">{renderTriggerList(coveredTriggers)}</p>
         </div>
         <div className="panel-quiet rounded-[24px] p-4">
-          <p className="text-sm text-on-surface-variant">How RideShield checked this claim</p>
-          <div className="mt-2 grid gap-2 text-sm text-on-surface">
-            <p>Disruption strength: {formatScore(components.disruption_component)}</p>
-            <p>Incident evidence: {formatScore(components.confidence_component)}</p>
-            <p>Payment safety: {formatScore(components.fraud_component)}</p>
-            <p>Account trust: {formatScore(components.trust_component)}</p>
-            <p>Follow-up check: {formatScore(components.flag_penalty)}</p>
+          <p className="text-sm text-on-surface-variant">AI Decision Factors</p>
+          <div className="mt-3 space-y-3">
+            {[
+              { label: "Disruption strength", value: components.disruption_component, color: "#42a5f5" },
+              { label: "Incident evidence", value: components.confidence_component, color: "#66bb6a" },
+              { label: "Payment safety", value: components.fraud_component, color: "#ef5350" },
+              { label: "Account trust", value: components.trust_component, color: "#ab47bc" },
+              { label: "Flag penalty", value: components.flag_penalty, color: "#ffa726" },
+            ].map(({ label, value, color }) => {
+              const pct = Math.round(Math.max(0, Math.min(1, Number(value || 0))) * 100);
+              return (
+                <div key={label}>
+                  <div className="flex items-center justify-between text-xs text-on-surface-variant mb-1">
+                    <span>{label}</span>
+                    <span className="font-semibold text-on-surface">{formatScore(value)}</span>
+                  </div>
+                  <div style={{ width: "100%", height: "6px", borderRadius: "3px", background: "rgba(255,255,255,0.08)" }}>
+                    <div
+                      style={{
+                        width: `${pct}%`,
+                        height: "6px",
+                        borderRadius: "3px",
+                        background: color,
+                        transition: "width 0.6s ease",
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
+          {fraudModel.confidence !== undefined ? (
+            <p className="mt-4 text-xs text-on-surface-variant">
+              Model confidence: <span className="font-semibold text-on-surface">{Math.round(Number(fraudModel.confidence || 0) * 100)}%</span>
+              {fraudModel.model_version ? ` · v${fraudModel.model_version}` : ""}
+              {fraudModel.fallback_used ? " · fallback mode" : ""}
+            </p>
+          ) : null}
         </div>
       </div>
     </div>
