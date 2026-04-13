@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Bell, BrainCircuit, LayoutDashboard, LogOut, PlaySquare, Settings, Shield, ShieldCheck, Siren, Sparkles } from "lucide-react";
+import { BrainCircuit, FlaskConical, LayoutDashboard, LogOut, PlaySquare, Settings, Shield, ShieldCheck, Siren, Sparkles } from "lucide-react";
+import NotificationBell from "./NotificationBell";
 
 import { useAuth } from "../auth/AuthContext";
 import toast from "react-hot-toast";
@@ -12,6 +13,7 @@ const workerNav = [
 const adminNav = [
   { to: "/admin", label: "Admin Panel", icon: ShieldCheck },
   { to: "/demo", label: "Demo Runner", icon: PlaySquare },
+  { to: "/lab", label: "Scenario Lab", icon: FlaskConical },
   { to: "/intelligence", label: "Intelligence", icon: BrainCircuit },
 ];
 
@@ -24,6 +26,8 @@ export default function AppFrame({ children }) {
   const title =
     location.pathname.startsWith("/demo")
       ? "Simulation Control"
+      : location.pathname.startsWith("/lab")
+        ? "Scenario Lab"
       : location.pathname.startsWith("/intelligence")
         ? "System Intelligence"
       : location.pathname.startsWith("/admin")
@@ -130,9 +134,7 @@ export default function AppFrame({ children }) {
                 <Siren size={16} />
                 Alert
               </button>
-              <button type="button" onClick={() => toast("You have no new notifications", { icon: "🔔" })} aria-label="Notifications" className="rounded-full bg-surface-container-high p-3 text-on-surface-variant transition hover:bg-surface-container-highest">
-                <Bell size={16} />
-              </button>
+              <NotificationBell />
             </div>
           </div>
         </header>

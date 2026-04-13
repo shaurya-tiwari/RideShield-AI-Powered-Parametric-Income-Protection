@@ -1,15 +1,20 @@
 """
-Payout executor for simulated wallet and UPI transfers.
+Payout executor with Razorpay sandbox integration.
+Falls back to simulation when RAZORPAY keys are not configured.
 """
 
+import logging
 import uuid
 from decimal import Decimal
 from typing import Dict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.config import settings
 from backend.db.models import AuditLog, Claim, Payout, Worker
 from backend.utils.time import utc_now_naive
+
+logger = logging.getLogger("rideshield.payout")
 
 
 class PayoutExecutor:
@@ -35,6 +40,83 @@ class PayoutExecutor:
             "worker_name": worker_name,
             "amount": amount,
             "channel": channel,
+        }
+
+    @property
+    def _razorpay_configured(self) -> bool:
+        return bool(settings.RAZORPAY_KEY_ID and settings.RAZORPAY_KEY_SECRET)
+
+    def _create_razorpay_order(self, amount_inr: float) -> Dict:
+        """Create a Razorpay order using the sandbox API.
+
+        Uses the Orders API: https://razorpay.com/docs/api/orders/create/
+        In sandbox, this creates a test order that can be "paid" without real money.
+        """
+        import requests
+
+        url = "https://api.razorpay.com/v1/orders"
+        amount_paise = int(round(amount_inr * 100))  # Razorpay uses paise
+
+        payload = {
+            "amount": amount_paise,
+            "currency": "INR",
+            "receipt": f"rs_{uuid.uuid4().hex[:12]}",
+            "notes": {
+                "source": "rideshield",
+                "type": "income_protection_payout",
+            },
+        }
+
+        try:
+            resp = requests.post(
+                url,
+                json=payload,
+                auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET),
+                timeout=10,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                logger.info("Razorpay order created: %s (₹%.2f)", data["id"], amount_inr)
+                return {
+                    "success": True,
+                    "order_id": data["id"],
+                    "receipt": data.get("receipt"),
+                    "amount_paise": data.get("amount"),
+                    "status": data.get("status"),
+                    "provider": "razorpay_sandbox",
+                }
+            else:
+                logger.warning("Razorpay order failed: %s %s", resp.status_code, resp.text[:200])
+                return {"success": False, "error": f"Razorpay API error: {resp.status_code}"}
+        except Exception as exc:
+            logger.warning("Razorpay connection failed: %s", exc)
+            return {"success": False, "error": str(exc)}
+
+    def _simulate_transfer(self, plan_name: str, amount: float = 0) -> Dict:
+        """Execute transfer — uses Razorpay sandbox if configured, falls back to simulation."""
+        channel, provider = self._channel_for_plan(plan_name)
+
+        # Try Razorpay sandbox when keys are configured
+        if self._razorpay_configured and channel == "wallet":
+            rzp_result = self._create_razorpay_order(amount)
+            if rzp_result.get("success"):
+                return {
+                    "channel": channel,
+                    "provider": "razorpay_sandbox",
+                    "transaction_id": rzp_result["order_id"],
+                    "razorpay_order": rzp_result,
+                    "mode": "sandbox",
+                }
+            else:
+                logger.info("Razorpay fallback to simulation: %s", rzp_result.get("error"))
+
+        # Simulation fallback
+        transaction_prefix = "upi" if channel == "upi" else "rzp_sim"
+        return {
+            "channel": channel,
+            "provider": provider,
+            "transaction_id": f"{transaction_prefix}_{uuid.uuid4().hex[:12]}",
+            "mode": "simulation",
         }
 
     async def _mark_failed(
@@ -100,15 +182,6 @@ class PayoutExecutor:
     async def record_failed(self, db: AsyncSession, claim: Claim, worker: Worker, plan_name: str, amount: float, error: str) -> Dict:
         return await self._mark_failed(db, claim, worker, plan_name, amount, error)
 
-    def _simulate_transfer(self, plan_name: str) -> Dict:
-        channel, provider = self._channel_for_plan(plan_name)
-        transaction_prefix = "upi" if channel == "upi" else "wallet"
-        return {
-            "channel": channel,
-            "provider": provider,
-            "transaction_id": f"{transaction_prefix}_{uuid.uuid4().hex[:12]}",
-        }
-
     async def execute(self, db: AsyncSession, claim: Claim, worker: Worker, plan_name: str, amount: float) -> Dict:
         now = utc_now_naive()
         channel, _ = self._channel_for_plan(plan_name)
@@ -125,7 +198,7 @@ class PayoutExecutor:
         db.add(payout)
         await db.flush()
         try:
-            result = self._simulate_transfer(plan_name)
+            result = self._simulate_transfer(plan_name, amount)
             payout.channel = result["channel"]
             payout.transaction_id = result["transaction_id"]
             payout.status = "completed"
@@ -144,6 +217,7 @@ class PayoutExecutor:
                         "transaction_id": result["transaction_id"],
                         "plan_name": plan_name,
                         "provider": result["provider"],
+                        "mode": result.get("mode", "simulation"),
                     },
                 )
             )
@@ -153,6 +227,7 @@ class PayoutExecutor:
                 "channel": payout.channel,
                 "transaction_id": result["transaction_id"],
                 "status": "completed",
+                "payment_mode": result.get("mode", "simulation"),
                 "initiated_at": payout.initiated_at.isoformat(),
                 "completed_at": payout.completed_at.isoformat() if payout.completed_at else None,
                 "notification": self._notification_for_status(
