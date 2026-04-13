@@ -45,6 +45,7 @@ class Worker(Base):
     claims = relationship("Claim", back_populates="worker", lazy="selectin")
     trust_score = relationship("TrustScore", back_populates="worker", uselist=False, lazy="selectin")
     activity_logs = relationship("WorkerActivity", back_populates="worker", lazy="selectin")
+    notifications = relationship("Notification", back_populates="worker", lazy="noload")
     city_ref = relationship("City", back_populates="workers", lazy="selectin")
     zone_ref = relationship("Zone", back_populates="workers", lazy="selectin")
 
@@ -228,6 +229,8 @@ class FraudLog(Base):
     confidence = Column(Numeric(4, 3), nullable=True)
     signals = Column(JSONB, nullable=True)
     action_taken = Column(String(20), nullable=True)
+    is_simulated = Column(Boolean, default=False, index=True)
+    simulation_type = Column(String(50), nullable=True)
     created_at = Column(DateTime, default=utc_now_naive)
 
     def __repr__(self):
@@ -365,6 +368,8 @@ class WorkerActivity(Base):
     longitude = Column(Numeric(10, 7), nullable=True)
     speed_kmh = Column(Numeric(5, 1), nullable=True)
     has_delivery_stop = Column(Boolean, default=False)
+    is_simulated = Column(Boolean, default=False, index=True)
+    simulation_type = Column(String(50), nullable=True)
     recorded_at = Column(DateTime, default=utc_now_naive)
 
     # Relationships
@@ -374,6 +379,7 @@ class WorkerActivity(Base):
     __table_args__ = (
         Index("idx_activity_zone_time", "zone", "recorded_at"),
         Index("idx_activity_worker_time", "worker_id", "recorded_at"),
+        Index("idx_activity_simulated", "is_simulated"),
     )
 
     def __repr__(self):
@@ -457,3 +463,26 @@ class ZoneRiskProfile(Base):
     updated_at = Column(DateTime, default=utc_now_naive, onupdate=utc_now_naive)
 
     zone_ref = relationship("Zone", back_populates="risk_profile", lazy="selectin")
+
+
+class Notification(Base):
+    """In-app notification for workers."""
+    __tablename__ = "notifications"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
+    worker_id = Column(UUID(as_uuid=True), ForeignKey("workers.id"), nullable=False, index=True)
+    category = Column(String(50), nullable=False, index=True)
+    title = Column(String(200), nullable=False)
+    body = Column(Text, nullable=True)
+    metadata_json = Column(JSONB, nullable=True)
+    is_read = Column(Boolean, default=False, index=True)
+    created_at = Column(DateTime, default=utc_now_naive)
+
+    worker = relationship("Worker", back_populates="notifications", lazy="selectin")
+
+    __table_args__ = (
+        Index("idx_notifications_worker_unread", "worker_id", "is_read"),
+    )
+
+    def __repr__(self):
+        return f"<Notification {self.category} for {self.worker_id}>"

@@ -20,6 +20,7 @@ from backend.api.policies import router as policies_router
 from backend.api.payouts import router as payouts_router
 from backend.api.triggers import router as triggers_router
 from backend.api.workers import router as workers_router
+from backend.api.notifications import router as notifications_router
 from backend.config import settings
 from backend.core.fraud_model_service import fraud_model_service
 from backend.core.location_service import location_service
@@ -58,9 +59,11 @@ async def lifespan(app: FastAPI):
         await session.commit()
     logger.info("Geography bootstrap complete")
 
-    if settings.ENABLE_TRIGGER_SCHEDULER:
+    if settings.ENABLE_TRIGGER_SCHEDULER and settings.SCHEDULER_IN_PROCESS:
         await trigger_scheduler.start()
-        logger.info("Trigger scheduler enabled")
+        logger.info("Trigger scheduler enabled (in-process mode)")
+    elif settings.ENABLE_TRIGGER_SCHEDULER:
+        logger.info("Trigger scheduler enabled (run separately: python -m backend.scheduler_worker)")
     else:
         logger.info("Trigger scheduler disabled")
 
@@ -148,6 +151,7 @@ app.include_router(triggers_router)
 app.include_router(events_router)
 app.include_router(claims_router)
 app.include_router(payouts_router)
+app.include_router(notifications_router)
 
 
 @app.get("/")

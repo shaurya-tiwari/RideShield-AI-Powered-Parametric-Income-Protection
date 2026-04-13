@@ -548,6 +548,9 @@ class ClaimProcessor:
         elif decision_result["decision"] == "rejected" and fraud_result["is_high_risk"]:
             await self._update_trust_score(db, worker, fraud_flag=True)
 
+        # Create in-app notification for the worker
+        await self._notify_worker(db, worker, claim, decision_result, payout_calc)
+
         return result
 
     async def _update_trust_score(self, db: AsyncSession, worker: Worker, approved: bool = False, fraud_flag: bool = False) -> None:
@@ -580,6 +583,39 @@ class ClaimProcessor:
         aqi_simulator.set_scenario(config["aqi"])
         traffic_simulator.set_scenario(config["traffic"])
         platform_simulator.set_scenario(config["platform"])
+
+    async def _notify_worker(self, db: AsyncSession, worker: Worker, claim, decision_result: Dict, payout_calc: Dict) -> None:
+        """Create an in-app notification for the worker about their claim outcome."""
+        from backend.api.notifications import create_notification
+
+        decision = decision_result["decision"]
+        payout_amount = payout_calc.get("final_payout", 0)
+        trigger = claim.trigger_type or "disruption"
+
+        if decision == "approved":
+            await create_notification(
+                db, worker.id,
+                category="claim_approved",
+                title=f"₹{payout_amount:.0f} payout approved",
+                body=f"Your income protection claim for {trigger.replace('_', ' ')} has been approved. The payout will be processed shortly.",
+                metadata={"claim_id": str(claim.id), "amount": payout_amount},
+            )
+        elif decision == "delayed":
+            await create_notification(
+                db, worker.id,
+                category="claim_review",
+                title="Claim under review",
+                body=f"Your claim for {trigger.replace('_', ' ')} is being reviewed. We'll update you once a decision is made.",
+                metadata={"claim_id": str(claim.id)},
+            )
+        elif decision == "rejected":
+            await create_notification(
+                db, worker.id,
+                category="claim_rejected",
+                title="Claim could not be approved",
+                body=f"Your claim for {trigger.replace('_', ' ')} did not meet the criteria for automatic payout. You can view the details in your claim history.",
+                metadata={"claim_id": str(claim.id), "reason": decision_result.get("explanation", "")},
+            )
 
 
 claim_processor = ClaimProcessor()
