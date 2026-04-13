@@ -52,4 +52,16 @@ def test_signal_aggregator_is_deterministic_and_versioned():
     assert first == second
     assert first["aggregation_version"] == signal_aggregator.VERSION
     assert first["source_mode"] == "shadow"
-    assert first["social"] > 0
+    # Social is now independent — no social snapshot provided, platform (0.72) is below 0.85 fallback
+    assert first["social"] == 0.0
+
+    # When an admin-injected social snapshot IS provided, it should be used
+    with_social = signal_aggregator.build_zone_snapshot(
+        "delhi",
+        "east_delhi",
+        snapshots,
+        source_mode="shadow",
+        shadow_diffs=[{"signal_type": "weather", "delta": 0.0}],
+        social_snapshot_value=0.8,
+    )
+    assert with_social["social"] == 0.8
