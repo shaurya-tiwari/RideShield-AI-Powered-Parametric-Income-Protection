@@ -18,7 +18,7 @@ import NextDecisionPanel from "../components/NextDecisionPanel";
 import ReviewQueue from "../components/ReviewQueue";
 import { groupClaimsByIncident } from "../utils/claimGroups";
 import { formatAudienceFactor } from "../utils/decisionNarrative";
-import { formatCurrency, formatDateTime, formatPercent, formatRelative, humanizeSlug } from "../utils/formatters";
+import { formatCurrency, formatPercent, formatRelative, humanizeSlug } from "../utils/formatters";
 
 function forecastTone(band) {
   switch (band) {
@@ -80,19 +80,7 @@ function queuePressureState(totalPending, overdueCount, exposure) {
 
 
 
-function sourceLabel(signalType, status) {
-  const signal = humanizeSlug(signalType);
-  if (!status) {
-    return `${signal} unavailable`;
-  }
-  if (status.is_fallback) {
-    return `Fallback ${signal.toLowerCase()}`;
-  }
-  if (status.configured_source === "real" || String(status.latest_provider || "").startsWith("openweather")) {
-    return `Live ${signal.toLowerCase()}`;
-  }
-  return `Mock ${signal.toLowerCase()}`;
-}
+
 
 function sourceTone(status) {
   if (!status) {
@@ -134,7 +122,7 @@ export default function AdminPanel() {
   useEffect(() => {
     load();
     loadCities();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     loadForecast();

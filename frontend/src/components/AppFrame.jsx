@@ -22,7 +22,7 @@ export default function AppFrame({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { session, role, logout } = useAuth();
-  const [lang, setLangState] = useState(getLang());
+  const [, setLangState] = useState(getLang());
 
   function handleToggleLang() {
     const next = toggleLang();

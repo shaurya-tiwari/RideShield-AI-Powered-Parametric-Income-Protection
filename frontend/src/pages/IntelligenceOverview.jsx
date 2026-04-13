@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { BrainCircuit, Clock3, TrendingUp } from "lucide-react";
+import { BrainCircuit, TrendingUp } from "lucide-react";
 
 import { analyticsApi } from "../api/analytics";
 import { healthApi } from "../api/health";
 import { locationsApi } from "../api/locations";
 import SectionHeader from "../components/SectionHeader";
 import { formatAudienceFactor, formatPolicyRule, formatPolicySurface } from "../utils/decisionNarrative";
-import { formatDateTime, formatPercent, formatRelative, humanizeSlug } from "../utils/formatters";
+import { formatPercent, formatRelative, humanizeSlug } from "../utils/formatters";
 
 function interpretLossRatio(value) {
   if (!Number.isFinite(Number(value))) {

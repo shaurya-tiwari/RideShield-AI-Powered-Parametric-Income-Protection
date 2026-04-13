@@ -41,6 +41,7 @@ stitch/
 logs/runtime/*.txt
 *.egg-info/
 .eggs/
+
 # Block large ML artifacts from being pushed (Local training only)
 backend/ml/artifacts/*.joblib
 backend/ml/artifacts/*.json
@@ -61,4 +62,7 @@ nul
 other/
 DEVTrails_2026_Usecase_Document (1).pdf
 RideShield_stitch_backup
-RideShield-AI-Powered-Parametric-Income-Protection
+
+# Nested repos
+RideShield-AI-Powered-Parametric-Income-Protection/
+.git_worktrees/

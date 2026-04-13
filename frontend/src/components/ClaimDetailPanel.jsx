@@ -1,5 +1,5 @@
 import { formatCurrency, formatDateTime, formatScore, humanizeSlug, statusPill } from "../utils/formatters";
-import { patternCopy, workerClaimNarrative, workerFriendlyFactors } from "../utils/decisionNarrative";
+import { workerClaimNarrative, workerFriendlyFactors } from "../utils/decisionNarrative";
 import { t } from "../utils/i18n";
 import WhatsAppPreview from "./WhatsAppPreview";
 
@@ -32,8 +32,8 @@ export default function ClaimDetailPanel({ claim }) {
   const fraudModel = claim.fraud_model || breakdown.fraud_model || {};
   const incidentTriggers = inputs.incident_triggers || claim.decision_breakdown?.incident_triggers || [claim.trigger_type];
   const coveredTriggers = inputs.covered_triggers || claim.decision_breakdown?.covered_triggers || [];
-  const pattern = components.pattern_taxonomy;
-  const patternNarrative = patternCopy(pattern);
+
+
   const workerFactors = workerFriendlyFactors(claim);
   const decisionExperience = claim.decision_experience || {};
   const behaviorLabel = decisionExperience.behavioral_label ? humanizeSlug(decisionExperience.behavioral_label) : null;
