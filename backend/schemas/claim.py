@@ -49,6 +49,7 @@ class ClaimResponse(BaseModel):
     primary_factor: Optional[str] = None
     secondary_factors: Optional[List[str]] = None
     payout_info: Optional[Dict[str, Any]] = None
+    decision_experience: Optional[Dict[str, Any]] = None
 
 
 class ClaimListResponse(BaseModel):
@@ -81,6 +82,8 @@ class ClaimResolveRequest(BaseModel):
 class ReviewQueueResponse(BaseModel):
     total_pending: int
     overdue_count: int
+    high_load_mode: Optional[bool] = None
+    high_load_threshold: Optional[int] = None
     claims: List[ClaimResponse]
 
 
