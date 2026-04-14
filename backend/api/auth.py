@@ -18,7 +18,8 @@ from backend.schemas.auth import AdminLoginRequest, WorkerLoginRequest
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 SESSION_COOKIE_NAME = "rideshield_session"
 SESSION_COOKIE_MAX_AGE = settings.SESSION_DURATION_HOURS * 3600
-SESSION_COOKIE_SECURE = not settings.DEBUG
+SESSION_COOKIE_SECURE = settings.SESSION_COOKIE_SECURE
+SESSION_COOKIE_SAMESITE = settings.SESSION_COOKIE_SAMESITE
 
 
 def worker_session_payload(worker: Worker) -> dict:
@@ -62,7 +63,7 @@ async def worker_login(
         max_age=SESSION_COOKIE_MAX_AGE,
         httponly=True,
         secure=SESSION_COOKIE_SECURE,
-        samesite="lax",
+        samesite=SESSION_COOKIE_SAMESITE,
         path="/",
     )
     return {
@@ -107,7 +108,7 @@ async def admin_login(request: AdminLoginRequest, http_request: Request, respons
         max_age=SESSION_COOKIE_MAX_AGE,
         httponly=True,
         secure=SESSION_COOKIE_SECURE,
-        samesite="lax",
+        samesite=SESSION_COOKIE_SAMESITE,
         path="/",
     )
     return {
@@ -137,7 +138,7 @@ async def logout(response: Response):
         max_age=0,
         httponly=True,
         secure=SESSION_COOKIE_SECURE,
-        samesite="lax",
+        samesite=SESSION_COOKIE_SAMESITE,
         path="/",
     )
     return {"message": "Session cleared."}

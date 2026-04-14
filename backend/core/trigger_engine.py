@@ -11,52 +11,41 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from backend.config import settings
+from backend.core.signal_service import signal_service
 from backend.db.models import AuditLog, Event, Worker, Zone
 from backend.utils.time import utc_now_naive
-from simulations.aqi_mock import aqi_simulator
-from simulations.platform_mock import platform_simulator
-from simulations.traffic_mock import traffic_simulator
-from simulations.weather_mock import weather_simulator
+
 
 class TriggerEngine:
     """Fetches signals, evaluates thresholds, creates events, and finds workers."""
 
     THRESHOLDS = {
-        "rain": {"field": "rainfall_mm_hr", "threshold": settings.RAIN_THRESHOLD_MM, "weight": 0.20, "source": "openweather"},
-        "heat": {"field": "temperature_c", "threshold": settings.HEAT_THRESHOLD_C, "weight": 0.15, "source": "openweather"},
-        "aqi": {"field": "aqi_value", "threshold": settings.AQI_THRESHOLD, "weight": 0.15, "source": "waqi"},
-        "traffic": {"field": "congestion_index", "threshold": settings.TRAFFIC_THRESHOLD, "weight": 0.15, "source": "tomtom"},
-        "platform_outage": {"field": "order_density_drop", "threshold": settings.PLATFORM_OUTAGE_THRESHOLD, "weight": 0.20, "source": "platform_sim"},
-        "social": {"field": "normalized_inactivity", "threshold": settings.SOCIAL_INACTIVITY_THRESHOLD, "weight": 0.15, "source": "behavioral"},
+        "rain": {"field": "rainfall_mm_hr", "threshold": settings.RAIN_THRESHOLD_MM, "weight": 0.20, "source": "weather"},
+        "heat": {"field": "temperature_c", "threshold": settings.HEAT_THRESHOLD_C, "weight": 0.15, "source": "weather"},
+        "aqi": {"field": "aqi_value", "threshold": settings.AQI_THRESHOLD, "weight": 0.15, "source": "aqi"},
+        "traffic": {"field": "congestion_index", "threshold": settings.TRAFFIC_THRESHOLD, "weight": 0.15, "source": "traffic"},
+        "platform_outage": {"field": "order_density_drop", "threshold": settings.PLATFORM_OUTAGE_THRESHOLD, "weight": 0.20, "source": "platform"},
+        "social": {"field": "normalized_inactivity", "threshold": settings.SOCIAL_INACTIVITY_THRESHOLD, "weight": 0.15, "source": "social_disruption"},
     }
 
-    async def fetch_all_signals(self, zone: str, city: str = "delhi") -> Dict:
-        weather = weather_simulator.get_weather(zone)
-        aqi = aqi_simulator.get_aqi(zone, city)
-        traffic = traffic_simulator.get_traffic(zone)
-        platform = platform_simulator.get_platform_status(zone)
-        social_signal = self._calculate_social_signal(weather, traffic, platform)
-
-        return {
-            "rain": weather.get("rainfall_mm_hr", 0),
-            "heat": weather.get("temperature_c", 0),
-            "aqi": aqi.get("aqi_value", 0),
-            "traffic": traffic.get("congestion_index", 0),
-            "platform_outage": platform.get("order_density_drop", 0),
-            "social": social_signal,
-            "raw_data": {"weather": weather, "aqi": aqi, "traffic": traffic, "platform": platform},
-        }
+    async def fetch_all_signals(
+        self,
+        zone: str,
+        city: str = "delhi",
+        db: AsyncSession | None = None,
+    ) -> Dict:
+        return await signal_service.fetch_zone_snapshot(db=db, zone=zone, city=city, mode="live")
 
     def thresholds_for_zone(self, zone: Zone | None = None) -> Dict:
         if zone and zone.threshold_profile:
             profile = zone.threshold_profile
             return {
-                "rain": {"field": "rainfall_mm_hr", "threshold": float(profile.rain_threshold_mm), "weight": 0.20, "source": "openweather"},
-                "heat": {"field": "temperature_c", "threshold": float(profile.heat_threshold_c), "weight": 0.15, "source": "openweather"},
-                "aqi": {"field": "aqi_value", "threshold": float(profile.aqi_threshold), "weight": 0.15, "source": "waqi"},
-                "traffic": {"field": "congestion_index", "threshold": float(profile.traffic_threshold), "weight": 0.15, "source": "tomtom"},
-                "platform_outage": {"field": "order_density_drop", "threshold": float(profile.platform_outage_threshold), "weight": 0.20, "source": "platform_sim"},
-                "social": {"field": "normalized_inactivity", "threshold": float(profile.social_inactivity_threshold), "weight": 0.15, "source": "behavioral"},
+                "rain": {"field": "rainfall_mm_hr", "threshold": float(profile.rain_threshold_mm), "weight": 0.20, "source": "weather"},
+                "heat": {"field": "temperature_c", "threshold": float(profile.heat_threshold_c), "weight": 0.15, "source": "weather"},
+                "aqi": {"field": "aqi_value", "threshold": float(profile.aqi_threshold), "weight": 0.15, "source": "aqi"},
+                "traffic": {"field": "congestion_index", "threshold": float(profile.traffic_threshold), "weight": 0.15, "source": "traffic"},
+                "platform_outage": {"field": "order_density_drop", "threshold": float(profile.platform_outage_threshold), "weight": 0.20, "source": "platform"},
+                "social": {"field": "normalized_inactivity", "threshold": float(profile.social_inactivity_threshold), "weight": 0.15, "source": "social_disruption"},
             }
         return self.THRESHOLDS
 
@@ -124,6 +113,9 @@ class TriggerEngine:
         event_confidence: float,
         thresholds: Dict | None = None,
         demo_run_id: str | None = None,
+        traffic_source: str = "baseline",
+        scenario_name: str | None = None,
+        pressure_profile: str | None = None,
     ) -> Tuple[List[Event], int, int]:
         now = utc_now_naive()
         hour_start = now.replace(minute=0, second=0, microsecond=0)
@@ -174,6 +166,12 @@ class TriggerEngine:
                     **trigger_details,
                 },
                 "signals_snapshot": {k: v for k, v in signals.items() if k != "raw_data" and isinstance(v, (int, float))},
+                "traffic_source": traffic_source,
+                "traffic_sources_seen": sorted(
+                    set(((existing.metadata_json or {}).get("traffic_sources_seen") or []) + [traffic_source])
+                ),
+                "scenario_name": scenario_name,
+                "pressure_profile": pressure_profile,
             }
             db.add(
                 AuditLog(
@@ -211,6 +209,10 @@ class TriggerEngine:
                 "trigger_details": trigger_details,
                 "created_by": "trigger_engine",
                 "demo_run_id": demo_run_id,
+                "traffic_source": traffic_source,
+                "traffic_sources_seen": [traffic_source],
+                "scenario_name": scenario_name,
+                "pressure_profile": pressure_profile,
             },
         )
         db.add(event)
@@ -233,6 +235,7 @@ class TriggerEngine:
 
     async def find_affected_workers(self, db: AsyncSession, zone: Zone, fired_triggers: List[str]) -> List[Dict]:
         now = utc_now_naive()
+        grace_window = timedelta(hours=1)
         workers = (
             await db.execute(
                 select(Worker)
@@ -245,15 +248,28 @@ class TriggerEngine:
         for worker in workers:
             active_policy = None
             for policy in worker.policies:
-                if policy.status == "active" and policy.activates_at <= now <= policy.expires_at:
-                    active_policy = policy
-                    break
-            if not active_policy:
-                for policy in worker.policies:
-                    if policy.status == "pending" and policy.activates_at <= now <= policy.expires_at:
-                        policy.status = "active"
+                # Auto-expire policies that are past grace window
+                if (
+                    policy.status in ("active", "pending")
+                    and policy.expires_at < (now - grace_window)
+                ):
+                    policy.status = "expired"
+                    continue
+
+                # Active policy: within activation window OR within 1-hour grace
+                if policy.status == "active" and policy.activates_at <= now:
+                    if now <= policy.expires_at or now <= (policy.expires_at + grace_window):
                         active_policy = policy
                         break
+
+            if not active_policy:
+                for policy in worker.policies:
+                    if policy.status == "pending" and policy.activates_at <= now:
+                        if now <= policy.expires_at or now <= (policy.expires_at + grace_window):
+                            policy.status = "active"
+                            active_policy = policy
+                            break
+
             if not active_policy:
                 continue
             covered_triggers = [t for t in fired_triggers if t in active_policy.triggers_covered]

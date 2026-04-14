@@ -2,12 +2,66 @@
 
 This file is the implementation baseline for the current repo, not a copy of the sprint markdowns. `Sprint_1.md`, `Sprint_2.md`, and `Sprint_3.md` were used as planning references, but the codebase has intentionally diverged where correctness, maintainability, Windows compatibility, and demo clarity required it.
 
+### Current Working Snapshot (2026-04-13)
+
+- Current repo posture:
+  - working repo is now the main Phase 3 build surface
+  - deployed repo should only receive curated stable slices
+- Current Phase 3 state:
+  - Waves `0-5` core intent implemented
+  - Wave `5.5` governance and realism tooling materially implemented
+  - Wave `6` now includes real providers for:
+    - weather
+    - AQI
+    - traffic
+  - Wave `7` now has a deliberate light slice:
+    - payout lifecycle states
+    - failure-safe payout handling
+    - confidence bands
+    - high-load mode visibility
+- Current provider/runtime state:
+  - external real providers now use safe fallback instead of replacing the old mock path blindly
+  - source/freshness status is visible in health/admin/intelligence surfaces
+  - minimal live shadow diff persistence now exists for weather/AQI/traffic
+  - shadow diffs are observational only and do not affect live decision routing
+  - TomTom traffic is now returning live `200 OK` responses in the running app instead of `403` fallback-only behavior
+  - scheduler cadence is now budget-aware for real traffic mode and will clamp upward if the configured interval would exceed the daily traffic quota
+  - health/config surface has now been decomposed into:
+    - `/config/runtime`
+    - `/health/signals`
+    - `/health/diagnostics`
+    - legacy `/health/config` remains only as a compatibility aggregate with timing breakdowns
+- Current product-surface/runtime split:
+  - `DemoRunner` is now intentionally locked and deterministic for judge-safe product storytelling
+  - `Scenario Lab` now exists as the exploratory admin surface for composed signal testing, worker-profile injection, and batch experimentation
+  - the two surfaces reuse the same trigger/claim engine and do not fork business logic
+- Current read-path hardening:
+  - event APIs no longer use per-event claim-count N+1 reads
+  - admin analytics forecast loading is split out of `admin-overview`
+  - `admin-forecast` is cached with a `300s` TTL
+  - stale callers to `/api/analytics/overview` are now handled through a compatibility alias
+- Current known backend reality:
+  - focused provider/signal/shadow tests are green
+  - deterministic demo scenario regressions are green
+  - frontend tests/build remain green
+  - a fresh full-backend checkpoint should be treated as the next hard gate before commit/push
+- Current backend priority:
+  - stabilize flaky tests
+  - stop adding backend scope unless the next slice is truly necessary
+  - move toward curated promotion and demo/judge packaging
+
 ### Phase 2 Submission Snapshot
 
 - Submission posture:
   - stable mock-based signal inputs
   - real incident, claim, and review orchestration inside the app
-  - documentation intentionally excludes future integration and learning work from the Phase 2 claim
+  - framed explicitly around scalability across cities and signal layers
+  - documentation intentionally excludes future integration while noting dual-integration (Live/Mock) readiness
+- Core Architecture Principles (Hackathon to Enterprise pitch framing):
+  - **Determinism & Consistency**: The engine guarantees reproducible, non-random payouts based purely on hard data and behavior.
+  - **Graceful Degradation**: System continues decision-making even under partial signal failure, falling back to heuristics without pipeline collapse.
+  - **Time-Aware Continuity**: Duplicate events extend a continuous geographic claim instead of lazily rejecting sequential triggers.
+  - **Explainability & Fairness**: Admin SLA queues provide white-box breakdown of fraud modeling while trust modifiers and `0.85` operational deductions protect true net-profit for earners.
 - Signal architecture decision:
   - Phase 2 keeps disruption inputs isolated from the decision flow so future provider expansion does not require rewriting claims logic
   - today the product remains mock-driven and demo-safe
@@ -29,12 +83,16 @@ This file is the implementation baseline for the current repo, not a copy of the
 
 ### Latest Repo Notes
 
-- Latest push snapshot date: `2026-04-03`
+- Latest push-ready local snapshot date: `2026-04-13`
 - Final verification for the current worktree:
-  - backend tests: `56 passed`
+  - focused provider/signal/shadow regressions: passed
+  - deterministic demo scenario regressions: passed
   - frontend tests: `63 passed`
   - frontend build: successful
   - frontend lint: successful
+- Current exception:
+  - the newest demo-runner and scheduler-budget slices were validated with targeted tests first
+  - the next required checkpoint is one fresh full backend suite before commit/push
 - Current session/auth state:
   - auth cookies are now root-scoped so worker/admin sessions survive redirects into protected routes
   - localhost frontend also supports bearer fallback during session restore/login flows when a cookie is unavailable
@@ -51,6 +109,7 @@ This file is the implementation baseline for the current repo, not a copy of the
   - `docs/PHASE2_CURRENT_STATE.md`
   - `docs/business_model.md`
   - `docs/Phase3_Roadmap.md`
+  - `docs/questions_n_answers.md`
 - Git hygiene reminder:
   - this pass is not dropping any tracked file other than the intentional `PremiumCalculator.jsx` removal above
 
@@ -60,6 +119,55 @@ This file is the implementation baseline for the current repo, not a copy of the
 - Fraud ML is integrated into hybrid claim-path scoring with runtime fallback.
 - The frontend now uses httpOnly cookie sessions with minimal role-only local metadata.
 - Earlier audit notes were merged into this file so the implementation history stays in one place.
+- Real provider work now exists for:
+  - weather via OpenWeather
+  - AQI via OpenWeather Air Pollution
+  - traffic via TomTom
+- Minimal shadow diff persistence now exists for live comparisons between real and mock behavior for:
+  - weather
+  - AQI
+  - traffic
+- Platform telemetry is now a first-class behavioral provider-style input:
+  - `PLATFORM_SOURCE=db` builds demand/drop status from:
+    - time-of-day baseline demand
+    - zone resilience profiles
+    - bounded deterministic noise
+    - recent weather/traffic/AQI snapshot context
+    - active worker count when available
+  - the engine preserves the existing trigger contract through `order_density_drop`
+  - richer platform telemetry is implemented, but still needs full-suite validation and calibration before broader trust
+- The earlier `100000`-worker / broad synthetic-population effort was for governed policy calibration, not production-like user simulation:
+  - its purpose was to create enough labeled decision traffic to test whether rules and surfaces were causing unnecessary manual review
+  - it produced the current experiment runner, replay amplification, source labeling, and micro-world realism infrastructure
+  - repeated `1000`-row checkpoint runs improved realism materially
+  - but the effort stopped short of a trustworthy `100000`-row calibration run because source alignment, uncertainty emergence, and difficulty realism were still not strong enough
+  - current interpretation: useful for directional experimentation, not strong enough to override baseline/manual-reviewed truth
+- Deterministic product-demo stories now exist as app-owned backend/frontend flows:
+  - `clean_legit`
+  - `borderline_review`
+  - `suspicious_activity`
+  - these no longer rely on loose simulator toggles alone
+  - the demo runner now uses fixed Delhi zones and fixed seeded worker profiles for repeatability
+- Scenario Lab now exists as the complementary exploratory surface:
+  - composed numeric signal inputs
+  - selected city and zone scope
+  - seeded worker profile modes:
+    - `legit`
+    - `edge`
+    - `fraud`
+  - single-run and batch-run execution through the shared backend trigger/claim engine
+  - local preset save/load through `localStorage`
+- Scheduler quota protection now exists for real traffic mode:
+  - `TRAFFIC_DAILY_REQUEST_BUDGET` defaults to `2400`
+  - scheduler computes an effective interval from active zone count
+  - if the configured interval is too low, the effective interval is raised automatically to stay under daily traffic budget
+- Health/runtime diagnostics now have a cleaner API boundary:
+  - `/health` stays the fast liveness route
+  - `/health/db` checks database connectivity
+  - `/config/runtime` exposes stable runtime config
+  - `/health/signals` exposes provider source/freshness state
+  - `/health/diagnostics` exposes scheduler and shadow-diff internals
+  - legacy `/health/config` now logs section timings so remaining slowness can be attributed instead of guessed
 
 ### Current Baseline
 

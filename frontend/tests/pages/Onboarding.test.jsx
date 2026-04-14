@@ -191,7 +191,7 @@ describe("Onboarding", () => {
     fireEvent.click(screen.getByRole("button", { name: /Register worker/i }));
 
     expect(
-      await screen.findByText(/Purchase selected plan/i),
+      await screen.findByRole("button", { name: /Activate Protection/i }),
     ).toBeInTheDocument();
     expect(workersApi.register).toHaveBeenCalledTimes(1);
     expect(mockLoginWorker).not.toHaveBeenCalled();

@@ -55,11 +55,14 @@ describe("ClaimDetailPanel", () => {
       />,
     );
 
-    expect(screen.getByText(/44% suspicious/i)).toBeInTheDocument();
-    expect(screen.getByText(/fraud-model-v1 - hybrid scoring active/i)).toBeInTheDocument();
+    expect(screen.getByText(/44% check intensity/i)).toBeInTheDocument();
     expect(screen.getByText("Claim frequency")).toBeInTheDocument();
     expect(screen.getByText(/Gross hourly reference/i)).toBeInTheDocument();
     expect(screen.getByText(/Net protected hourly/i)).toBeInTheDocument();
     expect(screen.getByText(/Operating-cost factor: 85%/i)).toBeInTheDocument();
+    // AI Decision Factors section with visual bars
+    expect(screen.getByText("AI Decision Factors")).toBeInTheDocument();
+    expect(screen.getByText("Disruption strength")).toBeInTheDocument();
+    expect(screen.getByText("Payment safety")).toBeInTheDocument();
   });
 });

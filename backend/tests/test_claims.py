@@ -3,8 +3,8 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from backend.core.demo_scenarios import enrich_worker_for_demo
 from backend.main import app
-from scripts.run_scenario import enrich_worker_for_demo
 
 
 @pytest.mark.asyncio
@@ -92,6 +92,10 @@ async def test_event_claim_and_payout_detail_endpoints(client, valid_worker_data
     claim_detail = claim_detail_response.json()
     assert claim_detail["id"] == claim_id
     assert "event" in claim_detail
+    assert "decision_experience" in claim_detail
+    assert "summary" in claim_detail["decision_experience"]
+    assert "action_reason" in claim_detail["decision_experience"]
+    assert "next_step" in claim_detail["decision_experience"]
 
     if claim_detail["payout"]:
         payout_id = claim_detail["payout"]["id"]
@@ -131,6 +135,8 @@ async def test_review_queue_and_manual_resolution_flow(client, valid_worker_data
     assert review_queue_response.status_code == 200
     queue_data = review_queue_response.json()
     assert queue_data["total_pending"] >= 1
+    assert "high_load_mode" in queue_data
+    assert "high_load_threshold" in queue_data
     review_claim = next(claim for claim in queue_data["claims"] if claim["worker_id"] == worker_id)
     assert "urgency_score" in review_claim
     assert "urgency_band" in review_claim
@@ -139,6 +145,10 @@ async def test_review_queue_and_manual_resolution_flow(client, valid_worker_data
     assert "hours_waiting" in review_claim
     assert "decision_confidence" in review_claim
     assert "decision_confidence_band" in review_claim
+    assert "decision_experience" in review_claim
+    assert "summary" in review_claim["decision_experience"]
+    assert "next_step" in review_claim["decision_experience"]
+    assert "behavioral_label" in review_claim["decision_experience"]
     assert review_claim["urgency_band"] in {"critical", "warning", "steady"}
     assert review_claim["decision_confidence_band"] in {"high", "moderate", "low"}
 

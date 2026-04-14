@@ -1,5 +1,8 @@
 """Tests for risk model service and fallback behavior."""
 
+from pathlib import Path
+
+from backend.config import settings
 from backend.core.risk_model_service import RiskModelService
 from backend.ml.train.train_risk_model import train_risk_model
 
@@ -18,6 +21,15 @@ def test_risk_model_service_loads_trained_artifact(tmp_path):
     result = service.score({"city": "mumbai", "month": 7, "zone_profile_risk": 0.8, "incidents_7d": 6})
     assert result["fallback_used"] is False
     assert 0 <= result["risk_score"] <= 1
-    assert result["model_version"] == "risk-model-v1"
+    assert result["model_version"] == "risk-model-v2"
     assert len(result["explanation"]) > 0
 
+
+def test_risk_model_service_prefers_configured_risk_artifact_dir(monkeypatch):
+    monkeypatch.setattr(settings, "RISK_ML_ARTIFACT_DIR", "backend/ml/artifacts_v2")
+    monkeypatch.setattr(settings, "ML_ARTIFACT_DIR", "backend/ml/artifacts_v1")
+    service = RiskModelService()
+
+    assert service.model_available is True
+    assert service.get_model_info()["version"] == "risk-model-v2"
+    assert service.artifact_dir == Path("backend/ml/artifacts_v2")

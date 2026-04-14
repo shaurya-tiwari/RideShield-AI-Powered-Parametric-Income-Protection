@@ -12,6 +12,8 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
+from backend.config import settings
+
 
 class PrefixFilter(logging.Filter):
     def __init__(self, prefixes: tuple[str, ...]):
@@ -57,9 +59,6 @@ def configure_logging() -> None:
 
     structured = os.environ.get("STRUCTURED_LOGGING", "").lower() in ("1", "true", "yes")
 
-    log_dir = Path("logs") / "runtime"
-    log_dir.mkdir(parents=True, exist_ok=True)
-
     if structured:
         formatter = StructuredFormatter()
     else:
@@ -69,18 +68,23 @@ def configure_logging() -> None:
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(formatter)
 
-    app_file_handler = logging.FileHandler(log_dir / "app_runtime.txt", encoding="utf-8")
-    app_file_handler.setLevel(logging.INFO)
-    app_file_handler.setFormatter(formatter)
-
-    cycle_file_handler = logging.FileHandler(log_dir / "trigger_cycles.txt", encoding="utf-8")
-    cycle_file_handler.setLevel(logging.INFO)
-    cycle_file_handler.setFormatter(formatter)
-    cycle_file_handler.addFilter(PrefixFilter(("rideshield.scheduler", "rideshield.cycles")))
-
     root.setLevel(logging.INFO)
     root.handlers.clear()
     root.addHandler(console_handler)
-    root.addHandler(app_file_handler)
-    root.addHandler(cycle_file_handler)
+
+    if settings.FILE_LOGGING_ENABLED:
+        log_dir = Path("logs") / "runtime"
+        log_dir.mkdir(parents=True, exist_ok=True)
+
+        app_file_handler = logging.FileHandler(log_dir / "app_runtime.txt", encoding="utf-8")
+        app_file_handler.setLevel(logging.INFO)
+        app_file_handler.setFormatter(formatter)
+
+        cycle_file_handler = logging.FileHandler(log_dir / "trigger_cycles.txt", encoding="utf-8")
+        cycle_file_handler.setLevel(logging.INFO)
+        cycle_file_handler.setFormatter(formatter)
+        cycle_file_handler.addFilter(PrefixFilter(("rideshield.scheduler", "rideshield.cycles")))
+
+        root.addHandler(app_file_handler)
+        root.addHandler(cycle_file_handler)
     root._rideshield_logging_configured = True

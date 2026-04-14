@@ -16,6 +16,16 @@ A recharge-style, AI-powered parametric insurance system that protects gig deliv
 
 ---
 
+## 🏛️ Deployment Note
+This repository contains the full development codebase.
+
+The deployed version is based on a cleaned and optimized build 
+available here: [Ride-Shield-InsurTech-System](https://github.com/Gupta-Sarthak-358/Ride-Shield-InsurTech-System)
+
+Both share identical core logic, with Repo B structured for production deployment.
+
+---
+
 ## ✅ Requirement Coverage
 
 | Requirement | Status |
