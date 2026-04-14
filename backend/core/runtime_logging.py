@@ -62,7 +62,13 @@ def configure_logging() -> None:
     if structured:
         formatter = StructuredFormatter()
     else:
-        formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
+        class ProjectFormatter(logging.Formatter):
+            def format(self, record: logging.LogRecord) -> str:
+                prefix = "[SCHEDULER]" if "scheduler" in record.name else "[API]"
+                record.component = prefix
+                return super().format(record)
+        
+        formatter = ProjectFormatter("%(asctime)s %(levelname)s %(component)s %(name)s -(%(funcName)s:%(lineno)d) %(message)s")
 
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)

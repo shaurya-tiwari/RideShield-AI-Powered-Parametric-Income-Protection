@@ -160,20 +160,35 @@ async def get_trigger_status(city: str = "delhi", zones: Optional[str] = None, d
         # Social signal: prefer DB snapshot; fall back to 0 (no longer derived from platform)
         signals.setdefault("social", 0.0)
 
-        fired = trigger_engine.evaluate_thresholds(signals)
-        snapshots.append(
-            SignalSnapshotSchema(
-                zone=zone,
-                timestamp=latest_timestamp.isoformat() if latest_timestamp else "",
-                rain_mm_hr=signals.get("rain", 0),
-                temperature_c=signals.get("heat", 0),
-                aqi_value=int(signals.get("aqi", 0)),
-                congestion_index=signals.get("traffic", 0),
-                order_density_drop=signals.get("platform_outage", 0),
-                normalized_inactivity=signals.get("social", 0),
-                triggers_active=fired,
+        if latest_timestamp is None:
+            snapshots.append(
+                SignalSnapshotSchema(
+                    zone=zone,
+                    timestamp="warming_up",
+                    rain_mm_hr=0,
+                    temperature_c=0,
+                    aqi_value=0,
+                    congestion_index=0,
+                    order_density_drop=0,
+                    normalized_inactivity=0,
+                    triggers_active=["warming_up"],
+                )
             )
-        )
+        else:
+            fired = trigger_engine.evaluate_thresholds(signals)
+            snapshots.append(
+                SignalSnapshotSchema(
+                    zone=zone,
+                    timestamp=latest_timestamp.isoformat(),
+                    rain_mm_hr=signals.get("rain", 0),
+                    temperature_c=signals.get("heat", 0),
+                    aqi_value=int(signals.get("aqi", 0)),
+                    congestion_index=signals.get("traffic", 0),
+                    order_density_drop=signals.get("platform_outage", 0),
+                    normalized_inactivity=signals.get("social", 0),
+                    triggers_active=fired,
+                )
+            )
     return {
         "city": city,
         "zones_checked": len(snapshots),
