@@ -48,12 +48,12 @@ async def worker_login(
     if not worker or not verify_password(request.password, worker.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid worker credentials.",
+            detail={"error_code": "AUTH_INVALID_CREDENTIALS"},
         )
     if worker.status != "active":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Worker account is {worker.status}.",
+            detail={"error_code": "AUTH_ACCOUNT_INACTIVE"},
         )
 
     if request.device_fingerprint and request.device_fingerprint != worker.device_fingerprint:
@@ -95,7 +95,7 @@ async def admin_login(request: AdminLoginRequest, http_request: Request, respons
     if not username_ok or not password_ok:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid admin credentials.",
+            detail={"error_code": "AUTH_INVALID_CREDENTIALS"},
         )
 
 

@@ -48,6 +48,7 @@ backend/ml/artifacts/*.json
 !backend/ml/artifacts/.gitkeep
 
 # Project-local planning docs that should not be pushed
+docs/internal/
 /Sprint_*.md
 /Architecture.md
 /DevNotes.md

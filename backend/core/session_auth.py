@@ -50,14 +50,14 @@ def verify_session_token(token: str) -> Dict[str, Any]:
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid session token format.",
+            detail={"error_code": "AUTH_INVALID_TOKEN"},
         ) from exc
 
     expected_signature = _sign(encoded_payload)
     if not hmac.compare_digest(signature, expected_signature):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid session token signature.",
+            detail={"error_code": "AUTH_SIGNATURE_MISMATCH"},
         )
 
     try:
@@ -65,21 +65,21 @@ def verify_session_token(token: str) -> Dict[str, Any]:
     except (ValueError, json.JSONDecodeError) as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Unreadable session token payload.",
+            detail={"error_code": "AUTH_PAYLOAD_UNREADABLE"},
         ) from exc
 
     exp = payload.get("exp")
     if not exp:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Session token expiry missing.",
+            detail={"error_code": "AUTH_EXPIRY_MISSING"},
         )
 
     expires_at = datetime.fromisoformat(exp)
     if expires_at < utc_now_naive():
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Session expired. Please sign in again.",
+            detail={"error_code": "AUTH_EXPIRED"},
         )
 
     return payload
@@ -89,13 +89,13 @@ def parse_bearer_token(authorization: str | None) -> str:
     if not authorization:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization header required.",
+            detail={"error_code": "AUTH_HEADER_REQUIRED"},
         )
     parts = authorization.split(" ", 1)
     if len(parts) != 2 or parts[0].lower() != "bearer":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization header must be a Bearer token.",
+            detail={"error_code": "AUTH_BEARER_REQUIRED"},
         )
     return parts[1]
 
@@ -107,7 +107,7 @@ def parse_cookie_or_bearer(cookie_token: str | None, authorization: str | None) 
         return parse_bearer_token(authorization)
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Authentication required.",
+        detail={"error_code": "AUTH_REQUIRED"},
     )
 
 
@@ -135,7 +135,7 @@ async def require_admin_session(
     if session.get("role") != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin session required.",
+            detail={"error_code": "AUTH_ADMIN_REQUIRED"},
         )
     return session
 
@@ -147,5 +147,5 @@ def ensure_worker_access(session: Dict[str, Any], worker_id: Any) -> None:
         return
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail="You do not have access to this worker resource.",
+        detail={"error_code": "AUTH_WORKER_MISMATCH"},
     )

@@ -399,7 +399,7 @@ async def get_worker_claims(
     ensure_worker_access(session, worker_id)
     worker = (await db.execute(select(Worker).where(Worker.id == worker_id))).scalar_one_or_none()
     if not worker:
-        raise HTTPException(status_code=404, detail="Worker not found.")
+        raise HTTPException(status_code=404, detail={"error_code": "WORKER_NOT_FOUND"})
 
     cutoff = utc_now_naive() - timedelta(days=days)
     query = select(Claim).options(selectinload(Claim.payout)).where(and_(Claim.worker_id == worker_id, Claim.created_at >= cutoff))
@@ -447,7 +447,7 @@ async def get_claim_detail(
         )
     ).scalar_one_or_none()
     if not claim:
-        raise HTTPException(status_code=404, detail="Claim not found.")
+        raise HTTPException(status_code=404, detail={"error_code": "CLAIM_NOT_FOUND"})
     ensure_worker_access(session, claim.worker_id)
 
     event_info = None
@@ -539,9 +539,9 @@ async def resolve_delayed_claim(
         )
     ).scalar_one_or_none()
     if not claim:
-        raise HTTPException(status_code=404, detail="Claim not found.")
+        raise HTTPException(status_code=404, detail={"error_code": "CLAIM_NOT_FOUND"})
     if claim.status != "delayed":
-        raise HTTPException(status_code=400, detail=f"Claim is '{claim.status}', not 'delayed'.")
+        raise HTTPException(status_code=400, detail={"error_code": "CLAIM_NOT_DELAYED"})
 
     now = utc_now_naive()
     claim.reviewed_by = request.reviewed_by

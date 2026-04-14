@@ -1,0 +1,378 @@
+{
+  "dashboard": {
+    "title": "Worker Dashboard",
+    "subtitle": "Coverage, incidents, and payouts",
+    "protection_active": "Automatic protection active",
+    "no_claims": "No claim incidents yet",
+    "no_zone": "No zone",
+    "firstTimeGate": {
+      "title": "Get Protected",
+      "description": "Choose a plan to activate your income protection. RideShield watches for disruptions in your zone and automatically processes claims — zero paperwork.",
+      "loading": "Loading plans...",
+      "recommended": "Recommended",
+      "per_week": "/week",
+      "up_to_coverage": "Up to {{amount}} coverage",
+      "purchasing": "Purchasing...",
+      "buy": "Buy Plan",
+      "error": "Unable to load plans."
+    },
+    "expiredGate": {
+      "title": "Your coverage expired",
+      "description": "Your protection is no longer active. Renew to keep your income shielded from disruptions.",
+      "last_plan": "Last plan",
+      "expired": "Expired",
+      "premium_was": "Premium was",
+      "coverage_cap": "Coverage cap",
+      "expired_on": "Expired on",
+      "renewing": "Renewing...",
+      "renew": "Renew Coverage",
+      "want_different": "Want a different plan?",
+      "view_all": "View all plans",
+      "renew_success": "Coverage renewed! It will activate after the waiting period.",
+      "renew_failed": "Renewal failed."
+    },
+    "narrative": {
+      "latest_payout": "Latest payout {{amount}} credited automatically after system validation.",
+      "approved_claims": "{{count}} approved claims so far with zero worker filing steps.",
+      "waiting": "Coverage is live and waiting for the next verified disruption in the worker zone."
+    },
+    "payoutState": {
+      "failed": "Transfer failed, claim still protected",
+      "processing": "Transfer in progress",
+      "pending": "Transfer queued",
+      "credited": "Credited to wallet and recorded in payout history",
+      "none": "No wallet transfer yet"
+    },
+    "states": {
+      "loading": "Loading dashboard...",
+      "worker_not_found": "Worker not found",
+      "back_to_sign_in": "Back to sign in",
+      "refresh": "Refresh"
+    },
+    "hero": {
+      "zero_touch": "Zero-touch claims",
+      "greeting": "{{name}}, your protection runs in the background.",
+      "description": "RideShield watches disruption signals in your zone, merges overlapping triggers into one incident, checks policy coverage, and decides payout without asking you to file a manual claim."
+    },
+    "stats": {
+      "approved_claims": "Approved claims",
+      "of_total_claims": "Of {{count}} total claims filed",
+      "total_payouts": "Total payouts",
+      "coverage_window": "Coverage window",
+      "claims_tracked": "{{count}} claims tracked",
+      "latest_30_days": "Latest 30 days"
+    },
+    "detail": {
+      "title": "Claim detail"
+    },
+    "history": {
+      "eyebrow": "Claims history",
+      "title": "Incident-aligned claim history",
+      "focus_claim": "Focus current claim"
+    },
+    "payout": {
+      "eyebrow": "Latest payout"
+    },
+    "status": {
+      "eyebrow": "Protection status",
+      "active": "Active and shielded",
+      "pending": "Pending activation",
+      "aware": "Coverage and waiting-period aware"
+    },
+    "trust": {
+      "eyebrow": "Trust score"
+    },
+    "alerts": {
+      "eyebrow": "Nearby alerts",
+      "signal_strength": "- signal strength {{score}}"
+    }
+  },
+  "claim": {
+    "approved": "Claim approved",
+    "rejected": "Claim could not be approved",
+    "under_review": "Claim under review",
+    "payout_label": "Payout amount",
+    "income_loss": "Estimated income lost",
+    "coverage": "We covered",
+    "coverage_ratio": "Coverage ratio",
+    "select": "Select an incident",
+    "pick": "Pick a claim incident from the list to view detailed information."
+  },
+  "policy": {
+    "active": "Active policy",
+    "expired": "Policy expired",
+    "renew": "Renew your coverage",
+    "no_policy": "No active policy"
+  },
+  "payout": {
+    "credited": "Payout credited",
+    "processing": "Processing payout…",
+    "paid": "Paid"
+  },
+  "notif": {
+    "title": "Notifications",
+    "mark_read": "Mark all read",
+    "empty": "No notifications yet"
+  },
+  "appFrame": {
+    "view_active_protection": "View active protection",
+    "protected_worker_session": "Protected worker session",
+    "automatic_protection_active": "Automatic protection active",
+    "worker_coverage_mode": "Worker coverage mode",
+    "sign_out": "Sign out",
+    "settings": "Settings",
+    "alert": "Alert",
+    "alert_success": "Dispatcher alerted. They will contact you shortly.",
+    "settings_toast": "Settings will be available post-launch"
+  },
+  "general": {
+    "lang_toggle": "हिंदी"
+  },
+  "home": {
+    "pillars": {
+      "0": {
+        "title": "Parametric coverage",
+        "description": "Workers buy weekly coverage once. They do not file claims when disruption hits because the system detects incidents in the background."
+      },
+      "1": {
+        "title": "Incident-first monitoring",
+        "description": "Rain, heat, AQI, traffic, platform outages, and civic disruption signals are merged into one explainable incident instead of noisy duplicate events."
+      },
+      "2": {
+        "title": "Visible payout engine",
+        "description": "Eligible claims move through fraud checks, decisioning, and wallet payout simulation with a transparent system story for workers and admins."
+      }
+    },
+    "hero": {
+      "badge": "Autonomous guardian",
+      "title_guest": "RideShield turns disruption signals into trustable claim and payout decisions.",
+      "description_guest": "The product now connects onboarding, worker coverage, admin review, live trigger monitoring, and scenario-driven demos in one coherent operating surface.",
+      "title_worker": "Welcome back, {{name}}. Your RideShield coverage is already in motion.",
+      "description_worker": "Open the dashboard to review policy state, grouped incidents, recent payouts, and the logic behind the latest system decisions.",
+      "subtitle": "Zero-touch. Always on."
+    },
+    "cta": {
+      "start_onboarding": "Start onboarding",
+      "sign_in": "Sign in",
+      "open_demo": "Open demo runner",
+      "open_dashboard": "Open dashboard",
+      "create_demo": "Create another demo worker",
+      "switch_account": "Switch account",
+      "open_admin": "Open admin panel",
+      "run_scenarios": "Run scenarios"
+    },
+    "models": {
+      "claim_model": {
+        "label": "Claim model",
+        "value": "Incident-first"
+      },
+      "trigger_loop": {
+        "label": "Trigger loop",
+        "value": "Scheduler + demo override"
+      },
+      "coverage_story": {
+        "label": "Coverage story",
+        "value": "Zero manual filing"
+      }
+    },
+    "system": {
+      "eyebrow": "System promise",
+      "title": "Workers are informed. The system does the filing, scoring, and payout orchestration.",
+      "description": "RideShield is designed to observe disruption signals, translate them into one clear incident, and expose that reasoning across worker, admin, and demo views."
+    },
+    "surfaces": {
+      "worker": {
+        "label": "Worker surface",
+        "desc": "Coverage, incidents, payout history, and decision explanations in one calm, readable view."
+      },
+      "admin": {
+        "label": "Admin surface",
+        "desc": "Review queue, disruption pressure, fraud visibility, scheduler health, and city-aware monitoring."
+      }
+    },
+    "core": {
+      "eyebrow": "Core flow",
+      "title": "How the backend becomes a visible product",
+      "description": "The frontend does not mock product logic. It makes the real engine legible so workers trust outcomes and admins understand why those outcomes happened."
+    }
+  },
+  "auth": {
+    "errors": {
+      "name_required": "Full name is required.",
+      "phone_required": "Phone number is required.",
+      "phone_invalid": "Use a valid worker phone number.",
+      "password_required": "Password is required.",
+      "password_length": "Use at least 8 characters.",
+      "confirm_password_required": "Confirm the password to continue.",
+      "passwords_mismatch": "Passwords do not match.",
+      "zone_required": "Select an operating zone.",
+      "consent_required": "Consent is required before registration."
+    },
+    "password": {
+      "strong": "Strong password",
+      "decent": "Decent password",
+      "weak": "Weak password"
+    }
+  },
+  "onboarding": {
+    "header": {
+      "eyebrow": "Worker onboarding",
+      "title": "Register a delivery worker and buy a policy",
+      "desc": "This flow uses the real worker registration and policy purchase APIs. Admin-only simulation actions stay outside the worker signup flow."
+    },
+    "steps": {
+      "register": "Worker profile",
+      "plan": "Policy choice",
+      "complete": "Ready"
+    },
+    "errors": {
+      "locations": "Worker geography could not be loaded. Retry to continue onboarding.",
+      "zones": "Zones could not be loaded for the selected city.",
+      "plan_catalog": "Detailed premium pricing could not be loaded.",
+      "login_failed": "Worker sign-in failed. Use the sign-in page to continue.",
+      "fix_fields": "Fix the highlighted registration fields first.",
+      "register_success": "Worker registered. Choose a policy next.",
+      "register_failed": "Worker registration failed.",
+      "select_plan": "Select a plan before continuing",
+      "purchase_success": "Policy purchased",
+      "purchase_failed": "Policy purchase failed."
+    },
+    "stories": {
+      "basic_protect": {
+        "eyebrow": "Starter cover",
+        "bestFor": "A low-cost safety net for riders who mainly want outage protection and a predictable weekly premium.",
+        "compareFit": "Low-cost safety net"
+      },
+      "smart_protect": {
+        "eyebrow": "Balanced cover",
+        "bestFor": "The default choice for most active riders who want weather, traffic, and outage protection together.",
+        "compareFit": "Best for everyday riding"
+      },
+      "assured_plan": {
+        "eyebrow": "Guaranteed floor",
+        "bestFor": "Broader trigger cover with a guaranteed minimum payout floor when conditions turn rough.",
+        "compareFit": "Broader payout certainty"
+      },
+      "pro_max": {
+        "eyebrow": "Premium cover",
+        "bestFor": "The highest-cap option for full-time riders who want predictive alerts and the fastest payout path.",
+        "compareFit": "Maximum protection"
+      }
+    },
+    "recommendation_reason": "Best balance of cost and coverage for your risk level",
+    "complete": {
+      "eyebrow": "Ready",
+      "title": "You're now protected",
+      "desc": "Your income protection is active and monitoring for disruptions.",
+      "worker": "Worker",
+      "policy": "Policy",
+      "active": "Active in {{city}}",
+      "premium": "{{amount}}/week • Active",
+      "open_dashboard": "Go to Dashboard",
+      "opening": "Opening dashboard...",
+      "sign_later": "Sign in again later",
+      "footer": "We'll automatically detect disruptions and handle claims for you."
+    },
+    "form": {
+      "identity": "Identity",
+      "name": "Full name",
+      "phone": "Phone number",
+      "password": "Password",
+      "confirm_password": "Confirm password",
+      "area": "Operating area",
+      "city": "City",
+      "zone": "Zone",
+      "earning": "Earning profile",
+      "platform": "Platform",
+      "hours": "Working hours per day",
+      "income": "Self-reported daily income",
+      "consent": "Worker consents to location, behavior, and device data being used for claim validation and fraud checks.",
+      "register": "Register worker",
+      "registering": "Calculating risk profile..."
+    },
+    "plans": {
+      "compare": {
+        "eyebrow": "Compare plans",
+        "title": "Pick protection in one glance",
+        "desc": "Three curated options. Weekly pricing already reflects the rider's live risk score, so you only need to compare cost, cap, and fit.",
+        "options_count": "{{count}} options"
+      },
+      "refreshing": "Refreshing live policy pricing...",
+      "up_to": "Up to {{amount}}",
+      "waiting": "Policy options will appear as soon as pricing finishes loading.",
+      "more": {
+        "eyebrow": "More options",
+        "title": "Need a different coverage shape?",
+        "desc": "The short list keeps the decision fast, but the full backend catalog is still available when a rider wants a different cap or payout profile.",
+        "show_more": "Show {{count}} more option{{suffix}}",
+        "hide_more": "Hide extra option{{suffix}}",
+        "footer": "RideShield is highlighting the quickest three-way choice first. Open the extra option list if this rider needs a different premium-to-coverage tradeoff."
+      }
+    },
+    "trust": {
+      "eyebrow": "Trust and safety",
+      "title": "Why this feels safer to buy",
+      "monitoring": "Monitoring",
+      "monitoring_cities": "{{count}} cities live",
+      "monitoring_desc": "Weather, traffic, AQI, and outage thresholds are tracked automatically.",
+      "decision": "Decision path",
+      "auto_checks": "Auto-checks first",
+      "decision_desc": "Straightforward claims can auto-decide; suspicious ones route to manual review.",
+      "activation": "Activation",
+      "background": "Clear waiting period",
+      "activation_desc": "Coverage stays pending until the waiting period ends or simulation activates it."
+    },
+    "next": {
+      "eyebrow": "After purchase",
+      "title": "What happens next",
+      "step_1": "Step 1",
+      "step_1_title": "Purchase",
+      "step_1_desc": "Lock in the selected weekly premium and coverage cap.",
+      "step_2": "Step 2",
+      "step_2_title": "Waiting period",
+      "step_2_desc": "The policy stays pending until the wait window ends or an admin activates simulation coverage.",
+      "step_3": "Step 3",
+      "step_3_title": "Coverage active",
+      "step_3_desc": "The worker dashboard shows the active policy, live incidents, and claim outcomes."
+    },
+    "footer": {
+      "selected": "Selected Plan:",
+      "none": "None",
+      "activating": "Activating...",
+      "activate": "Activate Protection"
+    }
+  },
+  "errors": {
+    "VALIDATION_FAILED": "Validation failed.",
+    "AUTH_INVALID_TOKEN": "Invalid session token format.",
+    "AUTH_SIGNATURE_MISMATCH": "Invalid session token signature.",
+    "AUTH_PAYLOAD_UNREADABLE": "Unreadable session token payload.",
+    "AUTH_EXPIRY_MISSING": "Session token expiry missing.",
+    "AUTH_EXPIRED": "Session expired. Please sign in again.",
+    "AUTH_HEADER_REQUIRED": "Authorization header required.",
+    "AUTH_BEARER_REQUIRED": "Authorization header must be a Bearer token.",
+    "AUTH_REQUIRED": "Authentication required.",
+    "AUTH_ADMIN_REQUIRED": "Admin session required.",
+    "AUTH_WORKER_MISMATCH": "You do not have access to this resource.",
+    "AUTH_INVALID_CREDENTIALS": "Invalid credentials.",
+    "AUTH_ACCOUNT_INACTIVE": "Account is inactive.",
+    "RATE_LIMIT_EXCEEDED": "Too many requests. Please try again later.",
+    "LOCATION_CITY_NOT_SUPPORTED": "City is not supported.",
+    "LOCATION_ZONE_NOT_SUPPORTED": "Zone is not supported.",
+    "WORKER_PHONE_EXISTS": "A worker with this phone number is already registered.",
+    "WORKER_NOT_FOUND": "Worker not found.",
+    "POLICY_WORKER_INACTIVE": "Worker account is inactive. Cannot purchase a plan.",
+    "POLICY_NO_CONSENT": "You must give consent before purchasing a plan.",
+    "POLICY_UNKNOWN_PLAN": "Unknown plan.",
+    "POLICY_ALREADY_EXISTS": "You already have an active or pending policy.",
+    "POLICY_SIMULATION_ONLY": "Force activation is only available in simulation mode.",
+    "CLAIM_NOT_FOUND": "Claim not found.",
+    "CLAIM_NOT_DELAYED": "Claim is not delayed.",
+    "PAYOUT_NOT_FOUND": "Payout not found.",
+    "EVENT_NOT_FOUND": "Event not found.",
+    "DB_CONNECTION_FAILED": "Database connection failed.",
+    "UNKNOWN_ERROR": "An unknown error occurred.",
+    "FORBIDDEN": "You do not have permission for this action.",
+    "SERVER_ERROR": "A server error occurred. Please try again later."
+  }
+}

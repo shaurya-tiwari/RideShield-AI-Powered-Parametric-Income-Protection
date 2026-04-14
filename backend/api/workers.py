@@ -60,7 +60,7 @@ async def resolve_worker_zone(db: AsyncSession, city_slug: str, zone_slug: str |
         if not zones:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"City '{city_slug}' is not supported.",
+                detail={"error_code": "LOCATION_CITY_NOT_SUPPORTED"},
             )
         return zones[0]
     try:
@@ -70,11 +70,11 @@ async def resolve_worker_zone(db: AsyncSession, city_slug: str, zone_slug: str |
         if not valid:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"City '{city_slug}' is not supported.",
+                detail={"error_code": "LOCATION_CITY_NOT_SUPPORTED"},
             ) from exc
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"{exc} Valid zones: {', '.join(valid)}",
+            detail={"error_code": "LOCATION_ZONE_NOT_SUPPORTED"},
         ) from exc
 
 
@@ -90,7 +90,7 @@ async def register_worker(
     if existing.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="A worker with this phone number is already registered.",
+            detail={"error_code": "WORKER_PHONE_EXISTS"},
         )
 
     zone_record = await resolve_worker_zone(db, request.city, request.zone)
@@ -219,7 +219,7 @@ async def get_worker_profile(
     if not worker:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Worker not found.",
+            detail={"error_code": "WORKER_NOT_FOUND"},
         )
 
     now = utc_now_naive()
@@ -282,7 +282,7 @@ async def update_worker(
     if not worker:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Worker not found.",
+            detail={"error_code": "WORKER_NOT_FOUND"},
         )
 
     recalculate_risk = False
@@ -406,7 +406,7 @@ async def get_risk_score(
     if not worker:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Worker not found.",
+            detail={"error_code": "WORKER_NOT_FOUND"},
         )
 
     risk_result = risk_scorer.calculate_risk_score(

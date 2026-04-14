@@ -91,23 +91,23 @@ describe("Onboarding", () => {
 
     await waitFor(() => expect(locationsApi.cities).toHaveBeenCalled());
 
-    fireEvent.change(screen.getByLabelText(/Full name/i), {
+    fireEvent.change(screen.getByLabelText("onboarding.form.name"), {
       target: { value: "Rahul Kumar" },
     });
-    fireEvent.change(screen.getByLabelText(/Phone number/i), {
+    fireEvent.change(screen.getByLabelText("onboarding.form.phone"), {
       target: { value: "+919876543210" },
     });
-    fireEvent.change(screen.getByLabelText(/^Password$/i), {
+    fireEvent.change(screen.getByLabelText("onboarding.form.password"), {
       target: { value: "WorkerPass1" },
     });
-    fireEvent.change(screen.getByLabelText(/Confirm password/i), {
+    fireEvent.change(screen.getByLabelText("onboarding.form.confirm_password"), {
       target: { value: "Mismatch123" },
     });
     fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: /Register worker/i }));
+    fireEvent.click(screen.getByRole("button", { name: "onboarding.form.register" }));
 
     expect(
-      await screen.findByText(/Passwords do not match/i),
+      await screen.findByText("auth.errors.passwords_mismatch"),
     ).toBeInTheDocument();
     expect(workersApi.register).not.toHaveBeenCalled();
     expect(toast.error).toHaveBeenCalled();
@@ -138,7 +138,7 @@ describe("Onboarding", () => {
     expect(await screen.findByDisplayValue("Draft Worker")).toBeInTheDocument();
     expect(screen.getByDisplayValue("+919999999999")).toBeInTheDocument();
     expect(
-      screen.getByText(/Decent password|Strong password/i),
+      screen.getByText(/auth\.password\.(decent|strong)/i),
     ).toBeInTheDocument();
   });
 
@@ -175,23 +175,23 @@ describe("Onboarding", () => {
 
     await waitFor(() => expect(locationsApi.cities).toHaveBeenCalled());
 
-    fireEvent.change(screen.getByLabelText(/Full name/i), {
+    fireEvent.change(screen.getByLabelText("onboarding.form.name"), {
       target: { value: "Rahul Kumar" },
     });
-    fireEvent.change(screen.getByLabelText(/Phone number/i), {
+    fireEvent.change(screen.getByLabelText("onboarding.form.phone"), {
       target: { value: "+919876543210" },
     });
-    fireEvent.change(screen.getByLabelText(/^Password$/i), {
+    fireEvent.change(screen.getByLabelText("onboarding.form.password"), {
       target: { value: "WorkerPass1" },
     });
-    fireEvent.change(screen.getByLabelText(/Confirm password/i), {
+    fireEvent.change(screen.getByLabelText("onboarding.form.confirm_password"), {
       target: { value: "WorkerPass1" },
     });
     fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: /Register worker/i }));
+    fireEvent.click(screen.getByRole("button", { name: "onboarding.form.register" }));
 
     expect(
-      await screen.findByRole("button", { name: /Activate Protection/i }),
+      await screen.findByRole("button", { name: "onboarding.footer.activate" }),
     ).toBeInTheDocument();
     expect(workersApi.register).toHaveBeenCalledTimes(1);
     expect(mockLoginWorker).not.toHaveBeenCalled();
@@ -222,7 +222,7 @@ describe("Onboarding", () => {
 
     await waitFor(() => expect(locationsApi.cities).toHaveBeenCalledTimes(1));
 
-    fireEvent.change(screen.getByLabelText(/City/i), {
+    fireEvent.change(screen.getByLabelText("onboarding.form.city"), {
       target: { value: "mumbai" },
     });
 
@@ -317,23 +317,23 @@ describe("Onboarding", () => {
 
     await waitFor(() => expect(locationsApi.cities).toHaveBeenCalled());
 
-    fireEvent.change(screen.getByLabelText(/Full name/i), {
+    fireEvent.change(screen.getByLabelText("onboarding.form.name"), {
       target: { value: "Rahul Kumar" },
     });
-    fireEvent.change(screen.getByLabelText(/Phone number/i), {
+    fireEvent.change(screen.getByLabelText("onboarding.form.phone"), {
       target: { value: "+919876543210" },
     });
-    fireEvent.change(screen.getByLabelText(/^Password$/i), {
+    fireEvent.change(screen.getByLabelText("onboarding.form.password"), {
       target: { value: "WorkerPass1" },
     });
-    fireEvent.change(screen.getByLabelText(/Confirm password/i), {
+    fireEvent.change(screen.getByLabelText("onboarding.form.confirm_password"), {
       target: { value: "WorkerPass1" },
     });
     fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: /Register worker/i }));
+    fireEvent.click(screen.getByRole("button", { name: "onboarding.form.register" }));
 
     expect(
-      await screen.findByText(/Pick protection in one glance/i),
+      await screen.findByText("onboarding.plans.compare.title"),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Premium model/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/City Base Risk/i)).not.toBeInTheDocument();
@@ -347,11 +347,11 @@ describe("Onboarding", () => {
       screen.getByRole("button", { name: /Pro Max/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Show 1 more option/i }),
+      screen.getByRole("button", { name: "onboarding.plans.more.show_more" }),
     ).toBeInTheDocument();
 
     fireEvent.click(
-      screen.getByRole("button", { name: /Show 1 more option/i }),
+      screen.getByRole("button", { name: "onboarding.plans.more.show_more" }),
     );
 
     expect(
@@ -361,6 +361,6 @@ describe("Onboarding", () => {
     fireEvent.click(screen.getByRole("button", { name: /View details/i }));
 
     expect(screen.getByText(/City Base Risk/i)).toBeInTheDocument();
-    expect(screen.getByText(/Trust and safety/i)).toBeInTheDocument();
+    expect(screen.getByText("onboarding.trust.eyebrow")).toBeInTheDocument();
   });
 });

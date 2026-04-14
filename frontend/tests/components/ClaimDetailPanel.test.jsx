@@ -6,8 +6,8 @@ describe("ClaimDetailPanel", () => {
   it("shows the empty-state copy when no claim is selected", () => {
     render(<ClaimDetailPanel claim={null} />);
 
-    expect(screen.getByText(/Select an incident/i)).toBeInTheDocument();
-    expect(screen.getByText(/Pick a claim incident/i)).toBeInTheDocument();
+    expect(screen.getByText(/claim\.select/i)).toBeInTheDocument();
+    expect(screen.getByText(/claim\.pick/i)).toBeInTheDocument();
   });
 
   it("renders claim check intensity and payout breakdown when a claim is present", () => {

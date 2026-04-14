@@ -1,5 +1,5 @@
 import axios from "axios";
-import toast from "react-hot-toast";
+import { evaluateError } from "./errorStrategy";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
@@ -18,26 +18,109 @@ export function setAuthToken(token) {
   }
 }
 
+// In-flight tracking to prevent duplicating identical concurrent requests
+const activeRequests = new Map();
+
+// Lightweight Adaptive Intelligence Cache
+const getCache = new Map();
+const CACHE_TTL = 3 * 60 * 1000;
+
+function isFinancialRoute(url) {
+  if (!url) return false;
+  return url.includes("/claims") || url.includes("/payouts");
+}
+
+function getCacheKey(config) {
+  const url = [config.baseURL, config.url].filter(Boolean).join("").replace(/\/+/g, "/");
+  return `${config.method?.toUpperCase()}:${url}:${JSON.stringify(config.params || {})}`;
+}
+
+client.interceptors.request.use((config) => {
+  if (config.method?.toUpperCase() === "GET") {
+    if (!isFinancialRoute(config.url)) {
+      const key = getCacheKey(config);
+      const entry = getCache.get(key);
+      if (entry && Date.now() < entry.expiry) {
+        config.adapter = () => Promise.resolve(entry.response);
+      } else if (entry) {
+        getCache.delete(key);
+      }
+    }
+  } else {
+    const key = `${config.method}:${config.url}`;
+    if (activeRequests.has(key)) {
+       // Optional: we can throttle or log here. Currently we let axios proceed, 
+       // but we track it so retries don't stack violently.
+    }
+    activeRequests.set(key, true);
+  }
+  return config;
+});
+
 client.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (!error.config || error.config._skipInterceptors) {
+  (response) => {
+    // Clear tracking on success
+    const key = `${response.config.method}:${response.config.url}`;
+    activeRequests.delete(key);
+
+    // Save to cache if eligible GET
+    if (response.config.method?.toUpperCase() === "GET" && !isFinancialRoute(response.config.url)) {
+      const cacheKey = getCacheKey(response.config);
+      getCache.set(cacheKey, {
+        response,
+        expiry: Date.now() + CACHE_TTL
+      });
+    }
+
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+    
+    if (originalRequest) {
+      const key = `${originalRequest.method}:${originalRequest.url}`;
+      activeRequests.delete(key);
+    }
+
+    if (!originalRequest || originalRequest._skipInterceptors) {
       return Promise.reject(error);
     }
+
     const status = error.response?.status;
-    const detail = error.response?.data?.detail;
-    if (status === 401) {
-      const currentPath = window.location.pathname;
-      if (currentPath !== "/auth") {
-        window.location.href = "/auth?reason=session_expired";
-      }
-    } else if (status === 403) {
-      toast.error(detail || "You do not have permission for this action.");
-    } else if (status === 429) {
-      toast.error("Too many requests. Please wait a moment and try again.");
-    } else if (status >= 500) {
-      toast.error("A server error occurred. Please try again later.");
+    const detailPayload = error.response?.data?.detail;
+
+    // 1. Evaluate the error using the Central Strategy
+    const { errorCode, strategy } = evaluateError(status, detailPayload, error);
+
+    // 2. Cancellation Check
+    // If the route changed wildly while the request was in flight, abort silent retries to prevent ghost updates.
+    if (!originalRequest._routeSnapshot) {
+      originalRequest._routeSnapshot = window.location.pathname;
     }
+    if (originalRequest._routeSnapshot !== window.location.pathname) {
+      // User navigated away. Kill retry loop.
+      return Promise.reject(error);
+    }
+
+    // 3. Strategy Execution Loop
+    if (strategy.action === "redirect") {
+      if (window.location.pathname !== "/auth") {
+        window.location.href = `/auth?reason=${errorCode}`;
+      }
+    } else if (strategy.action === "retry" || strategy.action === "silent_retry") {
+      const maxAttempts = strategy.retry?.maxAttempts || 1;
+      originalRequest._retryCount = originalRequest._retryCount || 0;
+      
+      if (originalRequest._retryCount < maxAttempts) {
+        originalRequest._retryCount++;
+        const delay = strategy.retry?.delay || 1000;
+        
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        // Retry the request
+        return client(originalRequest);
+      }
+    }
+
     return Promise.reject(error);
   },
 );

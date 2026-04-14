@@ -1,11 +1,11 @@
-import { useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { BrainCircuit, FlaskConical, LayoutDashboard, LogOut, PlaySquare, Settings, ShieldCheck, Siren, Sparkles } from "lucide-react";
+import { BrainCircuit, FlaskConical, LayoutDashboard, LogOut, Menu, PlaySquare, Settings, ShieldCheck, Siren, Sparkles, X } from "lucide-react";
 import NotificationBell from "./NotificationBell";
 
 import { useAuth } from "../auth/AuthContext";
 import toast from "react-hot-toast";
-import { t, toggleLang, useLang } from "../utils/i18n";
+import { useTranslation } from "react-i18next";
 
 const workerNav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -22,10 +22,29 @@ export default function AppFrame({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { session, role, logout } = useAuth();
-  useLang();
+  const { t, i18n } = useTranslation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    function handleEscape(e) {
+      if (e.key === "Escape") setIsMobileMenuOpen(false);
+    }
+
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+      window.addEventListener("keydown", handleEscape);
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [isMobileMenuOpen]);
 
   function handleToggleLang() {
-    toggleLang();
+    i18n.changeLanguage(i18n.language === "en" ? "hi" : "en");
   }
 
   const navItems = role === "admin" ? adminNav : workerNav;
@@ -38,7 +57,7 @@ export default function AppFrame({ children }) {
         ? "System Intelligence"
       : location.pathname.startsWith("/admin")
         ? "System Oversight"
-        : "Worker Dashboard";
+        : t("dashboard.title");
   const userLabel = session?.session?.name || session?.session?.username || "RideShield user";
   const initials = useMemo(
     () =>
@@ -71,7 +90,7 @@ export default function AppFrame({ children }) {
 
           <button type="button" className="button-primary mb-6 w-full justify-start rounded-[22px] px-4 py-3" onClick={() => toast("Live oversight mode is active.", { icon: "✨" })}>
             <Sparkles size={16} />
-            {role === "admin" ? "Review live incidents" : "View active protection"}
+            {role === "admin" ? "Review live incidents" : t("appFrame.view_active_protection")}
           </button>
 
           <nav className="space-y-1">
@@ -99,22 +118,22 @@ export default function AppFrame({ children }) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-primary">{userLabel}</p>
-                  <p className="text-xs text-on-surface-variant">{role === "admin" ? "Operations session" : "Protected worker session"}</p>
+                  <p className="text-xs text-on-surface-variant">{role === "admin" ? "Operations session" : t("appFrame.protected_worker_session")}</p>
                 </div>
               </div>
               <div className="mt-4 flex items-center gap-2 text-sm font-medium" style={{ color: "#69f8e9" }}>
                 <Sparkles size={15} />
-                <span>{role === "admin" ? "Live oversight enabled" : "Automatic protection active"}</span>
+                <span>{role === "admin" ? "Live oversight enabled" : t("appFrame.automatic_protection_active")}</span>
               </div>
             </div>
 
             <button type="button" className="flex w-full items-center gap-3 rounded-[18px] px-4 py-3 text-sm font-semibold text-on-surface-variant transition hover:bg-surface-container-low" onClick={handleLogout}>
               <LogOut size={16} />
-              Sign out
+              {t("appFrame.sign_out")}
             </button>
-            <button type="button" onClick={() => toast("Settings will be available post-launch", { icon: "⚙️" })} className="flex w-full items-center gap-3 rounded-[18px] px-4 py-3 text-sm font-semibold text-on-surface-variant transition hover:bg-surface-container-low">
+            <button type="button" onClick={() => toast(t("appFrame.settings_toast"), { icon: "⚙️" })} className="flex w-full items-center gap-3 rounded-[18px] px-4 py-3 text-sm font-semibold text-on-surface-variant transition hover:bg-surface-container-low">
               <Settings size={16} />
-              Settings
+              {t("appFrame.settings")}
             </button>
           </div>
         </div>
@@ -127,18 +146,18 @@ export default function AppFrame({ children }) {
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-on-surface-variant">{title}</p>
                 <p className="text-sm font-bold text-primary">
-                  {role === "admin" ? "Operational control surface" : "Coverage, incidents, and payouts"}
+                  {role === "admin" ? "Operational control surface" : t("dashboard.subtitle")}
                 </p>
               </div>
             </div>
 
             <div className="hidden items-center gap-4 md:flex">
               <div className="rounded-full bg-surface-container-high px-4 py-2 text-sm font-medium text-on-surface-variant">
-                {role === "admin" ? "Operational review mode" : "Worker coverage mode"}
+                {role === "admin" ? "Operational review mode" : t("appFrame.worker_coverage_mode")}
               </div>
-              <button type="button" onClick={() => toast.success("Dispatcher alerted. They will contact you shortly.")} className="inline-flex items-center gap-2 rounded-full bg-tertiary-container px-4 py-2 text-sm font-semibold text-on-tertiary-container transition hover:brightness-110" aria-label="Emergency alert">
+              <button type="button" onClick={() => toast.success(t("appFrame.alert_success"))} className="inline-flex items-center gap-2 rounded-full bg-tertiary-container px-4 py-2 text-sm font-semibold text-on-tertiary-container transition hover:brightness-110" aria-label="Emergency alert">
                 <Siren size={16} />
-                Alert
+                {t("appFrame.alert")}
               </button>
               <NotificationBell />
               {role !== "admin" && (
@@ -148,7 +167,63 @@ export default function AppFrame({ children }) {
                   className="rounded-full bg-surface-container-high px-3 py-2 text-xs font-bold text-on-surface-variant transition hover:bg-surface-container-highest"
                   title="Switch language"
                 >
-                  {t("lang.toggle")}
+                  {t("general.lang_toggle")}
+                </button>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-3 md:hidden">
+              <button 
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+                className="rounded-full p-2 text-on-surface-variant hover:bg-surface-container-high transition"
+                aria-label="Toggle mobile menu"
+              >
+                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Overlay Backdrop */}
+          <div 
+            className={`fixed inset-0 top-16 z-20 bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
+              isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Mobile Menu Dropdown */}
+          <div 
+            className={`absolute left-0 right-0 top-16 z-30 border-b border-t border-white/10 bg-surface-container-lowest px-4 py-5 shadow-2xl transition-all duration-300 ease-out md:hidden flex flex-col gap-5 ${
+              isMobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"
+            }`}
+          >
+            <div className="rounded-full bg-surface-container-high px-4 py-2.5 text-sm font-medium text-center text-on-surface-variant ring-1 ring-white/5 shadow-inner">
+              {role === "admin" ? "Operational review mode" : t("appFrame.worker_coverage_mode")}
+            </div>
+            <button 
+              type="button" 
+              onClick={() => {
+                toast.success(t("appFrame.alert_success"));
+                setIsMobileMenuOpen(false);
+              }} 
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-tertiary-container px-4 py-3.5 text-sm font-semibold text-on-tertiary-container transition hover:brightness-110 shadow-md"
+            >
+              <Siren size={18} />
+              {t("appFrame.alert")}
+            </button>
+            <div className="flex items-center justify-between gap-4 pt-1 border-t border-white/10">
+              <NotificationBell />
+              {role !== "admin" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleToggleLang();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex-1 rounded-full bg-surface-container-high px-6 py-3 text-sm font-bold text-on-surface-variant transition hover:bg-surface-container-highest ring-1 ring-white/5"
+                >
+                  {t("general.lang_toggle")}
                 </button>
               )}
             </div>

@@ -415,7 +415,7 @@ async def simulate_spoofing(
     worker = result.scalar_one_or_none()
     if not worker:
         from fastapi import HTTPException, status
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Worker not found.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={"error_code": "WORKER_NOT_FOUND"})
 
     base_zone = worker.zone or "south_delhi"
 

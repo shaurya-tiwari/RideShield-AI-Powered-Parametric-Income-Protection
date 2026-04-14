@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowDownRight, ChevronDown, ChevronUp, MapPin, RefreshCcw, Shield, ShieldCheck, ShieldOff, Wallet } from "lucide-react";
+import { SkeletonBlock, SkeletonText } from "../components/Skeleton";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 
@@ -21,7 +22,7 @@ import TrustBadge from "../components/TrustBadge";
 import TrustScoreGauge from "../components/TrustScoreGauge";
 import { formatCurrency, formatDateTime, humanizeSlug } from "../utils/formatters";
 import { getDisruptionTone } from "../utils/toneHelpers";
-import { t, useLang } from "../utils/i18n";
+import { useTranslation } from "react-i18next";
 
 function claimPriority(claim) {
   if (!claim) return -1;
@@ -33,6 +34,7 @@ function claimPriority(claim) {
 
 /* ─── Policy Gate: First-time user ─── */
 function FirstTimeGate({ workerId, onPurchased }) {
+  const { t } = useTranslation();
   const [plans, setPlans] = useState(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(null);
@@ -63,34 +65,41 @@ function FirstTimeGate({ workerId, onPurchased }) {
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
           <Shield size={40} className="text-primary" />
         </div>
-        <h1 className="mt-6 text-4xl font-bold tracking-tight text-primary">Get Protected</h1>
+        <h1 className="mt-6 text-4xl font-bold tracking-tight text-primary">{t("dashboard.firstTimeGate.title")}</h1>
         <p className="mt-4 text-lg leading-8 text-on-surface-variant">
-          Choose a plan to activate your income protection. RideShield watches for disruptions in
-          your zone and automatically processes claims — zero paperwork.
+          {t("dashboard.firstTimeGate.description")}
         </p>
       </div>
 
       {loading ? (
-        <div className="text-center text-on-surface-variant">Loading plans...</div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="panel p-6">
+              <SkeletonBlock className="h-6 w-1/2 mb-4" />
+              <SkeletonBlock className="h-10 w-2/3 mb-3" />
+              <SkeletonText lines={2} />
+              <SkeletonBlock className="h-10 w-full mt-5" />
+            </div>
+          ))}
+        </div>
       ) : plans?.plans ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {plans.plans.map((plan) => (
             <div
               key={plan.plan_name}
-              className={`panel p-6 transition-smooth hover:shadow-lg ${
-                plan.plan_name === plans.recommended ? "ring-2 ring-primary" : ""
-              }`}
+              className={`panel p-6 transition-smooth hover:shadow-lg ${plan.plan_name === plans.recommended ? "ring-2 ring-primary" : ""
+                }`}
             >
               {plan.plan_name === plans.recommended && (
-                <span className="pill badge-active mb-3 inline-block text-xs">Recommended</span>
+                <span className="pill badge-active mb-3 inline-block text-xs">{t("dashboard.firstTimeGate.recommended")}</span>
               )}
               <h3 className="text-xl font-bold text-primary">{plan.display_name}</h3>
               <p className="mt-2 text-3xl font-extrabold text-on-surface">
                 {formatCurrency(plan.weekly_premium)}
-                <span className="text-sm font-normal text-on-surface-variant">/week</span>
+                <span className="text-sm font-normal text-on-surface-variant">{t("dashboard.firstTimeGate.per_week")}</span>
               </p>
               <p className="mt-2 text-sm text-on-surface-variant">
-                Up to {formatCurrency(plan.coverage_cap)} coverage
+                {t("dashboard.firstTimeGate.up_to_coverage", { amount: formatCurrency(plan.coverage_cap) })}
               </p>
               <div className="mt-3 flex flex-wrap gap-1">
                 {(plan.triggers_covered || []).map((t) => (
@@ -103,13 +112,13 @@ function FirstTimeGate({ workerId, onPurchased }) {
                 disabled={!!purchasing}
                 onClick={() => handlePurchase(plan.plan_name)}
               >
-                {purchasing === plan.plan_name ? "Purchasing..." : "Buy Plan"}
+                {purchasing === plan.plan_name ? t("dashboard.firstTimeGate.purchasing") : t("dashboard.firstTimeGate.buy")}
               </button>
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-center text-on-surface-variant">Unable to load plans.</div>
+        <div className="text-center text-on-surface-variant">{t("dashboard.firstTimeGate.error")}</div>
       )}
     </div>
   );
@@ -117,16 +126,17 @@ function FirstTimeGate({ workerId, onPurchased }) {
 
 /* ─── Policy Gate: Expired user ─── */
 function ExpiredGate({ workerId, lastPolicy, onPurchased }) {
+  const { t } = useTranslation();
   const [purchasing, setPurchasing] = useState(false);
 
   async function handleRenew() {
     setPurchasing(true);
     try {
       await policiesApi.create({ worker_id: workerId, plan_name: lastPolicy.plan_name });
-      toast.success("Coverage renewed! It will activate after the waiting period.");
+      toast.success(t("dashboard.expiredGate.renew_success", "Coverage renewed! It will activate after the waiting period."));
       onPurchased();
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Renewal failed.");
+      toast.error(err.response?.data?.detail || t("dashboard.expiredGate.renew_failed", "Renewal failed."));
     } finally {
       setPurchasing(false);
     }
@@ -139,38 +149,38 @@ function ExpiredGate({ workerId, lastPolicy, onPurchased }) {
           <ShieldOff size={40} className="text-amber-500" />
         </div>
         <h1 className="mt-6 text-4xl font-bold tracking-tight text-amber-400">
-          Your coverage expired
+          {t("dashboard.expiredGate.title")}
         </h1>
         <p className="mt-4 text-lg leading-8 text-on-surface-variant">
-          Your protection is no longer active. Renew to keep your income shielded from disruptions.
+          {t("dashboard.expiredGate.description")}
         </p>
       </div>
 
       <div className="panel p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="eyebrow">Last plan</p>
+            <p className="eyebrow">{t("dashboard.expiredGate.last_plan")}</p>
             <h3 className="mt-2 text-2xl font-bold text-primary">
               {lastPolicy.display_name || humanizeSlug(lastPolicy.plan_name)}
             </h3>
           </div>
-          <span className="pill badge-warning">Expired</span>
+          <span className="pill badge-warning">{t("dashboard.expiredGate.expired")}</span>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <div className="panel-quiet rounded-[24px] p-4">
-            <p className="text-sm text-on-surface-variant">Premium was</p>
+            <p className="text-sm text-on-surface-variant">{t("dashboard.expiredGate.premium_was")}</p>
             <p className="mt-2 text-xl font-bold text-primary">
               {formatCurrency(lastPolicy.weekly_premium)}/week
             </p>
           </div>
           <div className="panel-quiet rounded-[24px] p-4">
-            <p className="text-sm text-on-surface-variant">Coverage cap</p>
+            <p className="text-sm text-on-surface-variant">{t("dashboard.expiredGate.coverage_cap")}</p>
             <p className="mt-2 text-xl font-bold text-primary">
               {formatCurrency(lastPolicy.coverage_cap)}
             </p>
           </div>
           <div className="panel-quiet rounded-[24px] p-4">
-            <p className="text-sm text-on-surface-variant">Expired on</p>
+            <p className="text-sm text-on-surface-variant">{t("dashboard.expiredGate.expired_on")}</p>
             <p className="mt-2 text-sm font-semibold text-primary">
               {formatDateTime(lastPolicy.expired_at)}
             </p>
@@ -182,18 +192,18 @@ function ExpiredGate({ workerId, lastPolicy, onPurchased }) {
           disabled={purchasing}
           onClick={handleRenew}
         >
-          {purchasing ? "Renewing..." : "Renew Coverage"}
+          {purchasing ? t("dashboard.expiredGate.renewing") : t("dashboard.expiredGate.renew")}
         </button>
       </div>
 
       <p className="text-center text-sm text-on-surface-variant">
-        Want a different plan?{" "}
+        {t("dashboard.expiredGate.want_different")}{" "}
         <button
           type="button"
           className="font-semibold text-primary underline"
           onClick={() => window.location.reload()}
         >
-          View all plans
+          {t("dashboard.expiredGate.view_all")}
         </button>
       </p>
     </div>
@@ -202,7 +212,7 @@ function ExpiredGate({ workerId, lastPolicy, onPurchased }) {
 
 /* ─── Main Dashboard ─── */
 export default function Dashboard() {
-  useLang();
+  const { t } = useTranslation();
   const { workerId } = useParams();
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -300,26 +310,47 @@ export default function Dashboard() {
 
   const coverageNarrative = useMemo(() => {
     if (latestPayout) {
-      return `Latest payout ${formatCurrency(latestPayout.amount)} credited automatically after system validation.`;
+      return t("dashboard.narrative.latest_payout", { amount: formatCurrency(latestPayout.amount) });
     }
     if (approvedClaims > 0) {
-      return `${approvedClaims} approved claims so far with zero worker filing steps.`;
+      return t("dashboard.narrative.approved_claims", { count: approvedClaims });
     }
-    return "Coverage is live and waiting for the next verified disruption in the worker zone.";
-  }, [latestPayout, approvedClaims]);
+    return t("dashboard.narrative.waiting");
+  }, [latestPayout, approvedClaims, t]);
   const latestPayoutState =
     latestPayout?.status === "failed"
-      ? "Transfer failed, claim still protected"
+      ? t("dashboard.payoutState.failed")
       : latestPayout?.status === "processing"
-        ? "Transfer in progress"
+        ? t("dashboard.payoutState.processing")
         : latestPayout?.status === "pending"
-          ? "Transfer queued"
+          ? t("dashboard.payoutState.pending")
           : latestPayout
-            ? "Credited to wallet and recorded in payout history"
-            : "No wallet transfer yet";
+            ? t("dashboard.payoutState.credited")
+            : t("dashboard.payoutState.none");
 
   if (loading) {
-    return <div className="panel p-8 text-center text-on-surface-variant">Loading dashboard...</div>;
+    return (
+      <div className="space-y-6">
+        <section className="mb-6 flex items-end justify-between gap-6">
+          <div>
+            <SkeletonBlock className="mb-2 h-4 w-32" />
+            <SkeletonBlock className="h-10 w-64" />
+          </div>
+          <SkeletonBlock className="h-10 w-24 rounded-full" />
+        </section>
+        <div className="hero-glow hero-mesh rounded-[32px] p-8 scale-pop">
+          <SkeletonBlock className="mb-6 h-6 w-32 rounded-full" />
+          <SkeletonBlock className="mb-4 h-12 w-3/4 max-w-2xl" />
+          <SkeletonText lines={2} className="max-w-xl text-white/50" />
+          <div className="mt-8 grid gap-4 grid-cols-12">
+            <SkeletonBlock className="col-span-12 sm:col-span-7 h-32 rounded-[22px]" />
+            <SkeletonBlock className="col-span-12 sm:col-span-5 h-32 rounded-[22px]" />
+            <SkeletonBlock className="col-span-12 h-32 rounded-[22px]" />
+          </div>
+        </div>
+        <SkeletonBlock className="h-48 w-full rounded-[32px]" />
+      </div>
+    );
   }
 
   if (error) {
@@ -329,9 +360,9 @@ export default function Dashboard() {
   if (!worker) {
     return (
       <div className="panel p-8">
-        <p className="text-xl font-bold">Worker not found</p>
+        <p className="text-xl font-bold">{t("dashboard.states.worker_not_found")}</p>
         <button type="button" className="button-secondary mt-4" onClick={() => navigate("/auth")}>
-          Back to sign in
+          {t("dashboard.states.back_to_sign_in")}
         </button>
       </div>
     );
@@ -366,14 +397,14 @@ export default function Dashboard() {
           <div className="mb-2 flex items-center gap-2 text-sm text-on-surface-variant">
             <MapPin size={16} />
             <span>
-              {humanizeSlug(worker.city)} - {worker.zone ? humanizeSlug(worker.zone) : "No zone"}
+              {humanizeSlug(worker.city)} - {worker.zone ? humanizeSlug(worker.zone) : t("dashboard.no_zone")}
             </span>
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-primary">{t("dashboard.title")}</h1>
         </div>
         <button type="button" className="button-secondary !rounded-full !py-2" onClick={load}>
           <RefreshCcw size={16} />
-          Refresh
+          {t("dashboard.states.refresh")}
         </button>
       </section>
 
@@ -381,30 +412,29 @@ export default function Dashboard() {
       <div className="hero-glow hero-mesh rounded-[32px] p-8 scale-pop">
         <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white/80 backdrop-blur-sm">
           <ShieldCheck size={14} />
-          Zero-touch claims
+          {t("dashboard.hero.zero_touch")}
         </div>
         <h2 className="mt-6 max-w-2xl text-5xl font-bold leading-tight">
-          {worker.name}, your protection runs in the background.
+          {t("dashboard.hero.greeting", { name: worker.name })}
         </h2>
         <p className="mt-4 max-w-xl text-base leading-8 text-white/78">
-          RideShield watches disruption signals in your zone, merges overlapping triggers into one incident, checks
-          policy coverage, and decides payout without asking you to file a manual claim.
+          {t("dashboard.hero.description")}
         </p>
 
         <div className="mt-8 grid gap-4 grid-cols-12">
           <div className="col-span-12 sm:col-span-7 rounded-[22px] border-b-4 border-emerald-600 bg-white/10 p-6 transition-smooth hover:bg-white/15 backdrop-blur-sm">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">Approved claims</p>
+            <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">{t("dashboard.stats.approved_claims")}</p>
             <p className="mt-4 text-5xl font-extrabold">{approvedClaims}</p>
-            <p className="mt-2 text-xs text-white/60">Of {totalClaims} total claims filed</p>
+            <p className="mt-2 text-xs text-white/60">{t("dashboard.stats.of_total_claims", { count: totalClaims })}</p>
           </div>
           <div className="col-span-12 sm:col-span-5 rounded-[22px] border-b-4 border-amber-500 bg-white/10 p-6 transition-smooth hover:bg-white/15 backdrop-blur-sm">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">Total payouts</p>
+            <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">{t("dashboard.stats.total_payouts")}</p>
             <p className="mt-4 text-4xl font-extrabold">{formatCurrency(payouts?.total_amount)}</p>
           </div>
           <div className="col-span-12 rounded-[22px] border-b-4 border-blue-400 bg-white/10 p-6 transition-smooth hover:bg-white/15 backdrop-blur-sm">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">Coverage window</p>
-            <p className="mt-4 text-2xl font-extrabold">{totalClaims} claims tracked</p>
-            <p className="mt-2 text-xs text-white/60">Latest 30 days</p>
+            <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">{t("dashboard.stats.coverage_window")}</p>
+            <p className="mt-4 text-2xl font-extrabold">{t("dashboard.stats.claims_tracked", { count: totalClaims })}</p>
+            <p className="mt-2 text-xs text-white/60">{t("dashboard.stats.latest_30_days")}</p>
           </div>
         </div>
       </div>
@@ -421,7 +451,7 @@ export default function Dashboard() {
             onClick={() => setClaimDetailOpen(!claimDetailOpen)}
           >
             <div className="flex items-center gap-3">
-              <p className="eyebrow !mb-0">Claim detail</p>
+              <p className="eyebrow !mb-0">{t("dashboard.detail.title")}</p>
               <span className="text-sm text-on-surface-variant">
                 {humanizeSlug(urgentClaim.trigger_type || "incident")} — {humanizeSlug(urgentClaim.status)}
               </span>
@@ -450,8 +480,8 @@ export default function Dashboard() {
         <div className="context-panel card-secondary p-6">
           <div className="mb-5 flex items-center justify-between">
             <div>
-              <p className="eyebrow">Claims history</p>
-              <h3 className="mt-2 text-2xl font-bold text-primary">Incident-aligned claim history</h3>
+              <p className="eyebrow">{t("dashboard.history.eyebrow")}</p>
+              <h3 className="mt-2 text-2xl font-bold text-primary">{t("dashboard.history.title")}</h3>
             </div>
             {urgentClaim?.id ? (
               <button
@@ -463,7 +493,7 @@ export default function Dashboard() {
                 }}
               >
                 <ArrowDownRight size={16} />
-                Focus current claim
+                {t("dashboard.history.focus_claim")}
               </button>
             ) : null}
           </div>
@@ -478,7 +508,7 @@ export default function Dashboard() {
         <div className="col-span-12 md:col-span-7 context-panel p-6 border-accent-left border-accent-success">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <p className="eyebrow">Latest payout</p>
+              <p className="eyebrow">{t("dashboard.payout.eyebrow")}</p>
               <p className="mt-4 text-5xl font-bold text-primary">
                 {latestPayout ? formatCurrency(latestPayout.amount) : "INR 0"}
               </p>
@@ -490,25 +520,23 @@ export default function Dashboard() {
           <p className="mt-4 text-sm text-on-surface-variant">{latestPayoutState}</p>
         </div>
         <div className="col-span-12 md:col-span-5 context-panel p-6 border-accent-left border-accent-warning">
-          <p className="eyebrow">Protection status</p>
+          <p className="eyebrow">{t("dashboard.status.eyebrow")}</p>
           <div className="mt-4 flex items-center gap-3">
             <span
-              className={`pill ${
-                policyState?.active_policy ? "badge-active" : "badge-pending"
-              }`}
+              className={`pill ${policyState?.active_policy ? "badge-active" : "badge-pending"
+                }`}
             >
               <span
-                className={`mr-2 inline-block h-2 w-2 rounded-full ${
-                  policyState?.active_policy ? "bg-emerald-500" : "bg-amber-500"
-                }`}
+                className={`mr-2 inline-block h-2 w-2 rounded-full ${policyState?.active_policy ? "bg-emerald-500" : "bg-amber-500"
+                  }`}
               />
-              {policyState?.active_policy ? "Active and shielded" : "Pending activation"}
+              {policyState?.active_policy ? t("dashboard.status.active") : t("dashboard.status.pending")}
             </span>
           </div>
-          <p className="mt-3 text-sm text-on-surface-variant">Coverage and waiting-period aware</p>
+          <p className="mt-3 text-sm text-on-surface-variant">{t("dashboard.status.aware")}</p>
         </div>
         <div className="col-span-12 context-panel p-6 pulse-glow">
-          <p className="eyebrow">Trust score</p>
+          <p className="eyebrow">{t("dashboard.trust.eyebrow")}</p>
           <div className="mt-4">
             <TrustScoreGauge score={worker.trust_score} />
           </div>
@@ -520,7 +548,7 @@ export default function Dashboard() {
         <div className="context-panel p-5">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <p className="eyebrow !mb-0">Nearby alerts</p>
+              <p className="eyebrow !mb-0">{t("dashboard.alerts.eyebrow")}</p>
               <TrustBadge score={worker.trust_score} />
             </div>
           </div>
@@ -548,7 +576,7 @@ export default function Dashboard() {
                     />
                   </div>
                   <p className="mt-2 text-xs leading-5 text-on-surface-variant">
-                    {humanizeSlug(event.zone)} - signal strength {disruptionLevel.toFixed(2)}
+                    {humanizeSlug(event.zone)} {t("dashboard.alerts.signal_strength", { score: disruptionLevel.toFixed(2) })}
                   </p>
                 </div>
               );

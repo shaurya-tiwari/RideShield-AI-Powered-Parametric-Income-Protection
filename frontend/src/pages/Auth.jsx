@@ -4,6 +4,8 @@ import toast from "react-hot-toast";
 
 import { useAuth } from "../auth/AuthContext";
 import SectionHeader from "../components/SectionHeader";
+import { workersApi } from "../api/workers";
+import { policiesApi } from "../api/policies";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -27,7 +29,20 @@ export default function Auth() {
     setLoading(true);
     try {
       const result = await loginWorker(workerPhone, workerPassword);
-      navigate(redirectTarget || `/dashboard/${result.session.worker_id}`, { replace: true });
+      
+      // Predictive Preloading: Spark background GET fetches immediately.
+      // Since they are not awaited here, and not financial, they slip straight into the client memory cache.
+      const wid = result.session.worker_id;
+      if (!redirectTarget || redirectTarget.includes("dashboard")) {
+        try {
+          workersApi.profile(wid);
+          policiesApi.active(wid);
+        } catch {
+          // Ignore preloading errors
+        }
+      }
+
+      navigate(redirectTarget || `/dashboard/${wid}`, { replace: true });
     } catch (error) {
       toast.error(error.response?.data?.detail || "Worker sign-in failed.");
     } finally {

@@ -19,4 +19,4 @@ async def test_worker_registration_uses_db_backed_zone_validation(client, valid_
     invalid = {**valid_worker_data, "city": "delhi", "zone": "koramangala"}
     response = await client.post("/api/workers/register", json=invalid)
     assert response.status_code == 400
-    assert "Valid zones" in response.json()["detail"]
+    assert response.json()["detail"]["error_code"] == "LOCATION_ZONE_NOT_SUPPORTED"

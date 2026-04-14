@@ -1,0 +1,378 @@
+{
+  "dashboard": {
+    "title": "कर्मचारी डैशबोर्ड",
+    "subtitle": "कवरेज, घटनाएँ, और भुगतान",
+    "protection_active": "स्वचालित सुरक्षा सक्रिय",
+    "no_claims": "अभी तक कोई दावा नहीं",
+    "no_zone": "कोई क्षेत्र नहीं",
+    "firstTimeGate": {
+      "title": "सुरक्षा प्राप्त करें",
+      "description": "अपनी आय सुरक्षा सक्रिय करने के लिए एक योजना चुनें। राइडशील्ड आपके क्षेत्र में व्यवधानों पर नज़र रखता है और स्वचालित रूप से दावों की प्रक्रिया करता है — कोई कागजी कार्रवाई नहीं।",
+      "loading": "योजनाएँ लोड हो रही हैं...",
+      "recommended": "अनुशंसित",
+      "per_week": "/सप्ताह",
+      "up_to_coverage": "{{amount}} तक कवरेज",
+      "purchasing": "खरीद रहे हैं...",
+      "buy": "योजना खरीदें",
+      "error": "योजनाएँ लोड करने में असमर्थ।"
+    },
+    "expiredGate": {
+      "title": "आपकी कवरेज समाप्त हो गई है",
+      "description": "आपकी कवरेज अब सक्रिय नहीं है। अपनी आय को व्यवधानों से बचाने के लिए नवीनीकरण करें।",
+      "last_plan": "पिछली योजना",
+      "expired": "समाप्त",
+      "premium_was": "प्रीमियम था",
+      "coverage_cap": "कवरेज सीमा",
+      "expired_on": "को समाप्त हुआ",
+      "renewing": "नवीनीकरण हो रहा है...",
+      "renew": "कवरेज नवीनीकृत करें",
+      "want_different": "क्या आप कोई अलग योजना चाहते हैं?",
+      "view_all": "सभी योजनाएँ देखें",
+      "renew_success": "कवरेज नवीनीकृत! यह प्रतीक्षा अवधि के बाद सक्रिय हो जाएगा।",
+      "renew_failed": "नवीनीकरण विफल।"
+    },
+    "narrative": {
+      "latest_payout": "सिस्टम वैलिडेशन के बाद नवीनतम भुगतान {{amount}} स्वचालित रूप से जमा किया गया।",
+      "approved_claims": "अब तक {{count}} स्वीकृत दावे बिना किसी कागजी कार्रवाई के।",
+      "waiting": "कवरेज सक्रिय है और आपके क्षेत्र में अगले व्यवधान की प्रतीक्षा कर रहा है।"
+    },
+    "payoutState": {
+      "failed": "ट्रांसफर विफल, दावा अभी भी सुरक्षित",
+      "processing": "ट्रांसफर प्रगति पर है",
+      "pending": "ट्रांसफर कतारबद्ध",
+      "credited": "वॉलेट में जमा किया गया और भुगतान इतिहास में दर्ज किया गया",
+      "none": "अभी कोई वॉलेट ट्रांसफर नहीं"
+    },
+    "states": {
+      "loading": "डैशबोर्ड लोड हो रहा है...",
+      "worker_not_found": "कर्मचारी नहीं मिला",
+      "back_to_sign_in": "साइन इन पर वापस जाएँ",
+      "refresh": "रीफ्रेश करें"
+    },
+    "hero": {
+      "zero_touch": "जीरो-टच दावे",
+      "greeting": "{{name}}, आपकी सुरक्षा पृष्ठभूमि में चल रही है।",
+      "description": "राइडशील्ड आपके क्षेत्र में व्यवधान संकेतों को देखता है, अतिव्यापी ट्रिगर्स को एक घटना में मिलाता है, नीति कवरेज की जांच करता है, और आपको मैन्युअल दावा दायर करने के लिए कहे बिना भुगतान का निर्णय लेता है।"
+    },
+    "stats": {
+      "approved_claims": "स्वीकृत दावे",
+      "of_total_claims": "दायर किए गए {{count}} दावों में से",
+      "total_payouts": "कुल भुगतान",
+      "coverage_window": "कवरेज विंडो",
+      "claims_tracked": "{{count}} दावे ट्रैक किए गए",
+      "latest_30_days": "लेटेस्ट 30 दिन"
+    },
+    "detail": {
+      "title": "दावा विवरण"
+    },
+    "history": {
+      "eyebrow": "दावा इतिहास",
+      "title": "इंसिडेंट के अनुरूप दावा इतिहास",
+      "focus_claim": "वर्तमान दावे पर ध्यान दें"
+    },
+    "payout": {
+      "eyebrow": "लेटेस्ट भुगतान"
+    },
+    "status": {
+      "eyebrow": "सुरक्षा स्थिति",
+      "active": "सक्रिय और सुरक्षित",
+      "pending": "सक्रियण लंबित है",
+      "aware": "कवरेज और प्रतीक्षा अवधि के प्रति जागरूक"
+    },
+    "trust": {
+      "eyebrow": "ट्रस्ट स्कोर"
+    },
+    "alerts": {
+      "eyebrow": "आस-पास के अलर्ट",
+      "signal_strength": "- सिग्नल की ताकत {{score}}"
+    }
+  },
+  "claim": {
+    "approved": "दावा स्वीकृत",
+    "rejected": "दावा स्वीकृत नहीं हो सका",
+    "under_review": "दावा समीक्षा में",
+    "payout_label": "भुगतान राशि",
+    "income_loss": "अनुमानित आय हानि",
+    "coverage": "हमने कवर किया",
+    "coverage_ratio": "कवरेज अनुपात",
+    "select": "एक घटना चुनें",
+    "pick": "विस्तृत जानकारी देखने के लिए सूची से दावा चुनें।"
+  },
+  "policy": {
+    "active": "सक्रिय पॉलिसी",
+    "expired": "पॉलिसी समाप्त",
+    "renew": "अपनी सुरक्षा नवीनीकृत करें",
+    "no_policy": "कोई सक्रिय पॉलिसी नहीं"
+  },
+  "payout": {
+    "credited": "भुगतान जमा",
+    "processing": "भुगतान प्रक्रिया में…",
+    "paid": "भुगतान हो गया"
+  },
+  "notif": {
+    "title": "सूचनाएँ",
+    "mark_read": "सब पढ़ा हुआ",
+    "empty": "अभी कोई सूचना नहीं"
+  },
+  "appFrame": {
+    "view_active_protection": "सक्रिय सुरक्षा देखें",
+    "protected_worker_session": "सुरक्षित कर्मचारी सत्र",
+    "automatic_protection_active": "स्वचालित सुरक्षा सक्रिय",
+    "worker_coverage_mode": "कर्मचारी कवरेज मोड",
+    "sign_out": "साइन आउट",
+    "settings": "सेटिंग्स",
+    "alert": "अलर्ट",
+    "alert_success": "डिस्पैचर को सूचित कर दिया गया है। वे जल्द ही आपसे संपर्क करेंगे।",
+    "settings_toast": "सेटिंग्स लॉन्च के बाद उपलब्ध होंगी"
+  },
+  "general": {
+    "lang_toggle": "EN"
+  },
+  "home": {
+    "pillars": {
+      "0": {
+        "title": "पैरामीट्रिक कवरेज",
+        "description": "कर्मचारी एक बार साप्ताहिक कवरेज खरीदते हैं। व्यवधान होने पर वे दावा दायर नहीं करते क्योंकि सिस्टम पृष्ठभूमि में घटनाओं का पता लगाता है।"
+      },
+      "1": {
+        "title": "इंसिडेंट-फर्स्ट मॉनिटरिंग",
+        "description": "बारिश, गर्मी, AQI, ट्रैफ़िक आउटेज और नागरिक व्यवधान संकेतों को एक स्पष्ट घटना में मिला दिया जाता है।"
+      },
+      "2": {
+        "title": "पारदर्शी भुगतान इंजन",
+        "description": "योग्य दावे धोखाधड़ी परीक्षण, निर्णय लेने और पारदर्शी सिस्टम कहानी के साथ वॉलेट भुगतान अनुकरण से गुजरते हैं।"
+      }
+    },
+    "hero": {
+      "badge": "स्वायत्त रक्षक",
+      "title_guest": "राइडशील्ड व्यवधान संकेतों को विश्वसनीय दावा और भुगतान निर्णयों में बदल देता है।",
+      "description_guest": "यह उत्पाद अब ऑनबोर्डिंग, कवरेज, समीक्षा, लाइव ट्रिगर मॉनिटरिंग और परिदृश्य-संचालित डेमो को जोड़ता है।",
+      "title_worker": "वापसी पर स्वागत है, {{name}}। आपकी राइडशील्ड सुरक्षा सक्रिय है।",
+      "description_worker": "नीति की स्थिति, समूहीकृत घटनाओं, हाल के भुगतान और सिस्टम निर्णयों की समीक्षा करने के लिए डैशबोर्ड खोलें।",
+      "subtitle": "जीरो-टच। हमेशा चालू।"
+    },
+    "cta": {
+      "start_onboarding": "ऑनबोर्डिंग शुरू करें",
+      "sign_in": "साइन इन करें",
+      "open_demo": "डेमो रनर खोलें",
+      "open_dashboard": "डैशबोर्ड खोलें",
+      "create_demo": "एक और डेमो कर्मचारी बनाएँ",
+      "switch_account": "अकाउंट बदलें",
+      "open_admin": "एडमिन पैनल खोलें",
+      "run_scenarios": "परिदृश्य चलाएँ"
+    },
+    "models": {
+      "claim_model": {
+        "label": "दावा मॉडल",
+        "value": "इंसिडेंट-फर्स्ट"
+      },
+      "trigger_loop": {
+        "label": "ट्रिगर लूप",
+        "value": "शेड्यूलर + डेमो ओवरराइड"
+      },
+      "coverage_story": {
+        "label": "कवरेज स्टोरी",
+        "value": "कोई मैन्युअल फाइलिंग नहीं"
+      }
+    },
+    "system": {
+      "eyebrow": "सिस्टम प्रॉमिस",
+      "title": "कर्मचारी सूचित हैं। सिस्टम फाइलिंग, स्कोरिंग और भुगतान ऑर्केस्ट्रेशन करता है।",
+      "description": "राइडशील्ड व्यवधान संकेतों का निरीक्षण करने, उन्हें एक स्पष्ट घटना में बदलने और तर्क को उजागर करने के लिए डिज़ाइन किया गया है।"
+    },
+    "surfaces": {
+      "worker": {
+        "label": "कर्मचारी इंटरफेस",
+        "desc": "एक शांत, पढ़ने योग्य दृश्य में कवरेज, घटनाएं, भुगतान इतिहास और स्पष्टीकरण।"
+      },
+      "admin": {
+        "label": "एडमिन इंटरफेस",
+        "desc": "समीक्षा कतार, व्यवधान दबाव, धोखाधड़ी दृश्यता, और शहर-जागरूक निगरानी।"
+      }
+    },
+    "core": {
+      "eyebrow": "मुख्य प्रवाह",
+      "title": "बैकएंड एक दृश्यमान उत्पाद कैसे बनता है",
+      "description": "फ्रंटएंड उत्पाद तर्क का मज़ाक नहीं उड़ाता है। यह वास्तविक इंजन को सुपाठ्य बनाता है ताकि कर्मचारी परिणामों पर भरोसा कर सकें।"
+    }
+  },
+  "auth": {
+    "errors": {
+      "name_required": "पूरा नाम आवश्यक है।",
+      "phone_required": "फोन नंबर आवश्यक है।",
+      "phone_invalid": "एक वैध कार्यकर्ता फोन नंबर का उपयोग करें।",
+      "password_required": "पासवर्ड आवश्यक है।",
+      "password_length": "कम से कम 8 वर्णों का उपयोग करें।",
+      "confirm_password_required": "आगे बढ़ने के लिए पासवर्ड की पुष्टि करें।",
+      "passwords_mismatch": "पासवर्ड मेल नहीं खाते।",
+      "zone_required": "एक ऑपरेटिंग क्षेत्र चुनें।",
+      "consent_required": "पंजीकरण से पहले सहमति आवश्यक है।"
+    },
+    "password": {
+      "strong": "मजबूत पासवर्ड",
+      "decent": "ठीक पासवर्ड",
+      "weak": "कमज़ोर पासवर्ड"
+    }
+  },
+  "onboarding": {
+    "header": {
+      "eyebrow": "कर्मचारी ऑनबोर्डिंग",
+      "title": "कर्मचारी पंजीकृत करें और पॉलिसी खरीदें",
+      "desc": "यह प्रवाह वास्तविक कर्मचारी पंजीकरण और नीति खरीद API का उपयोग करता है। व्यवस्थापक-केवल सिमुलेशन कार्रवाई कर्मचारी साइनअप प्रवाह के बाहर रहती है।"
+    },
+    "steps": {
+      "register": "प्रोफ़ाइल",
+      "plan": "पॉलिसी का विकल्प",
+      "complete": "तैयार"
+    },
+    "errors": {
+      "locations": "कार्यकर्ता भूगोल लोड नहीं हो सका। ऑनबोर्डिंग जारी रखने के लिए पुनः प्रयास करें।",
+      "zones": "चयनित शहर के लिए क्षेत्र लोड नहीं किए जा सके।",
+      "plan_catalog": "विस्तृत प्रीमियम मूल्य निर्धारण लोड नहीं हो सका।",
+      "login_failed": "कार्यकर्ता साइन-इन विफल। जारी रखने के लिए साइन-इन पृष्ठ का उपयोग करें।",
+      "fix_fields": "पंजीकरण फ़ील्ड ठीक करें।",
+      "register_success": "कर्मचारी पंजीकृत। आगे एक नीति चुनें।",
+      "register_failed": "पंजीकरण विफल।",
+      "select_plan": "जारी रखने से पहले एक योजना चुनें",
+      "purchase_success": "नीति खरीदी गई",
+      "purchase_failed": "नीति खरीद विफल रही।"
+    },
+    "stories": {
+      "basic_protect": {
+        "eyebrow": "स्टार्टर कवर",
+        "bestFor": "उन सवारों के लिए एक कम लागत वाला सुरक्षा जाल जो मुख्य रूप से आउटेज सुरक्षा चाहते हैं।",
+        "compareFit": "कम लागत वाला सुरक्षा जाल"
+      },
+      "smart_protect": {
+        "eyebrow": "संतुलित कवर",
+        "bestFor": "अधिकांश सक्रिय राइडर्स के लिए डिफ़ॉल्ट विकल्प जो एक साथ सुरक्षा चाहते हैं।",
+        "compareFit": "रोजमर्रा की सवारी के लिए सर्वश्रेष्ठ"
+      },
+      "assured_plan": {
+        "eyebrow": "गारंटीकृत फ्लोर",
+        "bestFor": "परिस्थितियां खराब होने पर गारंटीशुदा न्यूनतम भुगतान सीमा के साथ व्यापक ट्रिगर कवर।",
+        "compareFit": "व्यापक भुगतान निश्चितता"
+      },
+      "pro_max": {
+        "eyebrow": "प्रीमियम कवर",
+        "bestFor": "पूर्णकालिक सवारों के लिए उच्चतम-कैप विकल्प जो भविष्य कहनेवाला अलर्ट चाहते हैं।",
+        "compareFit": "अधिकतम सुरक्षा"
+      }
+    },
+    "recommendation_reason": "आपके जोखिम स्तर के लिए सर्वोत्तम संतुलन",
+    "complete": {
+      "eyebrow": "तैयार",
+      "title": "अब आप सुरक्षित हैं",
+      "desc": "आपकी आय सुरक्षा सक्रिय है।",
+      "worker": "कर्मचारी",
+      "policy": "नीति",
+      "active": "{{city}} में सक्रिय",
+      "premium": "{{amount}}/सप्ताह • सक्रिय",
+      "open_dashboard": "डैशबोर्ड पर जाएं",
+      "opening": "डैशबोर्ड खोला जा रहा है...",
+      "sign_later": "बाद में फिर साइन इन करें",
+      "footer": "हम व्यवधानों का पता लगाएंगे और दावों को संभालेंगे।"
+    },
+    "form": {
+      "identity": "पहचान",
+      "name": "पूरा नाम",
+      "phone": "फोन नंबर",
+      "password": "पासवर्ड",
+      "confirm_password": "पासवर्ड की पुष्टि",
+      "area": "ऑपरेटिंग क्षेत्र",
+      "city": "शहर",
+      "zone": "ज़ोन",
+      "earning": "कमाई प्रोफ़ाइल",
+      "platform": "प्लेटफ़ॉर्म",
+      "hours": "काम के घंटे प्रति दिन",
+      "income": "स्व-रिपोर्ट की गई दैनिक आय",
+      "consent": "कर्मचारी धोखाधड़ी जांच के लिए स्थान, व्यवहार और डिवाइस डेटा उपयोग करने की सहमति देता है।",
+      "register": "कर्मचारी रजिस्टर करें",
+      "registering": "जोखिम की गणना..."
+    },
+    "plans": {
+      "compare": {
+        "eyebrow": "योजनाओं की तुलना",
+        "title": "एक नज़र में सुरक्षा चुनें",
+        "desc": "तीन क्यूरेटेड विकल्प। आपको केवल लागत, कैप और फिट की तुलना करने की आवश्यकता है।",
+        "options_count": "{{count}} विकल्प"
+      },
+      "refreshing": "ताज़ा किया जा रहा है...",
+      "up_to": "{{amount}} तक",
+      "waiting": "मूल्य निर्धारण लोडिंग समाप्त होते ही नीति विकल्प दिखाई देंगे।",
+      "more": {
+        "eyebrow": "अधिक विकल्प",
+        "title": "क्या आपको भिन्न कवरेज चाहिए?",
+        "desc": "निर्णय को तेज़ रखता है, लेकिन आवश्यक होने पर पूर्ण सूची उपलब्ध है।",
+        "show_more": "{{count}} अतिरिक्त विकल्प दिखाएं",
+        "hide_more": "अतिरिक्त विकल्प छिपाएँ",
+        "footer": "राइडशील्ड सबसे तेज़ विकल्प को उजागर कर रहा है।"
+      }
+    },
+    "trust": {
+      "eyebrow": "विश्वास और सुरक्षा",
+      "title": "यह खरीदना सुरक्षित क्यों लगता है?",
+      "monitoring": "निगरानी",
+      "monitoring_cities": "{{count}} शहर लाइव",
+      "monitoring_desc": "मौसम, ट्रैफ़िक, AQI और आउटेज स्वचालित रूप से ट्रैक किए जाते हैं।",
+      "decision": "निर्णय पथ",
+      "auto_checks": "ऑटो-चेक पहले",
+      "decision_desc": "दावे स्वतः तय हो सकते हैं; संदिग्ध मैनुअल समीक्षा में चले जाते हैं।",
+      "activation": "सक्रियकरण",
+      "background": "प्रतीक्षा अवधि साफ़ करें",
+      "activation_desc": "कवरेज तब तक लंबित रहता है जब तक प्रतीक्षा अवधि समाप्त नहीं हो जाती।"
+    },
+    "next": {
+      "eyebrow": "खरीद के बाद",
+      "title": "आगे क्या होगा",
+      "step_1": "चरण 1",
+      "step_1_title": "खरीदना",
+      "step_1_desc": "चयनित प्रीमियम और कवरेज कैप में ताला लगाएं।",
+      "step_2": "चरण 2",
+      "step_2_title": "प्रतीक्षा अवधि",
+      "step_2_desc": "पॉलिसी तब तक लंबित रहती है जब तक प्रतीक्षा विंडो समाप्त नहीं हो जाती।",
+      "step_3": "चरण 3",
+      "step_3_title": "कवरेज सक्रिय",
+      "step_3_desc": "कर्मचारी डैशबोर्ड सक्रिय नीति, लाइव घटनाओं और दावों के परिणाम दिखाता है।"
+    },
+    "footer": {
+      "selected": "चयनित योजना:",
+      "none": "कोई नहीं",
+      "activating": "सक्रिय किया जा रहा है...",
+      "activate": "सुरक्षा सक्रिय करें"
+    }
+  },
+  "errors": {
+    "VALIDATION_FAILED": "Validation failed.",
+    "AUTH_INVALID_TOKEN": "Invalid session token format.",
+    "AUTH_SIGNATURE_MISMATCH": "Invalid session token signature.",
+    "AUTH_PAYLOAD_UNREADABLE": "Unreadable session token payload.",
+    "AUTH_EXPIRY_MISSING": "Session token expiry missing.",
+    "AUTH_EXPIRED": "Session expired. Please sign in again.",
+    "AUTH_HEADER_REQUIRED": "Authorization header required.",
+    "AUTH_BEARER_REQUIRED": "Authorization header must be a Bearer token.",
+    "AUTH_REQUIRED": "Authentication required.",
+    "AUTH_ADMIN_REQUIRED": "Admin session required.",
+    "AUTH_WORKER_MISMATCH": "You do not have access to this resource.",
+    "AUTH_INVALID_CREDENTIALS": "Invalid credentials.",
+    "AUTH_ACCOUNT_INACTIVE": "Account is inactive.",
+    "RATE_LIMIT_EXCEEDED": "Too many requests. Please try again later.",
+    "LOCATION_CITY_NOT_SUPPORTED": "City is not supported.",
+    "LOCATION_ZONE_NOT_SUPPORTED": "Zone is not supported.",
+    "WORKER_PHONE_EXISTS": "A worker with this phone number is already registered.",
+    "WORKER_NOT_FOUND": "Worker not found.",
+    "POLICY_WORKER_INACTIVE": "Worker account is inactive. Cannot purchase a plan.",
+    "POLICY_NO_CONSENT": "You must give consent before purchasing a plan.",
+    "POLICY_UNKNOWN_PLAN": "Unknown plan.",
+    "POLICY_ALREADY_EXISTS": "You already have an active or pending policy.",
+    "POLICY_SIMULATION_ONLY": "Force activation is only available in simulation mode.",
+    "CLAIM_NOT_FOUND": "Claim not found.",
+    "CLAIM_NOT_DELAYED": "Claim is not delayed.",
+    "PAYOUT_NOT_FOUND": "Payout not found.",
+    "EVENT_NOT_FOUND": "Event not found.",
+    "DB_CONNECTION_FAILED": "Database connection failed.",
+    "UNKNOWN_ERROR": "An unknown error occurred.",
+    "FORBIDDEN": "You do not have permission for this action.",
+    "SERVER_ERROR": "A server error occurred. Please try again later."
+  }
+}

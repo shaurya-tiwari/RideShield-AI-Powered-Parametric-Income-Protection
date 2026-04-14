@@ -94,7 +94,7 @@ async def db_health_check(db: AsyncSession = Depends(get_db)):
         }
     except Exception as e:
         logger.error(f"Database health check failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail={"error_code": "DB_CONNECTION_FAILED"})
 
 
 @router.get("/config/runtime")

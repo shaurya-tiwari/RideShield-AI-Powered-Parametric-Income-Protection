@@ -112,7 +112,7 @@ async def get_event_detail(event_id: UUID, db: AsyncSession = Depends(get_db)):
         await db.execute(select(Event).options(selectinload(Event.claims)).where(Event.id == event_id))
     ).scalar_one_or_none()
     if not event:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={"error_code": "EVENT_NOT_FOUND"})
 
     claims_data = [
         {

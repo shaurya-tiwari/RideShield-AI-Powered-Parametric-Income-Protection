@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Bell } from "lucide-react";
 import { notificationsApi } from "../api/notifications";
 import { useAuth } from "../auth/AuthContext";
-import { t, useLang } from "../utils/i18n";
+import { useTranslation } from "react-i18next";
 
 const CATEGORY_ICONS = {
   claim_approved: "✅",
@@ -25,7 +25,7 @@ function timeAgo(dateStr) {
 }
 
 export default function NotificationBell() {
-  useLang();
+  const { t } = useTranslation();
   const { session, role } = useAuth();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -54,7 +54,7 @@ export default function NotificationBell() {
         setNotifications(res.data?.notifications || []);
         setUnreadCount(res.data?.unread_count || 0);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, [open, workerId, role]);
 
@@ -65,7 +65,7 @@ export default function NotificationBell() {
       notificationsApi
         .list(workerId, { unread_only: true, limit: 1 })
         .then((res) => setUnreadCount(res.data?.unread_count || 0))
-        .catch(() => {});
+        .catch(() => { });
     };
     poll();
     const interval = setInterval(poll, 30000);
@@ -74,9 +74,22 @@ export default function NotificationBell() {
 
   async function handleMarkAllRead() {
     if (!workerId) return;
-    await notificationsApi.markRead(workerId);
+
+    // Optimistic UI Update
+    const prevUnreadCount = unreadCount;
+    const prevNotifications = [...notifications];
+
     setUnreadCount(0);
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+
+    try {
+      await notificationsApi.markRead(workerId);
+    } catch {
+      // Revert optimism if external network fails
+      setUnreadCount(prevUnreadCount);
+      setNotifications(prevNotifications);
+      // We don't need to manually toast here since client.js catches the API rejection via the Strategy layer.
+    }
   }
 
   // Admin doesn't have notifications yet — keep the toast fallback

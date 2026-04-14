@@ -7,8 +7,10 @@ import logging
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from backend.api.analytics import router as analytics_router
 from backend.api.auth import router as auth_router
@@ -131,6 +133,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.exception_handler(HTTPException)
+async def custom_http_exception_handler(request: Request, exc: HTTPException):
+    if isinstance(exc.detail, dict):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": {"error_code": exc.detail.get("error_code", "UNKNOWN_ERROR")}}
+        )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": {"error_code": "UNKNOWN_ERROR"}}
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={"detail": {"error_code": "VALIDATION_FAILED"}}
+    )
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):

@@ -3,6 +3,8 @@ import clsx from "clsx";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
+import { useTranslation } from "react-i18next";
+
 import { useAuth } from "../auth/AuthContext";
 import { locationsApi } from "../api/locations";
 import { policiesApi } from "../api/policies";
@@ -37,36 +39,7 @@ const steps = [
   { id: "complete", label: "Ready" },
 ];
 
-const PLAN_STORIES = {
-  basic_protect: {
-    eyebrow: "Starter cover",
-    bestFor:
-      "A low-cost safety net for riders who mainly want outage protection and a predictable weekly premium.",
-    compareFit: "Low-cost safety net",
-  },
-  smart_protect: {
-    eyebrow: "Balanced cover",
-    bestFor:
-      "The default choice for most active riders who want weather, traffic, and outage protection together.",
-    compareFit: "Best for everyday riding",
-  },
-  assured_plan: {
-    eyebrow: "Guaranteed floor",
-    bestFor:
-      "Broader trigger cover with a guaranteed minimum payout floor when conditions turn rough.",
-    compareFit: "Broader payout certainty",
-  },
-  pro_max: {
-    eyebrow: "Premium cover",
-    bestFor:
-      "The highest-cap option for full-time riders who want predictive alerts and the fastest payout path.",
-    compareFit: "Maximum protection",
-  },
-};
 
-function getRecommendationReason() {
-  return "Best balance of cost and coverage for your risk level";
-}
 
 function getFeaturedPlans(plans, selectedPlan, recommendedPlan) {
   const planMap = new Map((plans || []).map((plan) => [plan.plan_name, plan]));
@@ -99,33 +72,33 @@ function validateRegistration(form) {
   const normalizedPhone = String(form.phone || "").trim();
 
   if (!String(form.name || "").trim()) {
-    errors.name = "Full name is required.";
+    errors.name = "auth.errors.name_required";
   }
 
   if (!normalizedPhone) {
-    errors.phone = "Phone number is required.";
+    errors.phone = "auth.errors.phone_required";
   } else if (!/^\+?\d{10,15}$/.test(normalizedPhone)) {
-    errors.phone = "Use a valid worker phone number.";
+    errors.phone = "auth.errors.phone_invalid";
   }
 
   if (!form.password) {
-    errors.password = "Password is required.";
+    errors.password = "auth.errors.password_required";
   } else if (String(form.password).length < 8) {
-    errors.password = "Use at least 8 characters.";
+    errors.password = "auth.errors.password_length";
   }
 
   if (!form.confirm_password) {
-    errors.confirm_password = "Confirm the password to continue.";
+    errors.confirm_password = "auth.errors.confirm_password_required";
   } else if (form.password !== form.confirm_password) {
-    errors.confirm_password = "Passwords do not match.";
+    errors.confirm_password = "auth.errors.passwords_mismatch";
   }
 
   if (!form.zone) {
-    errors.zone = "Select an operating zone.";
+    errors.zone = "auth.errors.zone_required";
   }
 
   if (!form.consent_given) {
-    errors.consent_given = "Consent is required before registration.";
+    errors.consent_given = "auth.errors.consent_required";
   }
 
   return errors;
@@ -143,15 +116,16 @@ function getPasswordStrength(password) {
   if (/[^A-Za-z0-9]/.test(password)) score += 1;
 
   if (score >= 4) {
-    return { label: "Strong password", tone: "text-emerald-700" };
+    return { label: "auth.password.strong", tone: "text-emerald-700" };
   }
   if (score >= 2) {
-    return { label: "Decent password", tone: "text-amber-700" };
+    return { label: "auth.password.decent", tone: "text-amber-700" };
   }
-  return { label: "Weak password", tone: "text-rose-700" };
+  return { label: "auth.password.weak", tone: "text-rose-700" };
 }
 
 export default function Onboarding() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { loginWorker } = useAuth();
   const [step, setStep] = useState("register");
@@ -476,26 +450,26 @@ export default function Onboarding() {
     return (
       <div className="mx-auto max-w-3xl space-y-6">
         <SectionHeader
-          eyebrow="Ready"
-          title="You're now protected"
-          description="Your income protection is active and monitoring for disruptions."
+          eyebrow={t("onboarding.complete.eyebrow")}
+          title={t("onboarding.complete.title")}
+          description={t("onboarding.complete.desc")}
         />
         <div className="decision-panel p-8">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-3xl bg-surface-container-high border border-surface-container-highest p-5">
-              <p className="text-sm font-semibold uppercase tracking-widest text-on-surface-variant">Worker</p>
+              <p className="text-sm font-semibold uppercase tracking-widest text-on-surface-variant">{t("onboarding.complete.worker")}</p>
               <p className="mt-2 text-2xl font-bold">{registration.name}</p>
               <p className="mt-2 text-sm text-primary">
-                Active in {humanizeSlug(registration.city)}
+                {t("onboarding.complete.active", { city: humanizeSlug(registration.city) })}
               </p>
             </div>
             <div className="rounded-3xl bg-surface-container-high border border-surface-container-highest p-5">
-              <p className="text-sm font-semibold uppercase tracking-widest text-on-surface-variant">Policy</p>
+              <p className="text-sm font-semibold uppercase tracking-widest text-on-surface-variant">{t("onboarding.complete.policy")}</p>
               <p className="mt-2 text-2xl font-bold">
                 {policyPurchase.policy.plan_display_name}
               </p>
               <p className="mt-2 text-sm text-primary">
-                {formatCurrency(selectedPlanData.weekly_premium)}/week • Active
+                {t("onboarding.complete.premium", { amount: formatCurrency(selectedPlanData.weekly_premium) })}
               </p>
             </div>
           </div>
@@ -507,18 +481,18 @@ export default function Onboarding() {
               disabled={loading}
               onClick={handleOpenDashboard}
             >
-              {loading ? "Opening dashboard..." : "Go to Dashboard"}
+              {loading ? t("onboarding.complete.opening") : t("onboarding.complete.open_dashboard")}
             </button>
             <button
               type="button"
               className="button-secondary"
               onClick={() => navigate("/auth")}
             >
-              Sign in again later
+              {t("onboarding.complete.sign_later")}
             </button>
           </div>
           <p className="mt-6 text-sm text-on-surface-variant text-center">
-            We&apos;ll automatically detect disruptions and handle claims for you.
+            {t("onboarding.complete.footer")}
           </p>
         </div>
       </div>
@@ -533,9 +507,9 @@ export default function Onboarding() {
       )}
     >
       <SectionHeader
-        eyebrow="Worker onboarding"
-        title="Register a delivery worker and buy a policy"
-        description="This flow uses the real worker registration and policy purchase APIs. Admin-only simulation actions stay outside the worker signup flow."
+        eyebrow={t("onboarding.header.eyebrow")}
+        title={t("onboarding.header.title")}
+        description={t("onboarding.header.desc")}
       />
 
       <div className="context-panel p-6">
@@ -546,7 +520,7 @@ export default function Onboarding() {
                 key={item.id}
                 className={`pill ${index <= stepIndex ? "bg-primary text-white" : "bg-surface-container-low text-on-surface-variant"}`}
               >
-                {item.label}
+                {t(`onboarding.steps.${item.id}`)}
               </div>
             ))}
           </div>
@@ -568,11 +542,11 @@ export default function Onboarding() {
                 <ErrorState message={locationsError} onRetry={loadCities} />
               ) : null}
               <div>
-                <p className="eyebrow">Identity</p>
+                <p className="eyebrow">{t("onboarding.form.identity")}</p>
                 <div className="mt-4 grid gap-5">
                   <div>
                     <label className="label" htmlFor="worker-name">
-                      Full name
+                      {t("onboarding.form.name")}
                     </label>
                     <input
                       id="worker-name"
@@ -584,13 +558,13 @@ export default function Onboarding() {
                     />
                     {touched.name && validationErrors.name ? (
                       <p className="mt-2 text-sm text-rose-700">
-                        {validationErrors.name}
+                        {t(validationErrors.name)}
                       </p>
                     ) : null}
                   </div>
                   <div>
                     <label className="label" htmlFor="worker-phone">
-                      Phone number
+                      {t("onboarding.form.phone")}
                     </label>
                     <input
                       id="worker-phone"
@@ -602,14 +576,14 @@ export default function Onboarding() {
                     />
                     {touched.phone && validationErrors.phone ? (
                       <p className="mt-2 text-sm text-rose-700">
-                        {validationErrors.phone}
+                        {t(validationErrors.phone)}
                       </p>
                     ) : null}
                   </div>
                   <div className="grid gap-5 sm:grid-cols-2">
                     <div>
                       <label className="label" htmlFor="worker-password">
-                        Password
+                        {t("onboarding.form.password")}
                       </label>
                       <input
                         id="worker-password"
@@ -625,12 +599,12 @@ export default function Onboarding() {
                       />
                       {passwordStrength ? (
                         <p className={`mt-2 text-sm ${passwordStrength.tone}`}>
-                          {passwordStrength.label}
+                          {t(passwordStrength.label)}
                         </p>
                       ) : null}
                       {touched.password && validationErrors.password ? (
                         <p className="mt-2 text-sm text-rose-700">
-                          {validationErrors.password}
+                          {t(validationErrors.password)}
                         </p>
                       ) : null}
                     </div>
@@ -639,7 +613,7 @@ export default function Onboarding() {
                         className="label"
                         htmlFor="worker-confirm-password"
                       >
-                        Confirm password
+                        {t("onboarding.form.confirm_password")}
                       </label>
                       <input
                         id="worker-confirm-password"
@@ -656,7 +630,7 @@ export default function Onboarding() {
                       {touched.confirm_password &&
                       validationErrors.confirm_password ? (
                         <p className="mt-2 text-sm text-rose-700">
-                          {validationErrors.confirm_password}
+                          {t(validationErrors.confirm_password)}
                         </p>
                       ) : null}
                     </div>
@@ -665,11 +639,11 @@ export default function Onboarding() {
               </div>
 
               <div>
-                <p className="eyebrow">Operating area</p>
+                <p className="eyebrow">{t("onboarding.form.area")}</p>
                 <div className="mt-4 grid gap-5 sm:grid-cols-2">
                   <div>
                     <label className="label" htmlFor="worker-city">
-                      City
+                      {t("onboarding.form.city")}
                     </label>
                     <select
                       id="worker-city"
@@ -687,7 +661,7 @@ export default function Onboarding() {
                   </div>
                   <div>
                     <label className="label" htmlFor="worker-zone">
-                      Zone
+                      {t("onboarding.form.zone")}
                     </label>
                     <select
                       id="worker-zone"
@@ -705,7 +679,7 @@ export default function Onboarding() {
                     </select>
                     {touched.zone && validationErrors.zone ? (
                       <p className="mt-2 text-sm text-rose-700">
-                        {validationErrors.zone}
+                        {t(validationErrors.zone)}
                       </p>
                     ) : null}
                   </div>
@@ -713,11 +687,11 @@ export default function Onboarding() {
               </div>
 
               <div>
-                <p className="eyebrow">Earning profile</p>
+                <p className="eyebrow">{t("onboarding.form.earning")}</p>
                 <div className="mt-4 grid gap-5 sm:grid-cols-2">
                   <div>
                     <label className="label" htmlFor="worker-platform">
-                      Platform
+                      {t("onboarding.form.platform")}
                     </label>
                     <select
                       id="worker-platform"
@@ -734,7 +708,7 @@ export default function Onboarding() {
                   </div>
                   <div>
                     <label className="label" htmlFor="worker-hours">
-                      Working hours per day
+                      {t("onboarding.form.hours")}
                     </label>
                     <input
                       id="worker-hours"
@@ -749,7 +723,7 @@ export default function Onboarding() {
                   </div>
                   <div className="sm:col-span-2">
                     <label className="label" htmlFor="worker-income">
-                      Self-reported daily income
+                      {t("onboarding.form.income")}
                     </label>
                     <input
                       id="worker-income"
@@ -775,13 +749,12 @@ export default function Onboarding() {
                   }
                 />
                 <span>
-                  Worker consents to location, behavior, and device data being
-                  used for claim validation and fraud checks.
+                  {t("onboarding.form.consent")}
                 </span>
               </label>
               {touched.consent_given && validationErrors.consent_given ? (
                 <p className="text-sm text-rose-700">
-                  {validationErrors.consent_given}
+                  {t(validationErrors.consent_given)}
                 </p>
               ) : null}
 
@@ -795,7 +768,7 @@ export default function Onboarding() {
                   !form.zone
                 }
               >
-                {loading ? "Calculating risk profile..." : "Register worker"}
+                {loading ? t("onboarding.form.registering") : t("onboarding.form.register")}
               </button>
             </div>
           </form>
@@ -818,18 +791,16 @@ export default function Onboarding() {
             <div className="panel p-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <p className="eyebrow">Compare plans</p>
+                  <p className="eyebrow">{t("onboarding.plans.compare.eyebrow")}</p>
                   <h3 className="mt-2 text-2xl font-bold text-primary">
-                    Pick protection in one glance
+                    {t("onboarding.plans.compare.title")}
                   </h3>
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-on-surface-variant">
-                    Three curated options. Weekly pricing already reflects the
-                    rider&apos;s live risk score, so you only need to compare
-                    cost, cap, and fit.
+                    {t("onboarding.plans.compare.desc")}
                   </p>
                 </div>
                 <span className="pill bg-surface-container-high text-on-surface-variant">
-                  {featuredPlans.length} options
+                  {t("onboarding.plans.compare.options_count", { count: featuredPlans.length })}
                 </span>
               </div>
 
@@ -846,14 +817,13 @@ export default function Onboarding() {
 
               {planCatalogLoading ? (
                 <div className="mt-5 rounded-2xl bg-surface-container-high p-4 text-sm text-on-surface-variant">
-                  Refreshing live policy pricing...
+                  {t("onboarding.plans.refreshing")}
                 </div>
               ) : null}
 
               {featuredPlans.length ? (
                 <div className="mt-5 grid gap-3 sm:grid-cols-3">
                   {featuredPlans.map((plan) => {
-                    const story = PLAN_STORIES[plan.plan_name];
                     const planName =
                       plan.display_name || humanizeSlug(plan.plan_name);
 
@@ -874,10 +844,10 @@ export default function Onboarding() {
                           {formatCurrency(plan.weekly_premium)}
                         </p>
                         <p className="mt-1 text-sm text-on-surface-variant">
-                          Up to {formatCurrency(plan.coverage_cap)}
+                          {t("onboarding.plans.up_to", { amount: formatCurrency(plan.coverage_cap) })}
                         </p>
                         <p className="mt-3 text-sm leading-6 text-on-surface-variant">
-                          {story?.compareFit || plan.description}
+                          {t(`onboarding.stories.${plan.plan_name}.compareFit`) || plan.description}
                         </p>
                       </div>
                     );
@@ -885,8 +855,7 @@ export default function Onboarding() {
                 </div>
               ) : (
                 <div className="mt-5 rounded-2xl bg-surface-container-high p-4 text-sm text-on-surface-variant">
-                  Policy options will appear as soon as pricing finishes
-                  loading.
+                  {t("onboarding.plans.waiting")}
                 </div>
               )}
             </div>
@@ -899,10 +868,14 @@ export default function Onboarding() {
                 plan={plan}
                 selected={selectedPlan === plan.plan_name}
                 onSelect={setSelectedPlan}
-                story={PLAN_STORIES[plan.plan_name]}
+                story={{
+                  eyebrow: t(`onboarding.stories.${plan.plan_name}.eyebrow`),
+                  bestFor: t(`onboarding.stories.${plan.plan_name}.bestFor`),
+                  compareFit: t(`onboarding.stories.${plan.plan_name}.compareFit`),
+                }}
                 recommendationReason={
                   plan.is_recommended
-                    ? getRecommendationReason()
+                    ? t("onboarding.recommendation_reason")
                     : ""
                 }
               />
@@ -913,14 +886,12 @@ export default function Onboarding() {
             <div className="context-panel p-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <p className="eyebrow">More options</p>
+                  <p className="eyebrow">{t("onboarding.plans.more.eyebrow")}</p>
                   <h3 className="mt-2 text-2xl font-bold text-primary">
-                    Need a different coverage shape?
+                    {t("onboarding.plans.more.title")}
                   </h3>
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-on-surface-variant">
-                    The short list keeps the decision fast, but the full backend
-                    catalog is still available when a rider wants a different
-                    cap or payout profile.
+                    {t("onboarding.plans.more.desc")}
                   </p>
                 </div>
                 <button
@@ -929,8 +900,8 @@ export default function Onboarding() {
                   onClick={() => setShowAllPlans((current) => !current)}
                 >
                   {showAllPlans
-                    ? `Hide extra option${additionalPlans.length === 1 ? "" : "s"}`
-                    : `Show ${additionalPlans.length} more option${additionalPlans.length === 1 ? "" : "s"}`}
+                    ? t("onboarding.plans.more.hide_more", { suffix: additionalPlans.length === 1 ? "" : "s" })
+                    : t("onboarding.plans.more.show_more", { count: additionalPlans.length, suffix: additionalPlans.length === 1 ? "" : "s" })}
                 </button>
               </div>
 
@@ -942,10 +913,14 @@ export default function Onboarding() {
                       plan={plan}
                       selected={selectedPlan === plan.plan_name}
                       onSelect={setSelectedPlan}
-                      story={PLAN_STORIES[plan.plan_name]}
+                      story={{
+                        eyebrow: t(`onboarding.stories.${plan.plan_name}.eyebrow`),
+                        bestFor: t(`onboarding.stories.${plan.plan_name}.bestFor`),
+                        compareFit: t(`onboarding.stories.${plan.plan_name}.compareFit`),
+                      }}
                       recommendationReason={
                         plan.is_recommended
-                          ? getRecommendationReason()
+                          ? t("onboarding.recommendation_reason")
                           : ""
                       }
                     />
@@ -953,9 +928,7 @@ export default function Onboarding() {
                 </div>
               ) : (
                 <div className="mt-5 rounded-2xl bg-surface-container-high p-4 text-sm leading-6 text-on-surface-variant">
-                  RideShield is highlighting the quickest three-way choice
-                  first. Open the extra option list if this rider needs a
-                  different premium-to-coverage tradeoff.
+                  {t("onboarding.plans.more.footer")}
                 </div>
               )}
             </div>
@@ -963,83 +936,78 @@ export default function Onboarding() {
 
           <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="panel p-6">
-              <p className="eyebrow">Trust and safety</p>
+              <p className="eyebrow">{t("onboarding.trust.eyebrow")}</p>
               <h3 className="mt-2 text-2xl font-bold text-primary">
-                Why this feels safer to buy
+                {t("onboarding.trust.title")}
               </h3>
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl bg-surface-container-high p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-on-surface-variant">
-                    Monitoring
+                    {t("onboarding.trust.monitoring")}
                   </p>
                   <p className="mt-2 text-lg font-semibold">
-                    {monitoredCities} cities live
+                    {t("onboarding.trust.monitoring_cities", { count: monitoredCities })}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-on-surface-variant">
-                    Weather, traffic, AQI, and outage thresholds are tracked
-                    automatically.
+                    {t("onboarding.trust.monitoring_desc")}
                   </p>
                 </div>
                 <div className="rounded-2xl bg-surface-container-high p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-on-surface-variant">
-                    Decision path
+                    {t("onboarding.trust.decision")}
                   </p>
                   <p className="mt-2 text-lg font-semibold">
-                    Auto-checks first
+                    {t("onboarding.trust.auto_checks")}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-on-surface-variant">
-                    Straightforward claims can auto-decide; suspicious ones
-                    route to manual review.
+                    {t("onboarding.trust.decision_desc")}
                   </p>
                 </div>
                 <div className="rounded-2xl bg-surface-container-high p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-on-surface-variant">
-                    Activation
+                    {t("onboarding.trust.activation")}
                   </p>
                   <p className="mt-2 text-lg font-semibold">
-                    Clear waiting period
+                    {t("onboarding.trust.background")}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-on-surface-variant">
-                    Coverage stays pending until the waiting period ends or
-                    simulation activates it.
+                    {t("onboarding.trust.activation_desc")}
                   </p>
                 </div>
               </div>
             </div>
 
             <div className="panel p-6">
-              <p className="eyebrow">After purchase</p>
+              <p className="eyebrow">{t("onboarding.next.eyebrow")}</p>
               <h3 className="mt-2 text-2xl font-bold text-primary">
-                What happens next
+                {t("onboarding.next.title")}
               </h3>
               <div className="mt-4 space-y-3">
                 <div className="rounded-2xl bg-surface-container-high p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-on-surface-variant">
-                    Step 1
+                    {t("onboarding.next.step_1")}
                   </p>
-                  <p className="mt-2 text-lg font-semibold">Purchase</p>
+                  <p className="mt-2 text-lg font-semibold">{t("onboarding.next.step_1_title")}</p>
                   <p className="mt-2 text-sm leading-6 text-on-surface-variant">
-                    Lock in the selected weekly premium and coverage cap.
+                    {t("onboarding.next.step_1_desc")}
                   </p>
                 </div>
                 <div className="rounded-2xl bg-surface-container-high p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-on-surface-variant">
-                    Step 2
+                    {t("onboarding.next.step_2")}
                   </p>
-                  <p className="mt-2 text-lg font-semibold">Waiting period</p>
+                  <p className="mt-2 text-lg font-semibold">{t("onboarding.next.step_2_title")}</p>
                   <p className="mt-2 text-sm leading-6 text-on-surface-variant">
-                    The policy stays pending until the wait window ends or an
-                    admin activates simulation coverage.
+                    {t("onboarding.next.step_2_desc")}
                   </p>
                 </div>
                 <div className="rounded-2xl bg-surface-container-high p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-on-surface-variant">
-                    Step 3
+                    {t("onboarding.next.step_3")}
                   </p>
-                  <p className="mt-2 text-lg font-semibold">Coverage active</p>
+                  <p className="mt-2 text-lg font-semibold">{t("onboarding.next.step_3_title")}</p>
                   <p className="mt-2 text-sm leading-6 text-on-surface-variant">
-                    The worker dashboard shows the active policy, live
-                    incidents, and claim outcomes.
+                    {t("onboarding.next.step_3_desc")}
                   </p>
                 </div>
               </div>
@@ -1054,11 +1022,11 @@ export default function Onboarding() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <p className="text-lg font-bold text-primary">
-                  Selected Plan:{" "}
+                  {t("onboarding.footer.selected")}{" "}
                   {selectedPlanData
                     ? selectedPlanData.display_name ||
                       humanizeSlug(selectedPlanData.plan_name)
-                    : "None"}
+                    : t("onboarding.footer.none")}
                 </p>
                 {selectedPlanData ? (
                   <span className="text-lg font-semibold text-primary">
@@ -1073,7 +1041,7 @@ export default function Onboarding() {
                 disabled={loading || !selectedPlanData}
                 onClick={handlePurchase}
               >
-                {loading ? "Activating..." : "Activate Protection"}
+                {loading ? t("onboarding.footer.activating") : t("onboarding.footer.activate")}
               </button>
             </div>
           </div>

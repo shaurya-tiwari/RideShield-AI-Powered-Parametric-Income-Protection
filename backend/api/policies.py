@@ -52,7 +52,7 @@ async def list_plans(
     if not worker:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Worker not found.",
+            detail={"error_code": "WORKER_NOT_FOUND"},
         )
 
     risk_result = risk_scorer.calculate_risk_score(city=worker.city, zone=worker.zone)
@@ -100,27 +100,26 @@ async def create_policy(
     if not worker:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Worker not found.",
+            detail={"error_code": "WORKER_NOT_FOUND"},
         )
 
     if worker.status != "active":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Worker account is {worker.status}. Cannot purchase a plan.",
+            detail={"error_code": "POLICY_WORKER_INACTIVE"},
         )
 
     if not worker.consent_given:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Worker must give consent before purchasing a plan.",
+            detail={"error_code": "POLICY_NO_CONSENT"},
         )
 
     plan_def = settings.PLAN_DEFINITIONS.get(request.plan_name)
     if not plan_def:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unknown plan: {request.plan_name}. "
-            f"Available plans: {', '.join(settings.PLAN_DEFINITIONS.keys())}",
+            detail={"error_code": "POLICY_UNKNOWN_PLAN"},
         )
 
     now = utc_now_naive()
@@ -128,10 +127,7 @@ async def create_policy(
         if existing_policy.status in ("active", "pending") and existing_policy.expires_at > now:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"Worker already has an active/pending policy "
-                f"({existing_policy.plan_display_name}) "
-                f"expiring at {existing_policy.expires_at.isoformat()}. "
-                f"Wait for it to expire or cancel it first.",
+                detail={"error_code": "POLICY_ALREADY_EXISTS"},
             )
 
     risk_result = risk_scorer.calculate_risk_score(city=worker.city, zone=worker.zone)
@@ -247,7 +243,7 @@ async def get_active_policy(
     if not worker:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Worker not found.",
+            detail={"error_code": "WORKER_NOT_FOUND"},
         )
 
     now = utc_now_naive()
@@ -362,7 +358,7 @@ async def get_policy_history(
     if not worker:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Worker not found.",
+            detail={"error_code": "WORKER_NOT_FOUND"},
         )
 
     policies_result = await db.execute(
@@ -499,7 +495,7 @@ async def force_activate_policies(
     if not settings.SIMULATION_MODE:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Force activation is only available in simulation mode.",
+            detail={"error_code": "POLICY_SIMULATION_ONLY"},
         )
 
     now = utc_now_naive()

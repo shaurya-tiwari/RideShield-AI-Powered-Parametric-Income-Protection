@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Radar, ShieldCheck, Wallet } from "lucide-react";
 
+import { useTranslation } from "react-i18next";
+
 import { useAuth } from "../auth/AuthContext";
 import SectionHeader from "../components/SectionHeader";
 
@@ -27,6 +29,7 @@ const pillars = [
 ];
 
 export default function Home() {
+  const { t } = useTranslation();
   const { booting, isAuthenticated, role, session } = useAuth();
   const displayName = session?.session?.name || session?.session?.username || "there";
 
@@ -34,20 +37,18 @@ export default function Home() {
     document.title = "RideShield";
   }, []);
 
-  let heroTitle = "RideShield turns disruption signals into trustable claim and payout decisions.";
-  let heroDescription =
-    "The product now connects onboarding, worker coverage, admin review, live trigger monitoring, and scenario-driven demos in one coherent operating surface.";
-  let primaryCta = { to: "/onboarding", label: "Start onboarding" };
-  let secondaryCta = { to: "/auth", label: "Sign in" };
-  let tertiaryCta = { to: "/demo", label: "Open demo runner" };
+  let heroTitle = t("home.hero.title_guest");
+  let heroDescription = t("home.hero.description_guest");
+  let primaryCta = { to: "/onboarding", label: t("home.cta.start_onboarding") };
+  let secondaryCta = { to: "/auth", label: t("home.cta.sign_in") };
+  let tertiaryCta = { to: "/demo", label: t("home.cta.open_demo") };
 
   if (!booting && isAuthenticated && role === "worker") {
-    heroTitle = `Welcome back, ${displayName}. Your RideShield coverage is already in motion.`;
-    heroDescription =
-      "Open the dashboard to review policy state, grouped incidents, recent payouts, and the logic behind the latest system decisions.";
-    primaryCta = { to: "/dashboard", label: "Open dashboard" };
-    secondaryCta = { to: "/onboarding", label: "Create another demo worker" };
-    tertiaryCta = { to: "/auth", label: "Switch account" };
+    heroTitle = t("home.hero.title_worker", { name: displayName });
+    heroDescription = t("home.hero.description_worker");
+    primaryCta = { to: "/dashboard", label: t("home.cta.open_dashboard") };
+    secondaryCta = { to: "/onboarding", label: t("home.cta.create_demo") };
+    tertiaryCta = { to: "/auth", label: t("home.cta.switch_account") };
   } else if (!booting && isAuthenticated && role === "admin") {
     heroTitle = `Welcome back, ${displayName}. Monitoring, review, and scenario controls are live.`;
     heroDescription =
@@ -64,13 +65,13 @@ export default function Home() {
           {/* Eyebrow badge */}
           <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white/80 backdrop-blur-sm">
             <ShieldCheck size={13} />
-            <span>Autonomous guardian</span>
+            <span>{t("home.hero.badge")}</span>
           </div>
 
           <h1 className="mt-6 max-w-4xl text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
             {heroTitle}
             <span className="hero-subtitle mt-2 block text-3xl font-bold sm:text-4xl">
-              Zero-touch. Always on.
+              {t("home.hero.subtitle")}
             </span>
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-white/78 sm:text-lg">{heroDescription}</p>
@@ -90,43 +91,42 @@ export default function Home() {
 
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
             <div className="rounded-[24px] bg-white/10 p-4 transition-smooth hover:bg-white/15">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">Claim model</p>
-              <p className="mt-2 text-lg font-semibold">Incident-first</p>
+              <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">{t("home.models.claim_model.label")}</p>
+              <p className="mt-2 text-lg font-semibold">{t("home.models.claim_model.value")}</p>
             </div>
             <div className="rounded-[24px] bg-white/10 p-4 transition-smooth hover:bg-white/15">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">Trigger loop</p>
-              <p className="mt-2 text-lg font-semibold">Scheduler + demo override</p>
+              <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">{t("home.models.trigger_loop.label")}</p>
+              <p className="mt-2 text-lg font-semibold">{t("home.models.trigger_loop.value")}</p>
             </div>
             <div className="rounded-[24px] bg-white/10 p-4 transition-smooth hover:bg-white/15">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">Coverage story</p>
-              <p className="mt-2 text-lg font-semibold">Zero manual filing</p>
+              <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">{t("home.models.coverage_story.label")}</p>
+              <p className="mt-2 text-lg font-semibold">{t("home.models.coverage_story.value")}</p>
             </div>
           </div>
         </div>
 
         <div className="editorial-grid">
           <div className="context-panel p-6 pulse-glow">
-            <p className="eyebrow">System promise</p>
+            <p className="eyebrow">{t("home.system.eyebrow")}</p>
             <p className="mt-3 text-2xl font-bold leading-tight text-primary">
-              Workers are informed. The system does the filing, scoring, and payout orchestration.
+              {t("home.system.title")}
             </p>
             <p className="mt-4 text-sm leading-7 text-on-surface-variant">
-              RideShield is designed to observe disruption signals, translate them into one clear incident, and expose
-              that reasoning across worker, admin, and demo views.
+              {t("home.system.description")}
             </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
             <div className="context-panel p-6 card-hover transition-smooth">
-              <p className="text-sm text-on-surface-variant">Worker surface</p>
+              <p className="text-sm text-on-surface-variant">{t("home.surfaces.worker.label")}</p>
               <p className="mt-2 text-lg font-semibold text-primary">
-                Coverage, incidents, payout history, and decision explanations in one calm, readable view.
+                {t("home.surfaces.worker.desc")}
               </p>
             </div>
             <div className="context-panel p-6 card-hover transition-smooth">
-              <p className="text-sm text-on-surface-variant">Admin surface</p>
+              <p className="text-sm text-on-surface-variant">{t("home.surfaces.admin.label")}</p>
               <p className="mt-2 text-lg font-semibold text-primary">
-                Review queue, disruption pressure, fraud visibility, scheduler health, and city-aware monitoring.
+                {t("home.surfaces.admin.desc")}
               </p>
             </div>
           </div>
@@ -135,24 +135,24 @@ export default function Home() {
 
       <section className="hero-glow hero-mesh rounded-[32px] p-8 sm:p-10 text-white">
         <SectionHeader
-          eyebrow="Core flow"
-          title="How the backend becomes a visible product"
-          description="The frontend does not mock product logic. It makes the real engine legible so workers trust outcomes and admins understand why those outcomes happened."
+          eyebrow={t("home.core.eyebrow")}
+          title={t("home.core.title")}
+          description={t("home.core.description")}
           invert
         />
 
         <div className="mt-8 grid gap-5 grid-cols-12">
-          {pillars.map(({ icon: Icon, title, description }, idx) => {
+          {pillars.map(({ icon: Icon }, idx) => {
             const colSpan =
               idx === 0 ? "col-span-12 md:col-span-7" : idx === 1 ? "col-span-12 md:col-span-5" : "col-span-12";
             const cardHeight = idx === 0 ? "min-h-64" : "";
             return (
-              <div key={title} className={`${colSpan} group rounded-[28px] bg-white/10 p-8 backdrop-blur-sm ${cardHeight} card-hover transition-smooth border border-transparent hover:border-white/10`}>
+              <div key={idx} className={`${colSpan} group rounded-[28px] bg-white/10 p-8 backdrop-blur-sm ${cardHeight} card-hover transition-smooth border border-transparent hover:border-white/10`}>
                 <div className="flex h-14 w-14 items-center justify-center rounded-[20px] bg-white/10 text-white transition-smooth group-hover:scale-110 group-hover:bg-white/20">
                   <Icon size={26} />
                 </div>
-                <h3 className="mt-6 text-2xl font-bold leading-tight">{title}</h3>
-                <p className="mt-4 text-base leading-7 text-white/78">{description}</p>
+                <h3 className="mt-6 text-2xl font-bold leading-tight">{t(`home.pillars.${idx}.title`)}</h3>
+                <p className="mt-4 text-base leading-7 text-white/78">{t(`home.pillars.${idx}.description`)}</p>
               </div>
             );
           })}

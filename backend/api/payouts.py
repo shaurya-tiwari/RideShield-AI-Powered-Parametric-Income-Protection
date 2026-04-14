@@ -40,7 +40,7 @@ async def get_worker_payouts(
     ensure_worker_access(session, worker_id)
     worker = (await db.execute(select(Worker).where(Worker.id == worker_id))).scalar_one_or_none()
     if not worker:
-        raise HTTPException(status_code=404, detail="Worker not found.")
+        raise HTTPException(status_code=404, detail={"error_code": "WORKER_NOT_FOUND"})
     cutoff = utc_now_naive() - timedelta(days=days)
     payouts = (
         await db.execute(
@@ -82,7 +82,7 @@ async def get_payout_detail(
 ):
     payout = (await db.execute(select(Payout).where(Payout.id == payout_id))).scalar_one_or_none()
     if not payout:
-        raise HTTPException(status_code=404, detail="Payout not found.")
+        raise HTTPException(status_code=404, detail={"error_code": "PAYOUT_NOT_FOUND"})
     ensure_worker_access(session, payout.worker_id)
     claim = (await db.execute(select(Claim).where(Claim.id == payout.claim_id))).scalar_one_or_none()
     worker = (await db.execute(select(Worker).where(Worker.id == payout.worker_id))).scalar_one_or_none()

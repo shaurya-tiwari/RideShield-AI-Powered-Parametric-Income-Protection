@@ -82,7 +82,7 @@ async def test_register_invalid_city_fails():
         })
 
         assert response.status_code == 400
-        assert "not supported" in response.json()["detail"]
+        assert response.json()["detail"]["error_code"] == "LOCATION_CITY_NOT_SUPPORTED"
 
 
 @pytest.mark.asyncio

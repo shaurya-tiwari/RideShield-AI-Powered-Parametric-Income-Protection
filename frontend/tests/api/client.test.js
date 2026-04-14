@@ -59,7 +59,7 @@ describe("API client auth redirects", () => {
       response: { status: 401 },
     });
 
-    expect(window.location.href).toBe("/auth?reason=session_expired");
+    expect(window.location.href).toBe("/auth?reason=AUTH_EXPIRED");
   });
 
   it("sets and clears the default authorization header", () => {
