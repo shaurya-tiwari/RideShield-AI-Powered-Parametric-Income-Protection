@@ -45,6 +45,7 @@ class Worker(Base):
     claims = relationship("Claim", back_populates="worker", lazy="selectin")
     trust_score = relationship("TrustScore", back_populates="worker", uselist=False, lazy="selectin")
     activity_logs = relationship("WorkerActivity", back_populates="worker", lazy="selectin")
+    notifications = relationship("Notification", back_populates="worker", lazy="noload")
     city_ref = relationship("City", back_populates="workers", lazy="selectin")
     zone_ref = relationship("Zone", back_populates="workers", lazy="selectin")
 
@@ -165,6 +166,7 @@ class Claim(Base):
     policy = relationship("Policy", back_populates="claims")
     event = relationship("Event", back_populates="claims")
     payout = relationship("Payout", back_populates="claim", uselist=False, lazy="selectin")
+    decision_logs = relationship("DecisionLog", back_populates="claim", lazy="selectin")
 
     __table_args__ = (
         UniqueConstraint("worker_id", "event_id", "trigger_type", name="uq_claim_dedup"),
@@ -227,6 +229,8 @@ class FraudLog(Base):
     confidence = Column(Numeric(4, 3), nullable=True)
     signals = Column(JSONB, nullable=True)
     action_taken = Column(String(20), nullable=True)
+    is_simulated = Column(Boolean, default=False, index=True)
+    simulation_type = Column(String(50), nullable=True)
     created_at = Column(DateTime, default=utc_now_naive)
 
     def __repr__(self):
@@ -253,6 +257,105 @@ class AuditLog(Base):
         return f"<AuditLog {self.action} on {self.entity_type}>"
 
 
+class DecisionLog(Base):
+    """Append-only decision memory for replay, analytics, and retraining."""
+    __tablename__ = "decision_logs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
+    claim_id = Column(UUID(as_uuid=True), ForeignKey("claims.id"), nullable=False, index=True)
+    worker_id = Column(UUID(as_uuid=True), ForeignKey("workers.id"), nullable=False, index=True)
+    policy_id = Column(UUID(as_uuid=True), ForeignKey("policies.id"), nullable=True, index=True)
+    event_id = Column(UUID(as_uuid=True), ForeignKey("events.id"), nullable=True, index=True)
+    lifecycle_stage = Column(String(50), nullable=False, index=True)
+    decision_source = Column(String(50), nullable=False, index=True)
+    system_decision = Column(String(20), nullable=True, index=True)
+    resulting_status = Column(String(20), nullable=False, index=True)
+    final_label = Column(String(20), nullable=True, index=True)
+    label_source = Column(String(50), nullable=True)
+    review_reason = Column(Text, nullable=True)
+    reviewed_by = Column(String(100), nullable=True)
+    payout_amount = Column(Numeric(10, 2), nullable=True)
+    review_wait_hours = Column(Numeric(6, 2), nullable=True)
+    fraud_score = Column(Numeric(4, 3), nullable=True)
+    trust_score = Column(Numeric(4, 3), nullable=True)
+    final_score = Column(Numeric(4, 3), nullable=True)
+    decision_confidence = Column(Numeric(4, 3), nullable=True)
+    model_versions = Column(JSONB, nullable=True)
+    decision_policy_version = Column(String(50), nullable=False)
+    signal_snapshot_refs = Column(JSONB, nullable=True)
+    feature_snapshot = Column(JSONB, nullable=False)
+    output_snapshot = Column(JSONB, nullable=False)
+    context_snapshot = Column(JSONB, nullable=True)
+    created_at = Column(DateTime, default=utc_now_naive, index=True)
+
+    claim = relationship("Claim", back_populates="decision_logs", lazy="selectin")
+
+    __table_args__ = (
+        Index("idx_decision_log_claim_stage_time", "claim_id", "lifecycle_stage", "created_at"),
+        Index("idx_decision_log_worker_time", "worker_id", "created_at"),
+    )
+
+    def __repr__(self):
+        return f"<DecisionLog {self.lifecycle_stage} {self.claim_id}>"
+
+
+class SignalSnapshot(Base):
+    """Normalized signal payload captured from a provider cycle."""
+    __tablename__ = "signal_snapshots"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
+    city = Column(String(50), nullable=False, index=True)
+    zone = Column(String(80), nullable=False, index=True)
+    signal_type = Column(String(50), nullable=False, index=True)
+    provider = Column(String(100), nullable=False)
+    source_mode = Column(String(20), nullable=False, default="mock")
+    captured_at = Column(DateTime, nullable=False, index=True)
+    normalized_metrics = Column(JSONB, nullable=False)
+    raw_payload = Column(JSONB, nullable=False)
+    quality_score = Column(Numeric(4, 3), nullable=False)
+    quality_breakdown = Column(JSONB, nullable=True)
+    confidence_envelope = Column(JSONB, nullable=True)
+    latency_ms = Column(Integer, nullable=False, default=0)
+    is_fallback = Column(Boolean, default=False)
+    request_id = Column(String(100), nullable=True)
+    created_at = Column(DateTime, default=utc_now_naive)
+
+    __table_args__ = (
+        Index("idx_signal_snapshot_zone_type_time", "zone", "signal_type", "captured_at"),
+        Index("idx_signal_snapshot_city_time", "city", "captured_at"),
+    )
+
+    def __repr__(self):
+        return f"<SignalSnapshot {self.signal_type} {self.zone} {self.captured_at}>"
+
+
+class ShadowSignalDiff(Base):
+    """Structured shadow-mode comparison persisted for review and alerting."""
+    __tablename__ = "shadow_signal_diffs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
+    city = Column(String(50), nullable=False, index=True)
+    zone = Column(String(80), nullable=False, index=True)
+    signal_type = Column(String(50), nullable=False, index=True)
+    primary_provider = Column(String(100), nullable=False)
+    shadow_provider = Column(String(100), nullable=False)
+    compared_at = Column(DateTime, nullable=False, index=True)
+    max_delta = Column(Numeric(8, 3), nullable=False)
+    metric_deltas = Column(JSONB, nullable=False)
+    threshold_crossed = Column(Boolean, default=False, nullable=False)
+    alert_triggered = Column(Boolean, default=False, nullable=False)
+    threshold_state = Column(JSONB, nullable=True)
+    created_at = Column(DateTime, default=utc_now_naive)
+
+    __table_args__ = (
+        Index("idx_shadow_diff_zone_type_time", "zone", "signal_type", "compared_at"),
+        Index("idx_shadow_diff_city_time", "city", "compared_at"),
+    )
+
+    def __repr__(self):
+        return f"<ShadowSignalDiff {self.signal_type} {self.zone} {self.compared_at}>"
+
+
 class WorkerActivity(Base):
     """GPS and movement data for behavioral validation."""
     __tablename__ = "worker_activity"
@@ -265,6 +368,8 @@ class WorkerActivity(Base):
     longitude = Column(Numeric(10, 7), nullable=True)
     speed_kmh = Column(Numeric(5, 1), nullable=True)
     has_delivery_stop = Column(Boolean, default=False)
+    is_simulated = Column(Boolean, default=False, index=True)
+    simulation_type = Column(String(50), nullable=True)
     recorded_at = Column(DateTime, default=utc_now_naive)
 
     # Relationships
@@ -274,6 +379,7 @@ class WorkerActivity(Base):
     __table_args__ = (
         Index("idx_activity_zone_time", "zone", "recorded_at"),
         Index("idx_activity_worker_time", "worker_id", "recorded_at"),
+        Index("idx_activity_simulated", "is_simulated"),
     )
 
     def __repr__(self):
@@ -357,3 +463,26 @@ class ZoneRiskProfile(Base):
     updated_at = Column(DateTime, default=utc_now_naive, onupdate=utc_now_naive)
 
     zone_ref = relationship("Zone", back_populates="risk_profile", lazy="selectin")
+
+
+class Notification(Base):
+    """In-app notification for workers."""
+    __tablename__ = "notifications"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=generate_uuid)
+    worker_id = Column(UUID(as_uuid=True), ForeignKey("workers.id"), nullable=False, index=True)
+    category = Column(String(50), nullable=False, index=True)
+    title = Column(String(200), nullable=False)
+    body = Column(Text, nullable=True)
+    metadata_json = Column(JSONB, nullable=True)
+    is_read = Column(Boolean, default=False, index=True)
+    created_at = Column(DateTime, default=utc_now_naive)
+
+    worker = relationship("Worker", back_populates="notifications", lazy="selectin")
+
+    __table_args__ = (
+        Index("idx_notifications_worker_unread", "worker_id", "is_read"),
+    )
+
+    def __repr__(self):
+        return f"<Notification {self.category} for {self.worker_id}>"
