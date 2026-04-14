@@ -173,7 +173,11 @@ async def test_worker_profile_requires_matching_session():
 
         login_response = await client.post(
             "/api/auth/worker/login",
-            json={"phone": first_worker["phone"], "password": first_worker["password"]},
+            json={
+                "phone": first_worker["phone"],
+                "password": first_worker["password"],
+                "device_fingerprint": "worker-profile-secure-device",
+            },
         )
         worker_headers = {"Authorization": f"Bearer {login_response.json()['token']}"}
 

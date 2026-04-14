@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { LogOut, Menu, Shield, Sparkles, X } from "lucide-react";
+import { LogOut, Menu, Sparkles, X } from "lucide-react";
 
 import { useAuth } from "../auth/AuthContext";
 
@@ -32,8 +32,8 @@ export default function Navbar({ session }) {
       <div className="glass-strip rounded-[30px] px-5 py-4">
         <div className="flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-cta-gradient text-on-primary">
-              <Shield size={20} />
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-[18px] bg-white shadow-sm">
+              <img src="/logo.png" alt="RideShield AI logo" className="h-full w-full object-contain" />
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-on-surface-variant">RideShield</p>

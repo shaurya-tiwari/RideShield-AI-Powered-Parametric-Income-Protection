@@ -37,7 +37,11 @@ async def test_claim_detail_includes_fraud_and_payout_breakdown(client, valid_wo
 
     login_response = await client.post(
         "/api/auth/worker/login",
-        json={"phone": worker_data["phone"], "password": worker_data["password"]},
+        json={
+            "phone": worker_data["phone"],
+            "password": worker_data["password"],
+            "device_fingerprint": "worker-claim-detail-01",
+        },
     )
     assert login_response.status_code == 200
     worker_cookies = dict(client.cookies)
@@ -55,4 +59,3 @@ async def test_claim_detail_includes_fraud_and_payout_breakdown(client, valid_wo
     assert payload["payout_breakdown"]["operating_cost_factor"] == pytest.approx(0.85, rel=1e-4)
     assert payload["payout_breakdown"]["net_income_per_hour"] <= payload["payout_breakdown"]["income_per_hour"]
     assert "model_version" in payload["fraud_model"]
-

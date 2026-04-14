@@ -33,7 +33,11 @@ async def test_trigger_cycle_creates_event_and_claim(client, valid_worker_data, 
 
     login_response = await client.post(
         "/api/auth/worker/login",
-        json={"phone": valid_worker_data["phone"], "password": valid_worker_data["password"]},
+        json={
+            "phone": valid_worker_data["phone"],
+            "password": valid_worker_data["password"],
+            "device_fingerprint": "worker-claims-login-01",
+        },
     )
     worker_cookies = dict(client.cookies)
     claims_response = await client.get(f"/api/claims/worker/{worker_id}", cookies=worker_cookies)
@@ -78,7 +82,11 @@ async def test_event_claim_and_payout_detail_endpoints(client, valid_worker_data
 
     login_response = await client.post(
         "/api/auth/worker/login",
-        json={"phone": valid_worker_data["phone"], "password": valid_worker_data["password"]},
+        json={
+            "phone": valid_worker_data["phone"],
+            "password": valid_worker_data["password"],
+            "device_fingerprint": "worker-claims-login-02",
+        },
     )
     worker_headers = {"Authorization": f"Bearer {login_response.json()['token']}"}
 
@@ -166,7 +174,11 @@ async def test_review_queue_and_manual_resolution_flow(client, valid_worker_data
 
     login_response = await client.post(
         "/api/auth/worker/login",
-        json={"phone": edge_worker_data["phone"], "password": edge_worker_data["password"]},
+        json={
+            "phone": edge_worker_data["phone"],
+            "password": edge_worker_data["password"],
+            "device_fingerprint": "worker-claims-login-03",
+        },
     )
     worker_cookies = dict(client.cookies)
     updated_claim = await client.get(f"/api/claims/detail/{claim_id}", cookies=worker_cookies)

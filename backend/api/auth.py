@@ -98,9 +98,6 @@ async def admin_login(request: AdminLoginRequest, http_request: Request, respons
             detail="Invalid admin credentials.",
         )
 
-    if request.device_fingerprint and request.device_fingerprint != worker.device_fingerprint:
-        worker.device_fingerprint = request.device_fingerprint
-        await db.commit()
 
     token = create_session_token(
         {

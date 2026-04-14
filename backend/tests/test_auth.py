@@ -8,9 +8,14 @@ async def test_worker_login_and_me(client, valid_worker_data):
     register_response = await client.post("/api/workers/register", json=valid_worker_data)
     assert register_response.status_code == 201
 
+    device_fingerprint = "worker-device-auth-01"
     login_response = await client.post(
         "/api/auth/worker/login",
-        json={"phone": valid_worker_data["phone"], "password": valid_worker_data["password"]},
+        json={
+            "phone": valid_worker_data["phone"],
+            "password": valid_worker_data["password"],
+            "device_fingerprint": device_fingerprint,
+        },
     )
     assert login_response.status_code == 200
     login_data = login_response.json()
@@ -31,9 +36,14 @@ async def test_worker_login_sets_root_scoped_cookie_for_protected_routes(client,
     assert register_response.status_code == 201
     worker_id = register_response.json()["worker_id"]
 
+    device_fingerprint = "worker-device-auth-02"
     login_response = await client.post(
         "/api/auth/worker/login",
-        json={"phone": valid_worker_data["phone"], "password": valid_worker_data["password"]},
+        json={
+            "phone": valid_worker_data["phone"],
+            "password": valid_worker_data["password"],
+            "device_fingerprint": device_fingerprint,
+        },
     )
     assert login_response.status_code == 200
     assert "Path=/" in login_response.headers.get("set-cookie", "")
@@ -53,9 +63,25 @@ async def test_worker_login_rejects_wrong_password(client, valid_worker_data):
 
     login_response = await client.post(
         "/api/auth/worker/login",
-        json={"phone": valid_worker_data["phone"], "password": "wrongpass123"},
+        json={
+            "phone": valid_worker_data["phone"],
+            "password": "wrongpass123",
+            "device_fingerprint": "worker-device-auth-03",
+        },
     )
     assert login_response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_worker_login_requires_device_fingerprint(client, valid_worker_data):
+    register_response = await client.post("/api/workers/register", json=valid_worker_data)
+    assert register_response.status_code == 201
+
+    login_response = await client.post(
+        "/api/auth/worker/login",
+        json={"phone": valid_worker_data["phone"], "password": valid_worker_data["password"]},
+    )
+    assert login_response.status_code == 422
 
 
 @pytest.mark.asyncio

@@ -33,7 +33,11 @@ async def create_worker_policy(client, admin_cookies, name: str, phone: str, zon
     assert force_activate.status_code == 200
     login_response = await client.post(
         "/api/auth/worker/login",
-        json={"phone": phone, "password": password},
+        json={
+            "phone": phone,
+            "password": password,
+            "device_fingerprint": f"{profile}-scenario-device",
+        },
     )
     assert login_response.status_code == 200, login_response.text
     worker_cookies = dict(client.cookies)

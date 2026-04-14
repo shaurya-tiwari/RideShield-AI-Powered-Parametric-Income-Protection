@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { BrainCircuit, FlaskConical, LayoutDashboard, LogOut, PlaySquare, Settings, Shield, ShieldCheck, Siren, Sparkles } from "lucide-react";
+import { BrainCircuit, FlaskConical, LayoutDashboard, LogOut, PlaySquare, Settings, ShieldCheck, Siren, Sparkles } from "lucide-react";
 import NotificationBell from "./NotificationBell";
 
 import { useAuth } from "../auth/AuthContext";
@@ -60,8 +60,8 @@ export default function AppFrame({ children }) {
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col bg-surface-container-lowest lg:flex" style={{ borderRight: "1px solid rgba(69, 70, 79, 0.15)" }}>
         <div className="flex h-full flex-col p-6">
           <div className="mb-8 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-[16px] bg-cta-gradient text-on-primary">
-              <Shield size={18} />
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-[16px] bg-white shadow-sm">
+              <img src="/logo.png" alt="RideShield AI logo" className="h-full w-full object-contain" />
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-on-surface-variant">RideShield</p>
