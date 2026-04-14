@@ -110,6 +110,49 @@ export function statusPill(status) {
   return clsx("pill", styles[status] || "bg-surface-container-high text-on-surface-variant");
 }
 
+export function decisionConfidenceCopy(band, status) {
+  const normalizedBand = String(band || "").trim().toLowerCase();
+  const normalizedStatus = String(status || "").trim().toLowerCase();
+
+  if (normalizedStatus === "approved") {
+    if (normalizedBand === "high") {
+      return "High confidence auto-approval";
+    }
+    if (normalizedBand === "moderate") {
+      return "Moderate confidence approval";
+    }
+    return "Approved with guarded confidence";
+  }
+
+  if (normalizedStatus === "rejected") {
+    if (normalizedBand === "high") {
+      return "High confidence rejection";
+    }
+    if (normalizedBand === "moderate") {
+      return "Moderate confidence rejection";
+    }
+    return "Rejected after guarded review";
+  }
+
+  if (normalizedStatus === "delayed") {
+    if (normalizedBand === "high") {
+      return "High confidence review hold";
+    }
+    if (normalizedBand === "moderate") {
+      return "Moderate confidence manual review";
+    }
+    return "Low confidence manual review";
+  }
+
+  if (normalizedBand === "high") {
+    return "High confidence monitoring";
+  }
+  if (normalizedBand === "moderate") {
+    return "Moderate confidence monitoring";
+  }
+  return "Low confidence monitoring";
+}
+
 export function riskLabel(score) {
   const numeric = Number(score || 0);
   if (numeric < 0.25) {

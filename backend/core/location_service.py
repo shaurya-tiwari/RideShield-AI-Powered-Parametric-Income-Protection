@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
+from time import monotonic
 from typing import Dict, List, Optional
 
 from sqlalchemy import select, text
@@ -35,7 +36,44 @@ ZONE_CENTROIDS: dict[str, tuple[Decimal, Decimal]] = {
     "anna_nagar": (Decimal("13.0850000"), Decimal("80.2101000")),
     "adyar": (Decimal("13.0067000"), Decimal("80.2576000")),
     "velachery": (Decimal("12.9791000"), Decimal("80.2212000")),
+    "banjara_hills": (Decimal("17.4126000"), Decimal("78.4347000")),
+    "hitech_city": (Decimal("17.4504000"), Decimal("78.3802000")),
+    "gachibowli": (Decimal("17.4401000"), Decimal("78.3489000")),
+    "kukatpally": (Decimal("17.4948000"), Decimal("78.3996000")),
+    "hinjawadi": (Decimal("18.5912000"), Decimal("73.7389000")),
+    "kothrud": (Decimal("18.5074000"), Decimal("73.8077000")),
+    "viman_nagar": (Decimal("18.5679000"), Decimal("73.9143000")),
+    "hadapsar": (Decimal("18.5089000"), Decimal("73.9260000")),
+    "salt_lake": (Decimal("22.5877000"), Decimal("88.4173000")),
+    "new_town": (Decimal("22.5750000"), Decimal("88.4790000")),
+    "park_street": (Decimal("22.5539000"), Decimal("88.3526000")),
+    "howrah": (Decimal("22.5958000"), Decimal("88.2636000")),
 }
+
+# ---------------------------------------------------------------------------
+# In-memory TTL cache for geography lookups.
+# Cities and zones are essentially static — they only change when an admin
+# modifies geography config, which happens at bootstrap or via explicit ops.
+# Caching avoids repeated DB round-trips when the event loop is contended
+# by heavy trigger/analytics work (turns 7-19s contention → <1ms cache hit).
+# ---------------------------------------------------------------------------
+_CACHE_TTL_SECONDS = 60
+
+_cities_cache: dict = {"data": None, "expires": 0.0}
+_zones_cache: dict = {}  # keyed by city_slug (None key = all zones)
+
+
+def _cache_get(cache_entry: dict):
+    """Return cached data if still valid, else None."""
+    if cache_entry.get("data") is not None and monotonic() < cache_entry.get("expires", 0):
+        return cache_entry["data"]
+    return None
+
+
+def _cache_set(cache_entry: dict, data):
+    """Store data in cache with TTL."""
+    cache_entry["data"] = data
+    cache_entry["expires"] = monotonic() + _CACHE_TTL_SECONDS
 
 
 def city_display_name(slug: str) -> str:
@@ -185,6 +223,9 @@ class LocationService:
             city.active = city.slug in active_city_slugs
         await db.flush()
 
+        # Invalidate cache after geography changes
+        self.invalidate_cache()
+
     async def backfill_zone_references(self, db: AsyncSession, strict: bool = True) -> None:
         """
         Sync legacy city/zone string columns to zone_id. Fail loudly if unmapped rows exist.
@@ -275,16 +316,29 @@ class LocationService:
         await self.backfill_zone_references(db, strict=strict_backfill)
 
     async def get_active_cities(self, db: AsyncSession) -> List[City]:
-        return (
+        cached = _cache_get(_cities_cache)
+        if cached is not None:
+            return cached
+        result = (
             await db.execute(select(City).where(City.active == True).order_by(City.display_name))  # noqa: E712
         ).scalars().all()
+        _cache_set(_cities_cache, result)
+        return result
 
     async def get_active_zones(self, db: AsyncSession, city_slug: Optional[str] = None) -> List[Zone]:
+        cache_key = city_slug or "__all__"
+        if cache_key not in _zones_cache:
+            _zones_cache[cache_key] = {"data": None, "expires": 0.0}
+        cached = _cache_get(_zones_cache[cache_key])
+        if cached is not None:
+            return cached
         query = select(Zone).join(City, Zone.city_id == City.id).where(Zone.active == True, City.active == True)  # noqa: E712
         if city_slug:
             query = query.where(City.slug == city_slug.lower())
         query = query.order_by(City.display_name, Zone.display_name)
-        return (await db.execute(query)).scalars().all()
+        result = (await db.execute(query)).scalars().all()
+        _cache_set(_zones_cache[cache_key], result)
+        return result
 
     async def resolve_zone(self, db: AsyncSession, city_slug: str, zone_slug: str) -> Zone:
         city_slug = city_slug.lower().strip()
@@ -304,6 +358,13 @@ class LocationService:
         for zone in zones:
             city_map.setdefault(zone.city_ref.slug, []).append(zone.slug)
         return city_map
+
+    def invalidate_cache(self) -> None:
+        """Clear all geography caches. Call after bootstrap or config changes."""
+        _cities_cache["data"] = None
+        _cities_cache["expires"] = 0.0
+        _zones_cache.clear()
+        logger.info("Geography cache invalidated")
 
 
 location_service = LocationService()

@@ -22,11 +22,11 @@ jobs:
         env:
           POSTGRES_USER: rideshield
           POSTGRES_PASSWORD: rideshield123
-          POSTGRES_DB: rideshield_test_db
+          POSTGRES_DB: rideshield_work_test_db
         ports:
           - 5433:5432
         options: >-
-          --health-cmd "pg_isready -U rideshield -d rideshield_test_db"
+          --health-cmd "pg_isready -U rideshield -d rideshield_work_test_db"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -41,6 +41,23 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
+      - name: Wait for test database
+        run: |
+          python - <<'PY'
+          import socket
+          import time
+
+          deadline = time.time() + 60
+          while time.time() < deadline:
+              try:
+                  with socket.create_connection(("127.0.0.1", 5433), timeout=2):
+                      print("postgres ready on 5433")
+                      break
+              except OSError:
+                  time.sleep(2)
+          else:
+              raise SystemExit("postgres did not become ready on localhost:5433")
+          PY
       - name: Run backend tests
         env:
           ENV: test

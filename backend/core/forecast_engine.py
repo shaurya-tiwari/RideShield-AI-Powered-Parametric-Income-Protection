@@ -10,16 +10,13 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config import settings
+from backend.core.forecast_preprocessor import forecast_preprocessor
 from backend.core.location_service import location_service
 from backend.core.risk_model_service import risk_model_service
 from backend.db.models import Event, Payout
 from backend.ml.explainability import summarize_forecast
 from backend.ml.features.risk_features import risk_feature_builder
 from backend.utils.time import utc_now_naive
-from simulations.aqi_mock import aqi_simulator
-from simulations.platform_mock import platform_simulator
-from simulations.traffic_mock import traffic_simulator
-from simulations.weather_mock import weather_simulator
 
 
 @dataclass
@@ -36,10 +33,8 @@ class ForecastEngine:
     async def forecast_zone(self, db: AsyncSession, city: str, zone: str, horizon_hours: int = 24) -> dict[str, Any]:
         zone_record = await location_service.resolve_zone(db, city, zone)
         month = 7 if horizon_hours >= 168 else 6
-        weather = weather_simulator.get_weather(zone)
-        traffic = traffic_simulator.get_traffic(zone)
-        aqi = aqi_simulator.get_aqi(zone, city)
-        platform = platform_simulator.get_platform_status(zone)
+        signal_snapshot = await self._read_latest_signals_from_db(db, zone, city)
+        cleaned_signals, preprocessing = await forecast_preprocessor.preprocess(db, zone_record.slug, signal_snapshot)
         incidents_7d, incidents_30d = await self._incident_pressure(db, zone_record.slug)
         payout_pressure = await self._payout_pressure(db, city)
 
@@ -50,11 +45,11 @@ class ForecastEngine:
             "zone_profile_risk": float(zone_record.risk_profile.base_risk) if zone_record.risk_profile else settings.CITY_RISK_PROFILES.get(city, {}).get("base_risk", 0.5),
             "incidents_7d": incidents_7d,
             "incidents_30d": incidents_30d,
-            "rain_intensity": min(1.0, float(weather.get("rainfall_mm_hr", 0) or 0) / max(1.0, settings.RAIN_THRESHOLD_MM * 1.5)),
-            "heat_index": min(1.0, float(weather.get("temperature_c", 0) or 0) / max(1.0, settings.HEAT_THRESHOLD_C + 6)),
-            "aqi_normalized": min(1.0, float(aqi.get("aqi_value", 0) or 0) / 500.0),
-            "traffic_congestion": min(1.0, float(traffic.get("congestion_index", 0) or 0)),
-            "platform_instability": min(1.0, float(platform.get("order_density_drop", 0) or 0)),
+            "rain_intensity": min(1.0, float(cleaned_signals.get("rain", 0) or 0) / max(1.0, settings.RAIN_THRESHOLD_MM * 1.5)),
+            "heat_index": min(1.0, float(cleaned_signals.get("heat", 0) or 0) / max(1.0, settings.HEAT_THRESHOLD_C + 6)),
+            "aqi_normalized": min(1.0, float(cleaned_signals.get("aqi", 0) or 0) / 500.0),
+            "traffic_congestion": min(1.0, float(cleaned_signals.get("traffic", 0) or 0)),
+            "platform_instability": min(1.0, float(cleaned_signals.get("platform_outage", 0) or 0)),
             "worker_density": min(1.0, 0.25 + incidents_7d * 0.04),
             "payout_pressure_30d": payout_pressure,
         }
@@ -105,6 +100,7 @@ class ForecastEngine:
             "confidence": ml_result.get("confidence", 0.0),
             "model_version": ml_result.get("model_version", "rule-based"),
             "fallback_used": ml_result["fallback_used"],
+            "signal_preprocessing": preprocessing,
             "likely_triggers": likely_triggers,
             "components": components,
             "explanation": top_factors,
@@ -173,6 +169,51 @@ class ForecastEngine:
             )
         ).scalar_one()
         return int(incidents_7d or 0), int(incidents_30d or 0)
+
+    async def _read_latest_signals_from_db(self, db: AsyncSession, zone: str, city: str) -> dict[str, Any]:
+        """Read latest persisted signal snapshots from DB instead of calling external APIs."""
+        from sqlalchemy import and_
+        from backend.db.models import SignalSnapshot
+
+        signal_types = ("weather", "aqi", "traffic", "platform", "social")
+        signals: dict[str, Any] = {"city": city, "zone": zone, "source_mode": "cached"}
+
+        for signal_type in signal_types:
+            row = (
+                await db.execute(
+                    select(SignalSnapshot)
+                    .where(
+                        and_(
+                            SignalSnapshot.zone == zone,
+                            SignalSnapshot.signal_type == signal_type,
+                        )
+                    )
+                    .order_by(SignalSnapshot.captured_at.desc())
+                    .limit(1)
+                )
+            ).scalar_one_or_none()
+            if row and row.normalized_metrics:
+                metrics = row.normalized_metrics
+                if signal_type == "weather":
+                    signals["rain"] = float(metrics.get("rainfall_mm_hr", 0) or 0)
+                    signals["heat"] = float(metrics.get("temperature_c", 0) or 0)
+                elif signal_type == "aqi":
+                    signals["aqi"] = int(metrics.get("aqi_value", 0) or 0)
+                elif signal_type == "traffic":
+                    signals["traffic"] = float(metrics.get("congestion_index", 0) or 0)
+                elif signal_type == "platform":
+                    signals["platform_outage"] = float(metrics.get("order_density_drop", 0) or 0)
+                elif signal_type == "social":
+                    signals["social"] = float(metrics.get("severity", 0) or 0)
+
+        signals.setdefault("rain", 0)
+        signals.setdefault("heat", 0)
+        signals.setdefault("aqi", 0)
+        signals.setdefault("traffic", 0)
+        signals.setdefault("platform_outage", 0)
+        signals.setdefault("social", 0.0)
+        signals["raw_data"] = {"weather": {}, "aqi": {}, "traffic": {}, "platform": {}}
+        return signals
 
     async def _payout_pressure(self, db: AsyncSession, city: str) -> float:
         payout_count = (

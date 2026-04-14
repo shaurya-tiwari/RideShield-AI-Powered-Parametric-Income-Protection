@@ -6,8 +6,8 @@ import os
 from uuid import uuid4
 
 os.environ["ENV"] = "test"
-os.environ["DATABASE_URL"] = "postgresql+asyncpg://rideshield:rideshield123@localhost:5433/rideshield_test_db"
-os.environ["DATABASE_URL_SYNC"] = "postgresql://rideshield:rideshield123@localhost:5433/rideshield_test_db"
+os.environ["DATABASE_URL"] = "postgresql+asyncpg://rideshield:rideshield123@localhost:5433/rideshield_work_test_db"
+os.environ["DATABASE_URL_SYNC"] = "postgresql://rideshield:rideshield123@localhost:5433/rideshield_work_test_db"
 os.environ["SESSION_SECRET"] = "rideshield-test-secret"
 os.environ["SESSION_COOKIE_SECURE"] = "false"
 os.environ["ADMIN_PASSWORD"] = "rideshield-test-admin-password"
