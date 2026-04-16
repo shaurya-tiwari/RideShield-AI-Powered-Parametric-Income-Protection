@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowDownRight, ChevronDown, ChevronUp, MapPin, RefreshCcw, Shield, ShieldCheck, ShieldOff, Wallet } from "lucide-react";
+import { ArrowDownRight, ChevronDown, ChevronUp, MapPin, RefreshCcw, Shield, ShieldCheck, ShieldOff, Wallet, Sparkles } from "lucide-react";
 import { SkeletonBlock, SkeletonText } from "../components/Skeleton";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -60,55 +60,62 @@ function FirstTimeGate({ workerId, onPurchased }) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8 py-12">
+    <div className="mx-auto max-w-4xl space-y-12 py-16">
       <div className="text-center">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-          <Shield size={40} className="text-primary" />
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-cta-gradient text-white shadow-glow-cyan">
+          <Shield size={36} strokeWidth={2} />
         </div>
-        <h1 className="mt-6 text-4xl font-bold tracking-tight text-primary">{t("dashboard.firstTimeGate.title")}</h1>
-        <p className="mt-4 text-lg leading-8 text-on-surface-variant">
+        <h1 className="mt-8 text-4xl font-black tracking-tight text-slate-900 dark:text-white sm:text-5xl">
+          {t("dashboard.firstTimeGate.title")}
+        </h1>
+        <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-500 dark:text-slate-400">
           {t("dashboard.firstTimeGate.description")}
         </p>
       </div>
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map(i => (
-            <div key={i} className="panel p-6">
+            <div key={i} className="glass-card-3d p-8">
               <SkeletonBlock className="h-6 w-1/2 mb-4" />
               <SkeletonBlock className="h-10 w-2/3 mb-3" />
               <SkeletonText lines={2} />
-              <SkeletonBlock className="h-10 w-full mt-5" />
+              <SkeletonBlock className="h-12 w-full mt-6 rounded-xl" />
             </div>
           ))}
         </div>
       ) : plans?.plans ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {plans.plans.map((plan) => (
             <div
               key={plan.plan_name}
-              className={`panel p-6 transition-smooth hover:shadow-lg ${plan.plan_name === plans.recommended ? "ring-2 ring-primary" : ""
-                }`}
+              className={`glass-card-3d relative p-8 transition-all hover:-translate-y-2 ${
+                plan.plan_name === plans.recommended ? "border-2 border-teal-500/50 shadow-glow-cyan" : ""
+              }`}
             >
               {plan.plan_name === plans.recommended && (
-                <span className="pill badge-active mb-3 inline-block text-xs">{t("dashboard.firstTimeGate.recommended")}</span>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-teal-500 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">
+                  {t("dashboard.firstTimeGate.recommended")}
+                </div>
               )}
-              <h3 className="text-xl font-bold text-primary">{plan.display_name}</h3>
-              <p className="mt-2 text-3xl font-extrabold text-on-surface">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">{plan.display_name}</h3>
+              <p className="mt-4 text-4xl font-black text-slate-950 dark:text-white">
                 {formatCurrency(plan.weekly_premium)}
-                <span className="text-sm font-normal text-on-surface-variant">{t("dashboard.firstTimeGate.per_week")}</span>
+                <span className="ml-1 text-sm font-bold text-slate-400">{t("dashboard.firstTimeGate.per_week")}</span>
               </p>
-              <p className="mt-2 text-sm text-on-surface-variant">
+              <p className="mt-3 text-sm font-medium text-teal-600 dark:text-teal-400">
                 {t("dashboard.firstTimeGate.up_to_coverage", { amount: formatCurrency(plan.coverage_cap) })}
               </p>
-              <div className="mt-3 flex flex-wrap gap-1">
-                {(plan.triggers_covered || []).map((t) => (
-                  <span key={t} className="pill text-xs">{humanizeSlug(t)}</span>
+              <div className="mt-5 flex flex-wrap gap-1.5">
+                {(plan.triggers_covered || []).map((trig) => (
+                  <span key={trig} className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500 dark:bg-white/10 dark:text-slate-400">
+                    {humanizeSlug(trig)}
+                  </span>
                 ))}
               </div>
               <button
                 type="button"
-                className="button-primary mt-5 w-full"
+                className="button-primary mt-8 w-full !rounded-xl"
                 disabled={!!purchasing}
                 onClick={() => handlePurchase(plan.plan_name)}
               >
@@ -118,7 +125,7 @@ function FirstTimeGate({ workerId, onPurchased }) {
           ))}
         </div>
       ) : (
-        <div className="text-center text-on-surface-variant">{t("dashboard.firstTimeGate.error")}</div>
+        <div className="text-center text-slate-500">{t("dashboard.firstTimeGate.error")}</div>
       )}
     </div>
   );
@@ -143,52 +150,54 @@ function ExpiredGate({ workerId, lastPolicy, onPurchased }) {
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-8 py-12">
+    <div className="mx-auto max-w-2xl space-y-10 py-16">
       <div className="text-center">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-500/10">
-          <ShieldOff size={40} className="text-amber-500" />
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 shadow-glow-amber">
+          <ShieldOff size={36} strokeWidth={2} />
         </div>
-        <h1 className="mt-6 text-4xl font-bold tracking-tight text-amber-400">
+        <h1 className="mt-8 text-4xl font-black tracking-tight text-slate-900 dark:text-white">
           {t("dashboard.expiredGate.title")}
         </h1>
-        <p className="mt-4 text-lg leading-8 text-on-surface-variant">
+        <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
           {t("dashboard.expiredGate.description")}
         </p>
       </div>
 
-      <div className="panel p-6">
+      <div className="glass-card-3d p-8">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="eyebrow">{t("dashboard.expiredGate.last_plan")}</p>
-            <h3 className="mt-2 text-2xl font-bold text-primary">
+            <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">{t("dashboard.expiredGate.last_plan")}</p>
+            <h3 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
               {lastPolicy.display_name || humanizeSlug(lastPolicy.plan_name)}
             </h3>
           </div>
-          <span className="pill badge-warning">{t("dashboard.expiredGate.expired")}</span>
+          <span className="rounded-full bg-amber-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/20">
+            {t("dashboard.expiredGate.expired")}
+          </span>
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="panel-quiet rounded-[24px] p-4">
-            <p className="text-sm text-on-surface-variant">{t("dashboard.expiredGate.premium_was")}</p>
-            <p className="mt-2 text-xl font-bold text-primary">
-              {formatCurrency(lastPolicy.weekly_premium)}/week
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-2xl bg-slate-50 p-5 dark:bg-white/5 shadow-glass-inset">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t("dashboard.expiredGate.premium_was")}</p>
+            <p className="mt-2 text-xl font-black text-slate-900 dark:text-white">
+              {formatCurrency(lastPolicy.weekly_premium)}<span className="text-xs font-bold text-slate-400">/wk</span>
             </p>
           </div>
-          <div className="panel-quiet rounded-[24px] p-4">
-            <p className="text-sm text-on-surface-variant">{t("dashboard.expiredGate.coverage_cap")}</p>
-            <p className="mt-2 text-xl font-bold text-primary">
+          <div className="rounded-2xl bg-slate-50 p-5 dark:bg-white/5 shadow-glass-inset">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t("dashboard.expiredGate.coverage_cap")}</p>
+            <p className="mt-2 text-xl font-black text-slate-900 dark:text-white">
               {formatCurrency(lastPolicy.coverage_cap)}
             </p>
           </div>
-          <div className="panel-quiet rounded-[24px] p-4">
-            <p className="text-sm text-on-surface-variant">{t("dashboard.expiredGate.expired_on")}</p>
-            <p className="mt-2 text-sm font-semibold text-primary">
-              {formatDateTime(lastPolicy.expired_at)}
+          <div className="rounded-2xl bg-slate-50 p-5 dark:bg-white/5 shadow-glass-inset text-center sm:text-left">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t("dashboard.expiredGate.expired_on")}</p>
+            <p className="mt-2 text-[13px] font-bold text-slate-700 dark:text-slate-300">
+              {formatDateTime(lastPolicy.expired_at).split(',')[0]}
             </p>
           </div>
         </div>
         <button
           type="button"
-          className="button-primary mt-6 w-full"
+          className="button-primary mt-8 w-full !rounded-xl h-14"
           disabled={purchasing}
           onClick={handleRenew}
         >
@@ -196,11 +205,11 @@ function ExpiredGate({ workerId, lastPolicy, onPurchased }) {
         </button>
       </div>
 
-      <p className="text-center text-sm text-on-surface-variant">
+      <p className="text-center text-sm font-medium text-slate-500">
         {t("dashboard.expiredGate.want_different")}{" "}
         <button
           type="button"
-          className="font-semibold text-primary underline"
+          className="font-bold text-teal-600 hover:underline dark:text-teal-400"
           onClick={() => window.location.reload()}
         >
           {t("dashboard.expiredGate.view_all")}
@@ -317,6 +326,7 @@ export default function Dashboard() {
     }
     return t("dashboard.narrative.waiting");
   }, [latestPayout, approvedClaims, t]);
+  
   const latestPayoutState =
     latestPayout?.status === "failed"
       ? t("dashboard.payoutState.failed")
@@ -330,25 +340,27 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 animate-pulse">
         <section className="mb-6 flex items-end justify-between gap-6">
           <div>
-            <SkeletonBlock className="mb-2 h-4 w-32" />
-            <SkeletonBlock className="h-10 w-64" />
+            <div className="mb-2 h-4 w-32 rounded bg-slate-200 dark:bg-white/10" />
+            <div className="h-10 w-64 rounded bg-slate-200 dark:bg-white/10" />
           </div>
-          <SkeletonBlock className="h-10 w-24 rounded-full" />
+          <div className="h-10 w-24 rounded-full bg-slate-200 dark:bg-white/10" />
         </section>
-        <div className="hero-glow hero-mesh rounded-[32px] p-8 scale-pop">
-          <SkeletonBlock className="mb-6 h-6 w-32 rounded-full" />
-          <SkeletonBlock className="mb-4 h-12 w-3/4 max-w-2xl" />
-          <SkeletonText lines={2} className="max-w-xl text-white/50" />
-          <div className="mt-8 grid gap-4 grid-cols-12">
-            <SkeletonBlock className="col-span-12 sm:col-span-7 h-32 rounded-[22px]" />
-            <SkeletonBlock className="col-span-12 sm:col-span-5 h-32 rounded-[22px]" />
-            <SkeletonBlock className="col-span-12 h-32 rounded-[22px]" />
-          </div>
+        <div className="glass-hero p-8">
+           <div className="mb-6 h-6 w-32 rounded-full bg-white/20" />
+           <div className="mb-4 h-12 w-3/4 max-w-2xl rounded bg-white/20" />
+           <div className="space-y-2 max-w-xl">
+             <div className="h-4 w-full rounded bg-white/10" />
+             <div className="h-4 w-2/3 rounded bg-white/10" />
+           </div>
+           <div className="mt-8 grid gap-4 grid-cols-12">
+             <div className="col-span-12 sm:col-span-7 h-32 rounded-3xl bg-white/10" />
+             <div className="col-span-12 sm:col-span-5 h-32 rounded-3xl bg-white/10" />
+             <div className="col-span-12 h-32 rounded-3xl bg-white/10" />
+           </div>
         </div>
-        <SkeletonBlock className="h-48 w-full rounded-[32px]" />
       </div>
     );
   }
@@ -359,9 +371,9 @@ export default function Dashboard() {
 
   if (!worker) {
     return (
-      <div className="panel p-8">
-        <p className="text-xl font-bold">{t("dashboard.states.worker_not_found")}</p>
-        <button type="button" className="button-secondary mt-4" onClick={() => navigate("/auth")}>
+      <div className="panel p-8 text-center max-w-md mx-auto mt-20">
+        <p className="text-xl font-bold text-slate-900 dark:text-white">{t("dashboard.states.worker_not_found")}</p>
+        <button type="button" className="button-secondary mt-6 !rounded-xl" onClick={() => navigate("/auth")}>
           {t("dashboard.states.back_to_sign_in")}
         </button>
       </div>
@@ -373,7 +385,6 @@ export default function Dashboard() {
 
   if (!hasPolicy) {
     const lastExpired = policyState?.last_expired_policy;
-
     if (lastExpired) {
       return (
         <ExpiredGate
@@ -383,7 +394,6 @@ export default function Dashboard() {
         />
       );
     }
-
     return <FirstTimeGate workerId={effectiveWorkerId} onPurchased={() => load()} />;
   }
 
@@ -391,199 +401,247 @@ export default function Dashboard() {
   const nearbyAlerts = workerEvents.slice(0, 2);
 
   return (
-    <div className="space-y-6">
-      <section className="mb-6 flex items-end justify-between gap-6">
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Header with quick actions */}
+      <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
         <div>
-          <div className="mb-2 flex items-center gap-2 text-sm text-on-surface-variant">
-            <MapPin size={16} />
+          <div className="mb-2 flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-slate-400">
+            <MapPin size={14} className="text-teal-500" />
             <span>
-              {humanizeSlug(worker.city)} - {worker.zone ? humanizeSlug(worker.zone) : t("dashboard.no_zone")}
+              {humanizeSlug(worker.city)} • {worker.zone ? humanizeSlug(worker.zone) : t("dashboard.no_zone")}
             </span>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-primary">{t("dashboard.title")}</h1>
+          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">{t("dashboard.title")}</h1>
         </div>
-        <button type="button" className="button-secondary !rounded-full !py-2" onClick={load}>
-          <RefreshCcw size={16} />
+        <button type="button" className="button-secondary group !rounded-xl !px-5 !py-2.5 shadow-glass-ring transition-all hover:-translate-y-0.5" onClick={load}>
+          <RefreshCcw size={16} className="group-active:animate-spin" />
           {t("dashboard.states.refresh")}
         </button>
       </section>
 
-      {/* Hero card — full width */}
-      <div className="hero-glow hero-mesh rounded-[32px] p-8 scale-pop">
-        <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white/80 backdrop-blur-sm">
-          <ShieldCheck size={14} />
-          {t("dashboard.hero.zero_touch")}
-        </div>
-        <h2 className="mt-6 max-w-2xl text-5xl font-bold leading-tight">
-          {t("dashboard.hero.greeting", { name: worker.name })}
-        </h2>
-        <p className="mt-4 max-w-xl text-base leading-8 text-white/78">
-          {t("dashboard.hero.description")}
-        </p>
+      {/* Hero card section */}
+      <div className="glass-hero p-8 perspective-scene relative overflow-hidden">
+        {/* Abstract background elements */}
+        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[600px] h-[600px] bg-teal-500/10 blur-[120px] rounded-full pointer-events-none" />
+        
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-[11px] font-black uppercase tracking-[0.24em] text-white/90 backdrop-blur-xl ring-1 ring-white/10">
+            <ShieldCheck size={14} className="text-teal-400" />
+            {t("dashboard.hero.zero_touch")}
+          </div>
+          <h2 className="mt-8 max-w-2xl text-4xl font-black leading-[1.1] text-white sm:text-5xl">
+            {t("dashboard.hero.greeting", { name: worker.name })}
+          </h2>
+          <p className="mt-5 max-w-xl text-lg font-medium text-white/70 leading-relaxed">
+            {t("dashboard.hero.description")}
+          </p>
 
-        <div className="mt-8 grid gap-4 grid-cols-12">
-          <div className="col-span-12 sm:col-span-7 rounded-[22px] border-b-4 border-emerald-600 bg-white/10 p-6 transition-smooth hover:bg-white/15 backdrop-blur-sm">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">{t("dashboard.stats.approved_claims")}</p>
-            <p className="mt-4 text-5xl font-extrabold">{approvedClaims}</p>
-            <p className="mt-2 text-xs text-white/60">{t("dashboard.stats.of_total_claims", { count: totalClaims })}</p>
-          </div>
-          <div className="col-span-12 sm:col-span-5 rounded-[22px] border-b-4 border-amber-500 bg-white/10 p-6 transition-smooth hover:bg-white/15 backdrop-blur-sm">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">{t("dashboard.stats.total_payouts")}</p>
-            <p className="mt-4 text-4xl font-extrabold">{formatCurrency(payouts?.total_amount)}</p>
-          </div>
-          <div className="col-span-12 rounded-[22px] border-b-4 border-blue-400 bg-white/10 p-6 transition-smooth hover:bg-white/15 backdrop-blur-sm">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">{t("dashboard.stats.coverage_window")}</p>
-            <p className="mt-4 text-2xl font-extrabold">{t("dashboard.stats.claims_tracked", { count: totalClaims })}</p>
-            <p className="mt-2 text-xs text-white/60">{t("dashboard.stats.latest_30_days")}</p>
+          <div className="mt-10 grid gap-6 grid-cols-12">
+            <div className="col-span-12 sm:col-span-7 group rounded-3xl border border-white/10 bg-white/5 p-7 backdrop-blur-xl transition-all hover:bg-white/10 shadow-glass-inset">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-white/50">{t("dashboard.stats.approved_claims")}</p>
+              <p className="mt-5 text-6xl font-black text-white group-hover:scale-110 transition-transform origin-left">{approvedClaims}</p>
+              <p className="mt-3 text-sm font-bold text-white/40">{t("dashboard.stats.of_total_claims", { count: totalClaims })}</p>
+            </div>
+            <div className="col-span-12 sm:col-span-5 group rounded-3xl border border-white/10 bg-white/5 p-7 backdrop-blur-xl transition-all hover:bg-white/10 shadow-glass-inset">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-white/50">{t("dashboard.stats.total_payouts")}</p>
+              <p className="mt-5 text-4xl font-black text-white">{formatCurrency(payouts?.total_amount)}</p>
+              <div className="mt-3 h-1 w-full rounded-full bg-white/5 overflow-hidden">
+                <div className="h-full bg-teal-400 w-2/3 shadow-glow-cyan" />
+              </div>
+            </div>
+            <div className="col-span-12 group rounded-3xl border border-white/10 bg-white/5 p-7 backdrop-blur-xl transition-all hover:bg-white/10 shadow-glass-inset">
+               <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-white/50">{t("dashboard.stats.coverage_window")}</p>
+                  <p className="mt-5 text-2xl font-black text-white">{t("dashboard.stats.claims_tracked", { count: totalClaims })}</p>
+                  <p className="mt-2 text-sm font-bold text-white/40">{t("dashboard.stats.latest_30_days")}</p>
+                </div>
+                <div className="h-16 w-32 hidden sm:block">
+                  {/* Subtle abstract sparkline effect */}
+                  <div className="flex items-end gap-1.5 h-full">
+                    {[3, 5, 4, 7, 5, 8, 6, 9].map((h, i) => (
+                      <div key={i} className="flex-1 bg-white/20 rounded-t-sm transition-all hover:bg-teal-400" style={{ height: `${h * 10}%` }} />
+                    ))}
+                  </div>
+                </div>
+               </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Decision Panel — full width */}
-      <DecisionPanel claim={urgentClaim} narrative={coverageNarrative} />
+      {/* Main Grid Layout */}
+      <div className="grid gap-8 xl:grid-cols-[1.18fr_0.82fr]">
+        <div className="space-y-8">
+          {/* Decision Panel */}
+          <DecisionPanel claim={urgentClaim} narrative={coverageNarrative} />
 
-      {/* Claim Detail — collapsible full width */}
-      {urgentClaim && (
-        <div className="context-panel overflow-hidden rounded-[28px]">
-          <button
-            type="button"
-            className="flex w-full items-center justify-between px-6 py-4 text-left transition-smooth hover:bg-surface-container"
-            onClick={() => setClaimDetailOpen(!claimDetailOpen)}
-          >
-            <div className="flex items-center gap-3">
-              <p className="eyebrow !mb-0">{t("dashboard.detail.title")}</p>
-              <span className="text-sm text-on-surface-variant">
-                {humanizeSlug(urgentClaim.trigger_type || "incident")} — {humanizeSlug(urgentClaim.status)}
-              </span>
-            </div>
-            {claimDetailOpen ? <ChevronUp size={18} className="text-on-surface-variant" /> : <ChevronDown size={18} className="text-on-surface-variant" />}
-          </button>
-          {claimDetailOpen && (
-            <div className="border-t border-outline-variant/20 px-0">
-              <ClaimDetailPanel claim={urgentClaim} />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Active Policy — full width */}
-      <ActivePolicyCard policy={policyState?.active_policy} pendingPolicy={policyState?.pending_policy} />
-
-      {/* Active Incidents + Coverage Outlook — side by side */}
-      <div className="grid items-start gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <EventPanel events={workerEvents} />
-        <RiskScoreCard workerId={effectiveWorkerId} />
-      </div>
-
-      {/* Claims History + Payout History — side by side */}
-      <div className="grid items-start gap-6 xl:grid-cols-2">
-        <div className="context-panel card-secondary p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <div>
-              <p className="eyebrow">{t("dashboard.history.eyebrow")}</p>
-              <h3 className="mt-2 text-2xl font-bold text-primary">{t("dashboard.history.title")}</h3>
-            </div>
-            {urgentClaim?.id ? (
+          {/* Claim Detail (Collapsible) */}
+          {urgentClaim && (
+            <div className="glass-card-3d overflow-hidden !p-0">
               <button
                 type="button"
-                className="button-secondary !rounded-full !py-2"
-                onClick={() => {
-                  setSelectedClaim(urgentClaim);
-                  setClaimDetailOpen(true);
-                }}
+                className="flex w-full items-center justify-between px-8 py-5 text-left transition-all hover:bg-slate-50 dark:hover:bg-white/5"
+                onClick={() => setClaimDetailOpen(!claimDetailOpen)}
               >
-                <ArrowDownRight size={16} />
-                {t("dashboard.history.focus_claim")}
-              </button>
-            ) : null}
-          </div>
-          <ClaimList claims={claims?.claims || []} onSelect={(claim) => { setSelectedClaim(claim); setClaimDetailOpen(true); }} />
-        </div>
-
-        <PayoutHistory data={payouts} />
-      </div>
-
-      {/* Payout + Protection status + Trust */}
-      <div className="grid gap-6 grid-cols-12">
-        <div className="col-span-12 md:col-span-7 context-panel p-6 border-accent-left border-accent-success">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <p className="eyebrow">{t("dashboard.payout.eyebrow")}</p>
-              <p className="mt-4 text-5xl font-bold text-primary">
-                {latestPayout ? formatCurrency(latestPayout.amount) : "INR 0"}
-              </p>
-            </div>
-            <div className="mt-1 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100/50">
-              <Wallet size={20} className="text-emerald-700" />
-            </div>
-          </div>
-          <p className="mt-4 text-sm text-on-surface-variant">{latestPayoutState}</p>
-        </div>
-        <div className="col-span-12 md:col-span-5 context-panel p-6 border-accent-left border-accent-warning">
-          <p className="eyebrow">{t("dashboard.status.eyebrow")}</p>
-          <div className="mt-4 flex items-center gap-3">
-            <span
-              className={`pill ${policyState?.active_policy ? "badge-active" : "badge-pending"
-                }`}
-            >
-              <span
-                className={`mr-2 inline-block h-2 w-2 rounded-full ${policyState?.active_policy ? "bg-emerald-500" : "bg-amber-500"
-                  }`}
-              />
-              {policyState?.active_policy ? t("dashboard.status.active") : t("dashboard.status.pending")}
-            </span>
-          </div>
-          <p className="mt-3 text-sm text-on-surface-variant">{t("dashboard.status.aware")}</p>
-        </div>
-        <div className="col-span-12 context-panel p-6 pulse-glow">
-          <p className="eyebrow">{t("dashboard.trust.eyebrow")}</p>
-          <div className="mt-4">
-            <TrustScoreGauge score={worker.trust_score} />
-          </div>
-        </div>
-      </div>
-
-      {/* Zone Pressure — compact, secondary */}
-      {nearbyAlerts.length > 0 && (
-        <div className="context-panel p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <p className="eyebrow !mb-0">{t("dashboard.alerts.eyebrow")}</p>
-              <TrustBadge score={worker.trust_score} />
-            </div>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {nearbyAlerts.map((event) => {
-              const disruptionLevel = Number(event.disruption_score || 0);
-              const tone = getDisruptionTone(disruptionLevel);
-              return (
-                <div
-                  key={event.id}
-                  className={`rounded-[16px] border-l-2 p-3 text-sm opacity-90 transition-smooth hover:shadow-md ${tone.border}`}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-medium text-on-surface">
-                      {(event.metadata_json?.fired_triggers || [event.event_type]).map(humanizeSlug).join(", ")}
+                <div className="flex items-center gap-4">
+                  <div className="rounded-xl bg-primary/10 p-2 text-primary">
+                    <Sparkles size={18} />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">{t("dashboard.detail.title")}</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
+                      {humanizeSlug(urgentClaim.trigger_type || "incident")} — {humanizeSlug(urgentClaim.status)}
                     </p>
-                    <span className="text-xs font-bold text-on-surface">
-                      {Math.round(disruptionLevel * 100)}%
-                    </span>
                   </div>
-                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-container-high">
-                    <div
-                      className={`h-full rounded-full transition-all ${tone.progress}`}
-                      style={{ width: `${Math.max(12, Math.round(disruptionLevel * 100))}%` }}
-                    />
-                  </div>
-                  <p className="mt-2 text-xs leading-5 text-on-surface-variant">
-                    {humanizeSlug(event.zone)} {t("dashboard.alerts.signal_strength", { score: disruptionLevel.toFixed(2) })}
+                </div>
+                <div className="rounded-full bg-slate-100 p-2 dark:bg-white/10 transition-transform duration-300" style={{ transform: claimDetailOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                   <ChevronDown size={18} className="text-slate-500 dark:text-slate-400" />
+                </div>
+              </button>
+              <div className={`transition-all duration-500 ease-in-out ${claimDetailOpen ? "max-h-[2000px] border-t border-slate-100 dark:border-white/5 opacity-100" : "max-h-0 opacity-0"}`}>
+                <div className="p-2 sm:p-4">
+                  <ClaimDetailPanel claim={urgentClaim} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Stats Multi-Card Grid */}
+          <div className="grid gap-6 grid-cols-12 perspective-scene">
+            <div className="col-span-12 md:col-span-7 glass-card-3d p-8 relative overflow-hidden">
+               {/* Vertical accent */}
+              <div className="absolute left-0 top-1/4 bottom-1/4 w-[4px] bg-emerald-500 rounded-r-full shadow-glow-cyan" />
+              
+              <div className="flex items-start justify-between gap-6">
+                <div className="flex-1">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">{t("dashboard.payout.eyebrow")}</p>
+                  <p className="mt-5 text-6xl font-black text-slate-950 dark:text-white tracking-tighter">
+                    {latestPayout ? formatCurrency(latestPayout.amount) : "₹0"}
+                  </p>
+                  <p className="mt-4 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    {latestPayoutState}
                   </p>
                 </div>
-              );
-            })}
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500 shadow-glass-inset">
+                  <Wallet size={24} />
+                </div>
+              </div>
+            </div>
+
+            <div className="col-span-12 md:col-span-5 glass-card-3d p-8 flex flex-col justify-between">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">{t("dashboard.status.eyebrow")}</p>
+                <div className="mt-5 flex items-center gap-3">
+                  <div className={`flex items-center gap-2.5 rounded-full px-4 py-2 text-[12px] font-black uppercase tracking-widest bg-opacity-10 ring-1 ring-inset ${
+                    policyState?.active_policy 
+                      ? "bg-emerald-500 text-emerald-600 ring-emerald-500/20" 
+                      : "bg-amber-500 text-amber-600 ring-amber-500/20"
+                  }`}>
+                    <div className={`h-2.5 w-2.5 rounded-full ${policyState?.active_policy ? "bg-emerald-500 shadow-glow-cyan" : "bg-amber-500 shadow-glow-amber"}`} />
+                    {policyState?.active_policy ? t("dashboard.status.active") : t("dashboard.status.pending")}
+                  </div>
+                </div>
+              </div>
+              <p className="mt-6 text-xs font-bold text-slate-400 leading-relaxed uppercase tracking-tighter">{t("dashboard.status.aware")}</p>
+            </div>
+
+            <div className="col-span-12 glass-card-3d p-8">
+              <div className="flex items-center justify-between mb-8">
+                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">{t("dashboard.trust.eyebrow")}</p>
+                <div className="flex items-center gap-1 bg-teal-500/5 px-2 py-1 rounded text-[10px] font-black text-teal-600">
+                   <ShieldCheck size={12} />
+                   PROTECTED
+                </div>
+              </div>
+              <TrustScoreGauge score={worker.trust_score} />
+            </div>
           </div>
+
+          {/* History Sections */}
+          <div className="glass-card-3d p-8 relative">
+            <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">{t("dashboard.history.eyebrow")}</p>
+                <h3 className="mt-2 text-2xl font-black text-slate-900 dark:text-white">{t("dashboard.history.title")}</h3>
+              </div>
+              {urgentClaim?.id ? (
+                <button
+                  type="button"
+                  className="button-secondary !rounded-xl !px-4 !py-2.5 shadow-glass-inset text-[13px]"
+                  onClick={() => {
+                    setSelectedClaim(urgentClaim);
+                    setClaimDetailOpen(true);
+                  }}
+                >
+                  <ArrowDownRight size={16} />
+                  {t("dashboard.history.focus_claim")}
+                </button>
+              ) : null}
+            </div>
+            <ClaimList claims={claims?.claims || []} onSelect={(claim) => { setSelectedClaim(claim); setClaimDetailOpen(true); }} />
+          </div>
+
+          <PayoutHistory data={payouts} />
         </div>
-      )}
+
+        <aside className="space-y-8">
+          <ActivePolicyCard policy={policyState?.active_policy} pendingPolicy={policyState?.pending_policy} />
+          
+          <RiskScoreCard workerId={effectiveWorkerId} />
+
+          {/* Disruption Feed / Alerts */}
+          <div className="glass-card-3d p-8">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">{t("dashboard.alerts.eyebrow")}</p>
+                <h3 className="mt-2 text-xl font-bold text-slate-900 dark:text-white">Live Zone Pressure</h3>
+              </div>
+              <TrustBadge score={worker.trust_score} />
+            </div>
+            
+            {nearbyAlerts.length > 0 ? (
+              <div className="space-y-4">
+                {nearbyAlerts.map((event) => {
+                  const disruptionLevel = Number(event.disruption_score || 0);
+                  const tone = getDisruptionTone(disruptionLevel);
+                  return (
+                    <div
+                      key={event.id}
+                      className={`group rounded-2xl border-l-4 p-5 transition-all hover:bg-slate-50 dark:hover:bg-white/5 shadow-glass-ring ${tone.border}`}
+                    >
+                      <div className="flex items-center justify-between gap-3 mb-4">
+                        <p className="text-[13px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter">
+                          {(event.metadata_json?.fired_triggers || [event.event_type]).map(humanizeSlug).join(", ")}
+                        </p>
+                        <span className="text-xs font-black text-slate-500">
+                          {Math.round(disruptionLevel * 100)}%
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
+                        <div
+                          className={`h-full rounded-full shadow-sm transition-all duration-1000 ${tone.progress}`}
+                          style={{ width: `${Math.max(12, Math.round(disruptionLevel * 100))}%` }}
+                        />
+                      </div>
+                      <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                        {humanizeSlug(event.zone)} • {t("dashboard.alerts.signal_strength", { score: disruptionLevel.toFixed(2) })}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="rounded-3xl border-2 border-dashed border-slate-200 p-10 text-center dark:border-white/10">
+                <p className="text-sm font-medium text-slate-500">No nearby disruptions active in your zone.</p>
+              </div>
+            )}
+          </div>
+
+          <EventPanel events={workerEvents} />
+        </aside>
+      </div>
     </div>
   );
 }

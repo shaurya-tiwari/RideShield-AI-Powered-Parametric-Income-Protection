@@ -10,10 +10,11 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      en: { translation: enCommon },
-      hi: { translation: hiCommon },
+      en: { common: enCommon, translation: enCommon },
+      hi: { common: hiCommon, translation: hiCommon },
     },
     fallbackLng: "en",
+    defaultNS: "translation",
     interpolation: {
       escapeValue: false, // React already does escaping
     },

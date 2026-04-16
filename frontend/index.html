@@ -7,13 +7,26 @@
       name="description"
       content="RideShield - Parametric AI insurance for gig delivery workers. Zero-touch claims, multi-signal fraud detection, and instant income protection."
     />
-    <meta name="theme-color" content="#0b1326" />
+    <meta name="theme-color" content="#FAFAFA" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="icon" type="image/png" href="/logo.png" />
     <title>RideShield</title>
   </head>
-  <body style="background-color:#0b1326">
+  <script>
+    (function(){
+      var t = localStorage.getItem('rideshield-theme');
+      var d = document.documentElement;
+      var prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+      if (t === 'dark' || (t !== 'light' && !prefersLight)) {
+        d.classList.add('dark');
+        document.body && (document.body.style.background = '#09090B');
+      } else {
+        d.classList.remove('dark');
+      }
+    })();
+  </script>
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

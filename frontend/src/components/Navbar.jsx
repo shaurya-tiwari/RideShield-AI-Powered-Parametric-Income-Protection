@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { LogOut, Menu, Sparkles, X, Languages } from "lucide-react";
+import { LogOut, Menu, Shield, X, Languages } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { useAuth } from "../auth/AuthContext";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar({ session }) {
   const navigate = useNavigate();
@@ -22,115 +23,150 @@ export default function Navbar({ session }) {
     }
   }
 
-  const navItems = session?.session?.role === "admin"
-    ? [
-        { to: "/intelligence", label: "Intelligence" },
-        { to: "/demo", label: "Demo Runner" },
-        { to: "/lab", label: "Scenario Lab" },
-        { to: "/admin", label: "Admin" },
+  const navItems =
+    session?.role === "admin"
+      ? [
+        { to: "/intelligence", label: t("appFrame.intelligence", { defaultValue: "Intelligence" }) },
+        { to: "/demo",         label: t("appFrame.demo_runner",   { defaultValue: "Demo Runner" }) },
+        { to: "/lab",          label: t("appFrame.scenario_lab",  { defaultValue: "Scenario Lab" }) },
+        { to: "/admin",        label: t("appFrame.admin_panel",   { defaultValue: "Admin" }) },
       ]
-    : [
-        { to: "/how-it-works", label: "How It Works" },
-        { to: "/onboarding", label: "Onboarding" },
-        ...(session?.session?.role === "worker" ? [{ to: "/dashboard", label: "Dashboard" }] : []),
+      : [
+        { to: "/how-it-works", label: t("nav.how_it_works", { defaultValue: "How It Works" }) },
+        { to: "/onboarding",   label: t("nav.onboarding", { defaultValue: "Onboarding" }) },
+        ...(session?.role === "worker"
+          ? [{ to: "/dashboard", label: t("dashboard.title", { defaultValue: "Dashboard" }) }]
+          : []),
       ];
 
+  const navLinkClass = ({ isActive }) =>
+    `rounded-lg px-3.5 py-2 text-[13px] font-semibold transition-all duration-200 ${
+      isActive ? "active-nav-link" : "inactive-nav-link"
+    }`;
+
   return (
-    <header className="sticky top-0 z-20 mb-10 pt-5">
-      <div className="glass-strip rounded-[30px] px-5 py-4">
-        <div className="flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-[18px] bg-white shadow-sm">
-              <img src="/logo.png" alt="RideShield AI logo" className="h-full w-full object-contain" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-on-surface-variant">RideShield</p>
-              <p className="text-lg font-bold text-primary">Income protection engine</p>
-            </div>
-          </Link>
+    <header className="sticky top-0 z-20 mb-8 pt-4">
+      {/* Main bar — solid light / glass dark */}
+      <div
+        className="flex h-16 items-center justify-between rounded-xl px-5 glass-strip"
+      >
+        {/* Brand */}
+        <Link to="/" className="flex items-center shrink-0 group">
+          <img src="/logo.png" alt="RideShield Logo" className="h-[52px] w-auto object-contain transition-transform duration-200 group-hover:scale-105" />
+        </Link>
 
-          <nav className="hidden items-center gap-2 md:flex">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `rounded-[18px] px-4 py-2 text-sm font-semibold transition ${
-                    isActive ? "bg-primary text-on-primary" : "text-on-surface-variant hover:bg-white/[0.06]"
-                  }`
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
+        {/* Desktop nav */}
+        <nav className="hidden items-center gap-1 md:flex">
+          {navItems.map((item) => (
+            <NavLink key={item.to} to={item.to} className={navLinkClass}>
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
 
-          <div className="hidden items-center gap-3 lg:flex">
-            <button
-              type="button"
-              onClick={handleToggleLang}
-              className="flex items-center gap-2 rounded-full bg-surface-container-high px-4 py-2 text-sm font-bold text-on-surface-variant transition hover:bg-surface-container-highest"
-              title="Switch language"
-            >
-              <Languages size={16} />
-              {t("general.lang_toggle", { defaultValue: "EN / HI" })}
-            </button>
-            <div className="items-center gap-2 rounded-full px-3 py-2 text-sm font-medium lg:flex" style={{ background: "rgba(0, 53, 48, 0.4)", color: "#69f8e9" }}>
-              <Sparkles size={16} />
-              <span>{session?.session ? `${session.session.role}: ${session.session.name || session.session.username}` : "Monitoring ready"}</span>
-            </div>
-            {session ? (
-              <button type="button" onClick={handleLogout} className="button-secondary !rounded-xl !px-3 !py-2 text-sm">
-                <LogOut size={16} />
-                {t("appFrame.sign_out")}
-              </button>
-            ) : null}
-          </div>
-
+        {/* Right controls */}
+        <div className="hidden items-center gap-2 lg:flex">
+          {/* Language toggle */}
           <button
             type="button"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-surface-container-high text-on-surface md:hidden"
-            onClick={() => setMenuOpen((value) => !value)}
-            aria-label={menuOpen ? "Close navigation" : "Open navigation"}
+            onClick={handleToggleLang}
+            className="flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200"
+            style={{ background: "var(--rs-elevated)", border: "1px solid var(--rs-border)", color: "var(--rs-text-secondary)" }}
+            title="Switch language"
           >
-            {menuOpen ? <X size={18} /> : <Menu size={18} />}
+            <Languages size={14} />
           </button>
-        </div>
 
-        {menuOpen ? (
-          <div className="mt-4 space-y-2 border-t border-white/10 pt-4 md:hidden">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                onClick={() => setMenuOpen(false)}
-                className={({ isActive }) =>
-                  `block rounded-[18px] px-4 py-3 text-sm font-semibold ${isActive ? "bg-primary text-on-primary" : "text-on-surface-variant"}`
-                }
+          <ThemeToggle />
+
+          {session && (
+            <>
+              <div className="mx-1 h-4 w-px" style={{ background: "var(--rs-border)" }} />
+              <span
+                className="rounded-full px-2.5 py-1 text-xs font-medium"
+                style={{ background: "var(--rs-elevated)", border: "1px solid var(--rs-border)", color: "var(--rs-text-secondary)" }}
               >
-                {item.label}
-              </NavLink>
-            ))}
-            <button
-              type="button"
-              onClick={() => {
-                handleToggleLang();
-                setMenuOpen(false);
-              }}
-              className="flex w-full items-center justify-start gap-3 rounded-[18px] bg-surface-container-high px-4 py-3 text-sm font-semibold text-on-surface-variant"
-            >
-              <Languages size={16} />
-              {t("general.lang_toggle", { defaultValue: "EN / HI" })}
-            </button>
-            {session ? (
-              <button type="button" onClick={handleLogout} className="button-secondary w-full justify-start mt-2">
-                <LogOut size={16} />
+                {session.role} · {session.name ?? session.username}
+              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-all duration-200"
+                style={{ color: "var(--rs-text-secondary)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--rs-elevated)"; e.currentTarget.style.color = "var(--rs-text-primary)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--rs-text-secondary)"; }}
+              >
+                <LogOut size={13} />
                 {t("appFrame.sign_out")}
               </button>
-            ) : null}
-          </div>
-        ) : null}
+            </>
+          )}
+        </div>
+
+        {/* Mobile controls */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <button
+            type="button"
+            onClick={handleToggleLang}
+            className="flex h-9 w-9 items-center justify-center rounded-lg"
+            style={{ background: "var(--rs-elevated)", border: "1px solid var(--rs-border)", color: "var(--rs-text-secondary)" }}
+          >
+            <Languages size={14} />
+          </button>
+          <ThemeToggle />
+          <button
+            type="button"
+            className="flex h-9 w-9 items-center justify-center rounded-lg md:hidden"
+            style={{ background: "var(--rs-elevated)", border: "1px solid var(--rs-border)", color: "var(--rs-text-secondary)" }}
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-nav"
+          >
+            {menuOpen ? <X size={15} /> : <Menu size={15} />}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile dropdown */}
+      {menuOpen && (
+        <div
+          id="mobile-nav"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Site navigation"
+          className="mt-1 rounded-xl p-2 md:hidden"
+          style={{ background: "var(--rs-surface)", border: "1px solid var(--rs-border)", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}
+        >
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={() => setMenuOpen(false)}
+              className={navLinkClass}
+              style={{ display: "block" }}
+            >
+              {item.label}
+            </NavLink>
+          ))}
+          {session && (
+            <div className="mt-1 pt-1" style={{ borderTop: "1px solid var(--rs-border)" }}>
+              <div className="px-3 py-2 text-xs" style={{ color: "var(--rs-text-secondary)" }}>
+                {session.role} · {session.name ?? session.username}
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all"
+                style={{ color: "var(--rs-text-secondary)" }}
+              >
+                <LogOut size={14} />
+                {t("appFrame.sign_out")}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </header>
   );
 }

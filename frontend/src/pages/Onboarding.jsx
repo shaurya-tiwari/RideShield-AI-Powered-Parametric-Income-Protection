@@ -335,7 +335,7 @@ export default function Onboarding() {
         }
         setPlanCatalogError(
           error.response?.data?.detail ||
-            t("onboarding.errors.plan_catalog"),
+          t("onboarding.errors.plan_catalog"),
         );
       } finally {
         if (active) {
@@ -367,7 +367,7 @@ export default function Onboarding() {
     } catch (error) {
       toast.error(
         error.response?.data?.detail ||
-          t("onboarding.errors.login_failed"),
+        t("onboarding.errors.login_failed"),
       );
     } finally {
       setLoading(false);
@@ -471,7 +471,7 @@ export default function Onboarding() {
               </p>
             </div>
           </div>
-          
+
           <div className="mt-6 flex flex-wrap gap-3">
             <button
               type="button"
@@ -511,24 +511,31 @@ export default function Onboarding() {
       />
 
       <div className="context-panel p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap gap-3">
-            {steps.map((item, index) => (
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex-1 w-full max-w-3xl">
+            <div className="flex gap-2 sm:gap-3 w-full">
+              {steps.map((item, index) => (
+                <div
+                  key={item.id}
+                  className={`pill flex-1 flex items-center justify-center text-center text-xs sm:text-sm font-semibold transition-colors duration-300 ${index <= stepIndex ? "bg-primary text-white shadow-md shadow-primary/20" : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container"}`}
+                >
+                  {t(`onboarding.steps.${item.id}`)}
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-surface-container-low">
               <div
-                key={item.id}
-                className={`pill ${index <= stepIndex ? "bg-primary text-white" : "bg-surface-container-low text-on-surface-variant"}`}
-              >
-                {t(`onboarding.steps.${item.id}`)}
-              </div>
-            ))}
+                className="h-full rounded-full transition-all duration-700 ease-out"
+                style={{ width: progressWidth, background: "var(--rs-accent)" }}
+              />
+            </div>
           </div>
-          <p className="text-sm text-on-surface-variant">{summaryLine}</p>
-        </div>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-container-low">
-          <div
-            className="h-full rounded-full bg-primary transition-all"
-            style={{ width: progressWidth }}
-          />
+          {form.city && form.platform ? (
+            <div className="shrink-0 lg:text-right hidden sm:block">
+              <p className="text-sm font-bold uppercase tracking-widest text-on-surface-variant mb-1">{t("onboarding.form.identity")}</p>
+              <p className="text-[13px] font-medium text-on-surface-variant opacity-80">{summaryLine}</p>
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -626,7 +633,7 @@ export default function Onboarding() {
                         required
                       />
                       {touched.confirm_password &&
-                      validationErrors.confirm_password ? (
+                        validationErrors.confirm_password ? (
                         <p className="mt-2 text-sm text-rose-700">
                           {t(validationErrors.confirm_password)}
                         </p>
@@ -1023,7 +1030,7 @@ export default function Onboarding() {
                   {t("onboarding.footer.selected")}{" "}
                   {selectedPlanData
                     ? selectedPlanData.display_name ||
-                      humanizeSlug(selectedPlanData.plan_name)
+                    humanizeSlug(selectedPlanData.plan_name)
                     : t("onboarding.footer.none")}
                 </p>
                 {selectedPlanData ? (

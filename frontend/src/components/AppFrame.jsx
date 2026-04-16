@@ -1,47 +1,26 @@
-import { useState, useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { BrainCircuit, FlaskConical, LayoutDashboard, LogOut, Menu, PlaySquare, Settings, ShieldCheck, Siren, Sparkles, X } from "lucide-react";
-import NotificationBell from "./NotificationBell";
-
+import { Bell, BrainCircuit, LayoutDashboard, LogOut, PlaySquare, Settings, Shield, ShieldCheck, Siren, Sparkles, FlaskConical } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
 import toast from "react-hot-toast";
-import { useTranslation } from "react-i18next";
 
 const workerNav = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/dashboard", labelKey: "dashboard.title", icon: LayoutDashboard },
 ];
 
 const adminNav = [
-  { to: "/admin", label: "Admin Panel", icon: ShieldCheck },
-  { to: "/demo", label: "Demo Runner", icon: PlaySquare },
-  { to: "/lab", label: "Scenario Lab", icon: FlaskConical },
-  { to: "/intelligence", label: "Intelligence", icon: BrainCircuit },
+  { to: "/admin", labelKey: "appFrame.admin_panel", icon: ShieldCheck, defaultLabel: "Admin Panel" },
+  { to: "/demo", labelKey: "appFrame.demo_runner", icon: PlaySquare, defaultLabel: "Demo Runner" },
+  { to: "/lab", labelKey: "appFrame.scenario_lab", icon: FlaskConical, defaultLabel: "Scenario Lab" },
+  { to: "/intelligence", labelKey: "appFrame.intelligence", icon: BrainCircuit, defaultLabel: "Intelligence" },
 ];
 
 export default function AppFrame({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { session, role, logout } = useAuth();
-  const { t, i18n } = useTranslation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    function handleEscape(e) {
-      if (e.key === "Escape") setIsMobileMenuOpen(false);
-    }
-
-    if (isMobileMenuOpen) {
-      window.addEventListener("keydown", handleEscape);
-    }
-
-    return () => {
-      window.removeEventListener("keydown", handleEscape);
-    };
-  }, [isMobileMenuOpen]);
-
-  function handleToggleLang() {
-    i18n.changeLanguage(i18n.language === "en" ? "hi" : "en");
-  }
+  const { t } = useTranslation();
 
   const navItems = role === "admin" ? adminNav : workerNav;
   const title =
@@ -49,11 +28,12 @@ export default function AppFrame({ children }) {
       ? "Simulation Control"
       : location.pathname.startsWith("/lab")
         ? "Scenario Lab"
-      : location.pathname.startsWith("/intelligence")
-        ? "System Intelligence"
-      : location.pathname.startsWith("/admin")
-        ? "System Oversight"
-        : t("dashboard.title");
+        : location.pathname.startsWith("/intelligence")
+          ? "System Intelligence"
+          : location.pathname.startsWith("/admin")
+            ? "System Oversight"
+            : t("dashboard.title");
+
   const userLabel = session?.session?.name || session?.session?.username || "RideShield user";
   const initials = useMemo(
     () =>
@@ -72,15 +52,23 @@ export default function AppFrame({ children }) {
 
   return (
     <div className="min-h-screen">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col bg-surface-container-lowest lg:flex" style={{ borderRight: "1px solid rgba(69, 70, 79, 0.15)" }}>
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col glass-light dark:glass-dark backdrop-blur-2xl lg:flex bg-white/20 dark:bg-black/20" style={{ borderRight: "1px solid rgba(255, 255, 255, 0.2)", border: "none" }}>
         <div className="flex h-full flex-col p-6">
           <div className="mb-8 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-[16px] bg-white shadow-sm">
-              <img src="/logo.png" alt="RideShield AI logo" className="h-full w-full object-contain" />
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-[16px] bg-cta-gradient text-on-primary shadow-md shadow-primary/20 ring-1 ring-white/20 dark:ring-primary/20">
+              <span className="pointer-events-none absolute inset-0 rounded-[16px] bg-gradient-to-br from-white/20 to-transparent opacity-50" aria-hidden />
+              <Shield className="relative" size={18} strokeWidth={2} aria-hidden />
             </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-on-surface-variant">RideShield</p>
-              <p className="text-base font-bold text-primary whitespace-nowrap">Parametric protection</p>
+            <div className="min-w-0 font-display">
+              <div className="flex items-baseline gap-0 tracking-[-0.03em]">
+                <span className="text-base font-extrabold text-on-surface">Ride</span>
+                <span className="bg-gradient-to-r from-teal-400 via-emerald-300 to-teal-400 bg-clip-text text-base font-extrabold text-transparent dark:from-primary dark:via-emerald-300 dark:to-teal-300">
+                  Shield
+                </span>
+              </div>
+              <p className="mt-0.5 truncate text-[0.6rem] font-medium uppercase tracking-[0.28em] text-on-surface-variant">
+                Parametric protection
+              </p>
             </div>
           </div>
 
@@ -95,13 +83,12 @@ export default function AppFrame({ children }) {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-[18px] px-4 py-3 text-sm font-semibold transition ${
-                    isActive ? "bg-surface-container text-primary shadow-ambient-glow" : "text-on-surface-variant hover:bg-surface-container-low"
+                  `flex items-center gap-3 rounded-[18px] px-4 py-3 text-sm font-semibold transition ${isActive ? "bg-surface-container text-primary shadow-ambient-glow" : "text-on-surface-variant hover:bg-surface-container-low"
                   }`
                 }
               >
                 <item.icon size={17} />
-                <span>{item.label}</span>
+                <span>{item.labelKey ? t(item.labelKey, { defaultValue: item.defaultLabel || item.label }) : item.label}</span>
               </NavLink>
             ))}
           </nav>
@@ -136,7 +123,7 @@ export default function AppFrame({ children }) {
       </aside>
 
       <main className="min-h-screen lg:ml-64">
-        <header className="sticky top-0 z-30 bg-surface-container-lowest/85 backdrop-blur-xl" style={{ borderBottom: "1px solid rgba(69, 70, 79, 0.15)" }}>
+        <header className="sticky top-0 z-30 glass-light dark:glass-dark backdrop-blur-3xl bg-white/30 dark:bg-black/30 border-b border-white/20 dark:border-white/10" style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.1)", border: "none" }}>
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-4">
               <div>
@@ -151,110 +138,12 @@ export default function AppFrame({ children }) {
               <div className="rounded-full bg-surface-container-high px-4 py-2 text-sm font-medium text-on-surface-variant">
                 {role === "admin" ? "Operational review mode" : t("appFrame.worker_coverage_mode")}
               </div>
-              <button type="button" onClick={() => toast.success(t("appFrame.alert_success"))} className="inline-flex items-center gap-2 rounded-full bg-tertiary-container px-4 py-2 text-sm font-semibold text-on-tertiary-container transition hover:brightness-110" aria-label="Emergency alert">
+              <button type="button" onClick={() => toast.success(t("appFrame.alert_success"))} className="inline-flex items-center gap-2 rounded-full bg-tertiary-container dark:bg-error/20 px-4 py-2 text-sm font-semibold text-on-tertiary-container dark:text-error transition hover:brightness-110" aria-label="Emergency alert">
                 <Siren size={16} />
                 {t("appFrame.alert")}
               </button>
-              <NotificationBell />
-              {role !== "admin" && (
-                <button
-                  type="button"
-                  onClick={handleToggleLang}
-                  className="rounded-full bg-surface-container-high px-3 py-2 text-xs font-bold text-on-surface-variant transition hover:bg-surface-container-highest"
-                  title="Switch language"
-                >
-                  {t("general.lang_toggle")}
-                </button>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-3 md:hidden">
-              <button 
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-                className="rounded-full p-2 text-on-surface-variant hover:bg-surface-container-high transition"
-                aria-label="Toggle mobile menu"
-              >
-                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile Overlay Backdrop */}
-          <div 
-            className={`fixed inset-0 top-16 z-20 bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
-              isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
-            onClick={() => setIsMobileMenuOpen(false)}
-            aria-hidden="true"
-          />
-
-          {/* Mobile Menu Dropdown */}
-          <div 
-            className={`absolute left-0 right-0 top-16 z-30 border-b border-t border-white/10 bg-surface-container-lowest px-4 py-5 shadow-2xl transition-all duration-300 ease-out md:hidden flex flex-col gap-5 ${
-              isMobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"
-            }`}
-          >
-            <div className="rounded-full bg-surface-container-high px-4 py-2.5 text-sm font-medium text-center text-on-surface-variant ring-1 ring-white/5 shadow-inner">
-              {role === "admin" ? "Operational review mode" : t("appFrame.worker_coverage_mode")}
-            </div>
-            <button 
-              type="button" 
-              onClick={() => {
-                toast.success(t("appFrame.alert_success"));
-                setIsMobileMenuOpen(false);
-              }} 
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-tertiary-container px-4 py-3.5 text-sm font-semibold text-on-tertiary-container transition hover:brightness-110 shadow-md"
-            >
-              <Siren size={18} />
-              {t("appFrame.alert")}
-            </button>
-            <div className="flex items-center justify-end gap-4 pt-1 border-t border-white/10 w-full">
-              {role !== "admin" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleToggleLang();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="flex-1 rounded-full bg-surface-container-high px-6 py-3 text-sm font-bold text-on-surface-variant transition hover:bg-surface-container-highest ring-1 ring-white/5"
-                >
-                  {t("general.lang_toggle")}
-                </button>
-              )}
-              <NotificationBell />
-            </div>
-
-            {/* User Info & Settings */}
-            <div className="flex items-center gap-3 rounded-2xl bg-surface-container-low p-3 shadow-sm ring-1 ring-white/5 mt-2">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-container text-xs font-bold text-primary shadow-inner">
-                {initials}
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <p className="truncate text-sm font-semibold text-primary">{userLabel}</p>
-                <p className="truncate text-xs text-on-surface-variant">{role === "admin" ? "Operational session" : t("appFrame.protected_worker_session")}</p>
-              </div>
-              <button 
-                type="button" 
-                onClick={() => { toast(t("appFrame.settings_toast"), { icon: "⚙️" }); setIsMobileMenuOpen(false); }} 
-                className="rounded-full p-2.5 text-on-surface-variant hover:bg-surface-container-high transition"
-                aria-label="Settings"
-              >
-                <Settings size={20} />
-              </button>
-            </div>
-
-            {/* Logout (Crucial Exit Path) */}
-            <div className="pt-2 border-t border-error/20">
-              <button 
-                type="button" 
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-error/10 px-4 py-3.5 text-sm font-bold text-error transition hover:bg-error/20 ring-1 ring-error/20 shadow-sm" 
-                onClick={() => { 
-                  setIsMobileMenuOpen(false);
-                  handleLogout(); 
-                }}
-              >
-                <LogOut size={18} />
-                {t("appFrame.sign_out")}
+              <button type="button" onClick={() => toast("You have no new notifications", { icon: "🔔" })} aria-label="Notifications" className="rounded-full bg-surface-container-high p-3 text-on-surface-variant transition hover:bg-surface-container-highest">
+                <Bell size={16} />
               </button>
             </div>
           </div>
@@ -263,7 +152,7 @@ export default function AppFrame({ children }) {
         <div className="mx-auto max-w-7xl px-4 py-8 pb-24 sm:px-6 lg:px-8 lg:pb-8">{children}</div>
       </main>
 
-      <nav className={`fixed bottom-0 left-0 right-0 z-40 bg-surface-container-lowest/95 px-4 py-3 backdrop-blur-xl lg:hidden ${navItems.length <= 1 ? "hidden" : ""}`} style={{ borderTop: "1px solid rgba(69, 70, 79, 0.15)" }}>
+      <nav className={`fixed bottom-0 left-0 right-0 z-40 glass-light dark:glass-dark backdrop-blur-3xl px-4 py-3 bg-white/30 dark:bg-black/30 lg:hidden ${navItems.length <= 1 ? "hidden" : ""}`} style={{ borderTop: "1px solid rgba(255, 255, 255, 0.1)", border: "none" }}>
         <div className="mx-auto flex max-w-xl items-center justify-around">
           {navItems.map((item) => (
             <NavLink
@@ -274,7 +163,7 @@ export default function AppFrame({ children }) {
               }
             >
               <item.icon size={18} />
-              <span>{item.label}</span>
+              <span>{item.labelKey ? t(item.labelKey, { defaultValue: item.defaultLabel || item.label }) : item.label}</span>
             </NavLink>
           ))}
         </div>
