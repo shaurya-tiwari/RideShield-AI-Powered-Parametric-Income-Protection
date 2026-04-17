@@ -42,7 +42,8 @@ const steps = [
 
 
 function getFeaturedPlans(plans, selectedPlan, recommendedPlan) {
-  const planMap = new Map((plans || []).map((plan) => [plan.plan_name, plan]));
+  const safePlans = Array.isArray(plans) ? plans : [];
+  const planMap = new Map(safePlans.map((plan) => [plan.plan_name, plan]));
   const premiumChoice = ["assured_plan", "pro_max"].includes(selectedPlan)
     ? selectedPlan
     : ["assured_plan", "pro_max"].includes(recommendedPlan)
@@ -163,19 +164,18 @@ export default function Onboarding() {
       (plan) => plan.plan_name === selectedPlan,
     );
   const featuredPlans = useMemo(
-    () => getFeaturedPlans(planOptions, selectedPlan, recommendedPlanName),
+    () => getFeaturedPlans(Array.isArray(planOptions) ? planOptions : [], selectedPlan, recommendedPlanName),
     [planOptions, recommendedPlanName, selectedPlan],
   );
-  const additionalPlans = useMemo(
-    () =>
-      planOptions.filter(
-        (plan) =>
-          !featuredPlans.some(
-            (featuredPlan) => featuredPlan.plan_name === plan.plan_name,
-          ),
-      ),
-    [featuredPlans, planOptions],
-  );
+  const additionalPlans = useMemo(() => {
+    const featured = Array.isArray(featuredPlans) ? featuredPlans : [];
+    return planOptions.filter(
+      (plan) =>
+        !featured.some(
+          (featuredPlan) => featuredPlan.plan_name === plan.plan_name,
+        ),
+    );
+  }, [featuredPlans, planOptions]);
   const stepIndex = steps.findIndex((item) => item.id === step);
   const progressWidth = `${((stepIndex + 1) / steps.length) * 100}%`;
   const validationErrors = useMemo(() => validateRegistration(form), [form]);
@@ -293,6 +293,7 @@ export default function Onboarding() {
 
   useEffect(() => {
     if (
+      Array.isArray(additionalPlans) &&
       additionalPlans.some((plan) => plan.plan_name === selectedPlan) &&
       !showAllPlans
     ) {
@@ -324,7 +325,7 @@ export default function Onboarding() {
             if (!current) {
               return recommended;
             }
-            return plans.some((plan) => plan.plan_name === current)
+            return Array.isArray(plans) && plans.some((plan) => plan.plan_name === current)
               ? current
               : recommended;
           });
