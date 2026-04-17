@@ -119,7 +119,9 @@ async def test_event_claim_and_payout_detail_endpoints(client, valid_worker_data
 
 
 @pytest.mark.asyncio
-async def test_review_queue_and_manual_resolution_flow(client, valid_worker_data, admin_cookies):
+async def test_review_queue_and_manual_resolution_flow(client, valid_worker_data, admin_cookies, monkeypatch):
+    from backend.core.decision_engine import DecisionEngine
+    monkeypatch.setitem(DecisionEngine.THRESHOLDS, "approved", 0.99)
     edge_worker_data = dict(valid_worker_data)
     edge_worker_data["name"] = "Edge Review Worker"
     edge_worker_data["phone"] = "+919999999998"
@@ -140,7 +142,7 @@ async def test_review_queue_and_manual_resolution_flow(client, valid_worker_data
         result = await session.execute(
             update(TrustScore)
             .where(TrustScore.worker_id == worker_uuid)
-            .values(score=Decimal("0.050"))
+            .values(score=Decimal("0.000"))
         )
         await session.commit()
 

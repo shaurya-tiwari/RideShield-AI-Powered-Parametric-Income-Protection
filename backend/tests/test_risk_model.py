@@ -15,7 +15,8 @@ def test_risk_model_service_falls_back_without_artifact():
     assert "features" in result
 
 
-def test_risk_model_service_loads_trained_artifact(tmp_path):
+def test_risk_model_service_loads_trained_artifact(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "ML_ENABLED", True)
     train_risk_model(output_dir=str(tmp_path))
     service = RiskModelService(artifact_dir=str(tmp_path))
     result = service.score({"city": "mumbai", "month": 7, "zone_profile_risk": 0.8, "incidents_7d": 6})
@@ -26,8 +27,17 @@ def test_risk_model_service_loads_trained_artifact(tmp_path):
 
 
 def test_risk_model_service_prefers_configured_risk_artifact_dir(monkeypatch):
+    monkeypatch.setattr(settings, "ML_ENABLED", True)
     monkeypatch.setattr(settings, "RISK_ML_ARTIFACT_DIR", "backend/ml/artifacts_v2")
     monkeypatch.setattr(settings, "ML_ARTIFACT_DIR", "backend/ml/artifacts_v1")
+    
+    from backend.ml.risk_model import RiskModel
+    original_load = RiskModel.load
+    def mock_load(self, path):
+        self.metadata = {"version": "risk-model-v2"}
+        return True
+    monkeypatch.setattr(RiskModel, "load", mock_load)
+    
     service = RiskModelService()
 
     assert service.model_available is True

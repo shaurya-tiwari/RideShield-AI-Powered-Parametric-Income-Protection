@@ -29,22 +29,22 @@ def train_risk_model(output_dir: str = "backend/ml/artifacts", use_gpu: bool = T
         HAS_XGBOOST = True
     except ImportError:
         HAS_XGBOOST = False
-        print("⚠️  XGBoost not installed, falling back to GradientBoosting")
+        print("XGBoost not installed, falling back to GradientBoosting")
         from sklearn.ensemble import GradientBoostingRegressor
     
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    print("🔄 Generating 50000 training samples...")
+    print("Generating 50000 training samples...")
     df = generate_risk_dataset(n_samples=50000)
-    print(f"✅ Generated {len(df)} samples")
+    print(f"Generated {len(df)} samples")
     
     X = df[RISK_FEATURE_NAMES]
     y = df["risk_score"]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     if HAS_XGBOOST:
-        print("🚀 Training XGBoost model...")
+        print("Training XGBoost model...")
         model = xgb.XGBRegressor(
             n_estimators=300,
             max_depth=8,
@@ -62,9 +62,9 @@ def train_risk_model(output_dir: str = "backend/ml/artifacts", use_gpu: bool = T
             eval_set=[(X_test, y_test)],
             verbose=False
         )
-        print("✅ XGBoost training complete")
+        print("XGBoost training complete")
     else:
-        print("📊 Training GradientBoosting model...")
+        print("Training GradientBoosting model...")
         model = GradientBoostingRegressor(
             n_estimators=200,
             max_depth=6,
@@ -74,7 +74,7 @@ def train_risk_model(output_dir: str = "backend/ml/artifacts", use_gpu: bool = T
             verbose=1,
         )
         model.fit(X_train, y_train)
-        print("✅ GradientBoosting training complete")
+        print("GradientBoosting training complete")
     
     predictions = model.predict(X_test)
     train_predictions = model.predict(X_train)
@@ -93,9 +93,9 @@ def train_risk_model(output_dir: str = "backend/ml/artifacts", use_gpu: bool = T
     print(f"Test R²:   {r2:.4f}")
     
     if gap_pct < 0.05:
-        print(f"✅ Generalization gap < 5% (Actual: {gap_pct:.2%})")
+        print(f"Generalization gap < 5% (Actual: {gap_pct:.2%})")
     else:
-        print(f"⚠️ Warning: Generalization gap is {gap_pct:.2%}")
+        print(f"Warning: Generalization gap is {gap_pct:.2%}")
     print("--------------------------\n")
 
     metadata = {
@@ -119,7 +119,7 @@ def train_risk_model(output_dir: str = "backend/ml/artifacts", use_gpu: bool = T
     joblib.dump(model, out_dir / "risk_model.joblib")
     (out_dir / "risk_model_metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     
-    print(f"✅ Model saved to {out_dir}/risk_model.joblib")
+    print(f"Model saved to {out_dir}/risk_model.joblib")
     return metadata
 
 
