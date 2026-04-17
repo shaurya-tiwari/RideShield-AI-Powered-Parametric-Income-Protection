@@ -49,18 +49,13 @@ async def main():
     try:
         await trigger_scheduler.start()
         logger.info("Scheduler loop running. Press Ctrl+C to stop.")
-        # Keep the process alive until interrupted
-        cleanup_count = 0
         while True:
-            await asyncio.sleep(1)
-            cleanup_count += 1
-            if cleanup_count >= 1800:  # every 30 min
-                try:
-                    await cleanup_old_snapshots()
-                    logger.info("Snapshot cleanup done")
-                except Exception as e:
-                    logger.error("Snapshot cleanup failed: %s", e)
-                cleanup_count = 0
+            await asyncio.sleep(1800)  # 30 min
+            try:
+                await cleanup_old_snapshots()
+                logger.info("Snapshot cleanup done")
+            except Exception as e:
+                logger.error("Snapshot cleanup failed: %s", e)
     except (KeyboardInterrupt, asyncio.CancelledError):
         logger.info("Scheduler worker interrupted")
     finally:
