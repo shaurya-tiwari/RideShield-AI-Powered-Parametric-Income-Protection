@@ -173,7 +173,7 @@ async def log_requests(request: Request, call_next):
         "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
         "img-src 'self' data: https://fastapi.tiangolo.com; "
-        "connect-src 'self' http://localhost:8000 http://localhost:3000 http://localhost:3001;"
+        "connect-src 'self' http://localhost:8000 http://localhost:3000 http://localhost:3001 https://ride-shield-backend-production.up.railway.app https://ride-shield-hazel.vercel.app;"
     )
     return response
 
