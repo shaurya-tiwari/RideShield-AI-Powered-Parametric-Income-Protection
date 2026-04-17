@@ -41,9 +41,12 @@ function FirstTimeGate({ workerId, onPurchased }) {
 
   useEffect(() => {
     policiesApi.plans(workerId).then((res) => {
-      setPlans(res.data);
+      setPlans(res.data || { plans: [], recommended: null });
       setLoading(false);
-    }).catch(() => setLoading(false));
+    }).catch(() => {
+      setPlans({ plans: [], recommended: null });
+      setLoading(false);
+    });
   }, [workerId]);
 
   async function handlePurchase(planName) {
@@ -84,7 +87,7 @@ function FirstTimeGate({ workerId, onPurchased }) {
             </div>
           ))}
         </div>
-      ) : Array.isArray(plans?.plans) ? (
+      ) : plans?.plans?.length > 0 ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {plans.plans.map((plan) => (
             <div

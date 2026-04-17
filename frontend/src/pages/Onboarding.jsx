@@ -363,7 +363,12 @@ export default function Onboarding() {
     setLoading(true);
     try {
       const result = await loginWorker(form.phone, form.password);
-      navigate(`/dashboard/${result.session.worker_id}`);
+      const workerId = result?.session?.worker_id || registration?.worker_id;
+      if (workerId) {
+        navigate(`/dashboard/${workerId}`);
+      } else {
+        toast.error(t("onboarding.errors.login_failed"));
+      }
     } catch (error) {
       toast.error(
         error.response?.data?.detail ||

@@ -77,7 +77,7 @@ class Settings(BaseSettings):
     DECISION_REASON_LIMIT: int = 3
     POLICY_TRUTH_TRAFFIC_SOURCES: str = "baseline"
     POLICY_SYNTHETIC_TRAFFIC_SOURCES: str = "simulation_pressure,scenario,replay_amplified"
-    SIGNAL_SNAPSHOT_RETENTION_DAYS: int = 14
+    SIGNAL_SNAPSHOT_RETENTION_MINUTES: int = 60
     SHADOW_DIFF_RETENTION_DAYS: int = 14
     SIGNAL_RETENTION_CLEANUP_INTERVAL: int = 100
     SHADOW_DIFF_ALERT_DELTA: float = 0.15
@@ -191,7 +191,7 @@ class Settings(BaseSettings):
         return normalized
 
     @field_validator(
-        "SIGNAL_SNAPSHOT_RETENTION_DAYS",
+        "SIGNAL_SNAPSHOT_RETENTION_MINUTES",
         "SHADOW_DIFF_RETENTION_DAYS",
         "SIGNAL_RETENTION_CLEANUP_INTERVAL",
         "FORECAST_SNAPSHOT_LOOKBACK_HOURS",
@@ -298,7 +298,7 @@ class Settings(BaseSettings):
             },
             "snapshots": {
                 "persistence_enabled": self.ENABLE_PROVIDER_SNAPSHOT_PERSISTENCE,
-                "retention_days": self.SIGNAL_SNAPSHOT_RETENTION_DAYS,
+                "retention_minutes": self.SIGNAL_SNAPSHOT_RETENTION_MINUTES,
                 "cleanup_interval": self.SIGNAL_RETENTION_CLEANUP_INTERVAL,
             },
             "forecast_preprocessing": {

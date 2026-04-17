@@ -51,7 +51,7 @@ async def test_signal_service_shadow_mode_returns_structured_diffs():
 @pytest.mark.asyncio
 async def test_signal_service_persists_shadow_diffs_and_prunes_stale_records(monkeypatch):
     monkeypatch.setattr(settings, "SIGNAL_RETENTION_CLEANUP_INTERVAL", 1)
-    monkeypatch.setattr(settings, "SIGNAL_SNAPSHOT_RETENTION_DAYS", 7)
+    monkeypatch.setattr(settings, "SIGNAL_SNAPSHOT_RETENTION_MINUTES", 60)
     monkeypatch.setattr(settings, "SHADOW_DIFF_RETENTION_DAYS", 7)
     snapshot_writer._writes_since_cleanup = 0
     shadow_diff_writer._writes_since_cleanup = 0
