@@ -29,6 +29,8 @@ class WhatsAppMetaProvider:
             "Content-Type": "application/json",
         }
         
+        logger.info(f"Sending WhatsApp request to: {self.base_url}")
+        
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.post(self.base_url, json=payload, headers=headers)
@@ -38,6 +40,7 @@ class WhatsAppMetaProvider:
                     logger.error(f"WhatsApp API error: {response.status_code} - {response_data}")
                     return {"error": response_data, "status": "failed"}
                 
+                logger.debug(f"WhatsApp API success: {response_data}")
                 return response_data
         except Exception as e:
             logger.exception("Failed to send WhatsApp message")

@@ -19,33 +19,39 @@ class WhatsAppSettingsService:
 
     async def get_user_lang(self, phone: str) -> str:
         """Get the user's preferred language, defaulting to 'en'."""
-        key = self._make_key(phone)
-        async with async_session_factory() as session:
-            stmt = select(SystemStatus).where(SystemStatus.key == key)
-            result = await session.execute(stmt)
-            status = result.scalar_one_or_none()
-            if status and isinstance(status.value, dict):
-                return status.value.get("lang", "en")
+        try:
+            key = self._make_key(phone)
+            async with async_session_factory() as session:
+                stmt = select(SystemStatus).where(SystemStatus.key == key)
+                result = await session.execute(stmt)
+                status = result.scalar_one_or_none()
+                if status and isinstance(status.value, dict):
+                    return status.value.get("lang", "en")
+        except Exception as e:
+            logger.error(f"Failed to fetch user language for {phone}: {e}")
         return "en"
 
     async def set_user_lang(self, phone: str, lang: str) -> None:
         """Set the user's preferred language."""
-        key = self._make_key(phone)
-        async with async_session_factory() as session:
-            stmt = select(SystemStatus).where(SystemStatus.key == key)
-            result = await session.execute(stmt)
-            status = result.scalar_one_or_none()
-            
-            settings = status.value if status and isinstance(status.value, dict) else {}
-            settings["lang"] = lang
-            
-            if status:
-                status.value = settings
-            else:
-                new_status = SystemStatus(key=key, value=settings)
-                session.add(new_status)
-            
-            await session.commit()
-            logger.info(f"Updated WhatsApp language for {phone} to {lang}")
+        try:
+            key = self._make_key(phone)
+            async with async_session_factory() as session:
+                stmt = select(SystemStatus).where(SystemStatus.key == key)
+                result = await session.execute(stmt)
+                status = result.scalar_one_or_none()
+                
+                settings = status.value if status and isinstance(status.value, dict) else {}
+                settings["lang"] = lang
+                
+                if status:
+                    status.value = settings
+                else:
+                    new_status = SystemStatus(key=key, value=settings)
+                    session.add(new_status)
+                
+                await session.commit()
+                logger.info(f"Updated WhatsApp language for {phone} to {lang}")
+        except Exception as e:
+            logger.error(f"Failed to set user language for {phone}: {e}")
 
 whatsapp_settings = WhatsAppSettingsService()

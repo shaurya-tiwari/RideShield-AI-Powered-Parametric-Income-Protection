@@ -32,129 +32,139 @@ async def verify_webhook(
 
 @router.post("/webhook")
 async def handle_webhook(request: Request):
-    payload = await request.json()
-    logger.info(f"WhatsApp Webhook Payload: {payload}")
-    
-    entries = payload.get("entry", [])
-    for entry in entries:
-        changes = entry.get("changes", [])
-        for change in changes:
-            value = change.get("value", {})
-            messages = value.get("messages", [])
-            
-            for message in messages:
-                sender_phone = message.get("from")
-                msg_text = whatsapp_helpers.get_message_text(message)
-                button_id = whatsapp_helpers.get_button_reply_id(message)
+    try:
+        payload = await request.json()
+        logger.info(f"WhatsApp Webhook Payload: {payload}")
+        
+        entries = payload.get("entry", [])
+        for entry in entries:
+            changes = entry.get("changes", [])
+            for change in changes:
+                value = change.get("value", {})
+                messages = value.get("messages", [])
                 
-                lang = await whatsapp_settings.get_user_lang(sender_phone)
-                session = whatsapp_flow.get_session(sender_phone)
-                
-                logger.debug(f"WA processing: {sender_phone} | State: {session['state']} | Button: {button_id} | Text: {msg_text}")
-                
-                # --- Shared Handlers ---
-                
-                # Language Selection
-                if button_id and button_id.startswith("lang_"):
-                    chosen_lang = "hi" if button_id == "lang_hi" else "en"
-                    await whatsapp_settings.set_user_lang(sender_phone, chosen_lang)
-                    whatsapp_flow.set_state(sender_phone, FlowState.MAIN_MENU)
-                    await whatsapp_meta.send_welcome_message(sender_phone, lang=chosen_lang)
-                    continue
+                for message in messages:
+                    sender_phone = message.get("from")
+                    msg_text = whatsapp_helpers.get_message_text(message)
+                    button_id = whatsapp_helpers.get_button_reply_id(message)
+                    
+                    try:
+                        lang = await whatsapp_settings.get_user_lang(sender_phone)
+                    except Exception as db_exc:
+                        logger.error(f"Database error in webhook (falling back to en): {db_exc}")
+                        lang = "en"
 
-                # Greeting
-                if whatsapp_helpers.is_greeting(msg_text) or button_id == "restart":
-                    await whatsapp_meta.send_lang_selection(sender_phone)
-                    whatsapp_flow.set_state(sender_phone, FlowState.LANG_SELECTION)
-                    continue
+                    session = whatsapp_flow.get_session(sender_phone)
+                    
+                    logger.debug(f"WA processing: {sender_phone} | State: {session['state']} | Button: {button_id} | Text: {msg_text}")
+                    
+                    # --- Shared Handlers ---
+                    
+                    # Language Selection
+                    if button_id and button_id.startswith("lang_"):
+                        chosen_lang = "hi" if button_id == "lang_hi" else "en"
+                        await whatsapp_settings.set_user_lang(sender_phone, chosen_lang)
+                        whatsapp_flow.set_state(sender_phone, FlowState.MAIN_MENU)
+                        await whatsapp_meta.send_welcome_message(sender_phone, lang=chosen_lang)
+                        continue
 
-                # --- State Dependent Logic ---
+                    # Greeting
+                    if whatsapp_helpers.is_greeting(msg_text) or button_id == "restart":
+                        await whatsapp_meta.send_lang_selection(sender_phone)
+                        whatsapp_flow.set_state(sender_phone, FlowState.LANG_SELECTION)
+                        continue
 
-                state = session["state"]
+                    # --- State Dependent Logic ---
 
-                # 1. Main Menu
-                if state == FlowState.MAIN_MENU:
-                    if button_id == "start":
-                        await whatsapp_meta.ask_onboard_name(sender_phone, lang=lang)
-                        whatsapp_flow.set_state(sender_phone, FlowState.ONBOARD_NAME)
-                    elif button_id == "status":
-                        await handle_status_check(sender_phone, lang)
-                
-                # 2. Capture Name
-                elif state == FlowState.ONBOARD_NAME:
-                    if msg_text:
-                        name = msg_text.strip()
-                        whatsapp_flow.update_data(sender_phone, "name", name)
-                        await whatsapp_meta.send_city_selection(sender_phone, name=name, lang=lang)
-                        whatsapp_flow.set_state(sender_phone, FlowState.ONBOARD_CITY)
+                    state = session["state"]
 
-                # 3. Capture City
-                elif state == FlowState.ONBOARD_CITY:
-                    if button_id and button_id.startswith("city_"):
-                        city_slug = button_id.replace("city_", "")
-                        whatsapp_flow.update_data(sender_phone, "city_slug", city_slug)
-                        await whatsapp_meta.send_platform_selection(sender_phone, lang=lang)
-                        whatsapp_flow.set_state(sender_phone, FlowState.ONBOARD_PLATFORM)
+                    # 1. Main Menu
+                    if state == FlowState.MAIN_MENU:
+                        if button_id == "start":
+                            await whatsapp_meta.ask_onboard_name(sender_phone, lang=lang)
+                            whatsapp_flow.set_state(sender_phone, FlowState.ONBOARD_NAME)
+                        elif button_id == "status":
+                            await handle_status_check(sender_phone, lang)
+                    
+                    # 2. Capture Name
+                    elif state == FlowState.ONBOARD_NAME:
+                        if msg_text:
+                            name = msg_text.strip()
+                            whatsapp_flow.update_data(sender_phone, "name", name)
+                            await whatsapp_meta.send_city_selection(sender_phone, name=name, lang=lang)
+                            whatsapp_flow.set_state(sender_phone, FlowState.ONBOARD_CITY)
 
-                # 4. Capture Platform
-                elif state == FlowState.ONBOARD_PLATFORM:
-                    if button_id and button_id.startswith("plat_"):
-                        platform = button_id.replace("plat_", "")
-                        whatsapp_flow.update_data(sender_phone, "platform", platform)
-                        
-                        # Fetch plans based on city
-                        city_slug = session["data"]["city_slug"]
-                        plan_data = await whatsapp_onboarding.get_plans_for_city(city_slug)
-                        
-                        if "error" in plan_data:
-                            await whatsapp_meta.send_text_message(sender_phone, f"Sorry, we don't support {city_slug} yet.")
-                            whatsapp_flow.set_state(sender_phone, FlowState.MAIN_MENU)
-                        else:
-                            whatsapp_flow.update_data(sender_phone, "risk_score", plan_data["risk_score"])
-                            whatsapp_flow.update_data(sender_phone, "zone_id", plan_data["zone_id"])
-                            whatsapp_flow.update_data(sender_phone, "city_id", plan_data["city_id"])
-                            whatsapp_flow.update_data(sender_phone, "zone_slug", plan_data["zone_slug"])
+                    # 3. Capture City
+                    elif state == FlowState.ONBOARD_CITY:
+                        if button_id and button_id.startswith("city_"):
+                            city_slug = button_id.replace("city_", "")
+                            whatsapp_flow.update_data(sender_phone, "city_slug", city_slug)
+                            await whatsapp_meta.send_platform_selection(sender_phone, lang=lang)
+                            whatsapp_flow.set_state(sender_phone, FlowState.ONBOARD_PLATFORM)
+
+                    # 4. Capture Platform
+                    elif state == FlowState.ONBOARD_PLATFORM:
+                        if button_id and button_id.startswith("plat_"):
+                            platform = button_id.replace("plat_", "")
+                            whatsapp_flow.update_data(sender_phone, "platform", platform)
                             
-                            await whatsapp_meta.send_plan_selection(sender_phone, plan_data["plans"], lang=lang)
-                            whatsapp_flow.set_state(sender_phone, FlowState.ONBOARD_PLAN)
+                            # Fetch plans based on city
+                            city_slug = session["data"]["city_slug"]
+                            plan_data = await whatsapp_onboarding.get_plans_for_city(city_slug)
+                            
+                            if "error" in plan_data:
+                                await whatsapp_meta.send_text_message(sender_phone, f"Sorry, we don't support {city_slug} yet.")
+                                whatsapp_flow.set_state(sender_phone, FlowState.MAIN_MENU)
+                            else:
+                                whatsapp_flow.update_data(sender_phone, "risk_score", plan_data["risk_score"])
+                                whatsapp_flow.update_data(sender_phone, "zone_id", plan_data["zone_id"])
+                                whatsapp_flow.update_data(sender_phone, "city_id", plan_data["city_id"])
+                                whatsapp_flow.update_data(sender_phone, "zone_slug", plan_data["zone_slug"])
+                                
+                                await whatsapp_meta.send_plan_selection(sender_phone, plan_data["plans"], lang=lang)
+                                whatsapp_flow.set_state(sender_phone, FlowState.ONBOARD_PLAN)
 
-                # 5. Capture Plan
-                elif state == FlowState.ONBOARD_PLAN:
-                    if button_id and button_id.startswith("plan_"):
-                        # format: plan_{plan_name}_{price}
-                        # Use split and join to handle plan_names that might contain underscores
-                        parts = button_id.split("_")
-                        price = int(float(parts[-1]))
-                        plan_name = "_".join(parts[1:-1])
-                        
-                        whatsapp_flow.update_data(sender_phone, "plan", plan_name)
-                        whatsapp_flow.update_data(sender_phone, "price", price)
-                        
-                        # Generate temp password for demo
-                        temp_password = "rs_" + str(uuid.uuid4().hex[:6])
-                        whatsapp_flow.update_data(sender_phone, "password", temp_password)
-                        
-                        plan_display = plan_name.replace("_", " ").title()
-                        await whatsapp_meta.send_checkout_request(sender_phone, plan_display, price, lang=lang)
-                        whatsapp_flow.set_state(sender_phone, FlowState.ONBOARD_PAYMENT)
+                    # 5. Capture Plan
+                    elif state == FlowState.ONBOARD_PLAN:
+                        if button_id and button_id.startswith("plan_"):
+                            # format: plan_{plan_name}_{price}
+                            # Use split and join to handle plan_names that might contain underscores
+                            parts = button_id.split("_")
+                            price = int(float(parts[-1]))
+                            plan_name = "_".join(parts[1:-1])
+                            
+                            whatsapp_flow.update_data(sender_phone, "plan", plan_name)
+                            whatsapp_flow.update_data(sender_phone, "price", price)
+                            
+                            # Generate temp password for demo
+                            temp_password = "rs_" + str(uuid.uuid4().hex[:6])
+                            whatsapp_flow.update_data(sender_phone, "password", temp_password)
+                            
+                            plan_display = plan_name.replace("_", " ").title()
+                            await whatsapp_meta.send_checkout_request(sender_phone, plan_display, price, lang=lang)
+                            whatsapp_flow.set_state(sender_phone, FlowState.ONBOARD_PAYMENT)
 
-                # 6. Mock Payment Success
-                elif state == FlowState.ONBOARD_PAYMENT:
-                    if button_id == "pay_success":
-                        result = await whatsapp_onboarding.finalize_onboarding(sender_phone, session["data"])
-                        if result["success"]:
-                            success_msg = get_string(
-                                "pay_success", 
-                                lang=lang, 
-                                name=session["data"]["name"],
-                                phone=sender_phone,
-                                password=session["data"]["password"]
-                            )
-                            await whatsapp_meta.send_text_message(sender_phone, success_msg)
-                            whatsapp_flow.set_state(sender_phone, FlowState.COMPLETED)
-                        else:
-                            await whatsapp_meta.send_text_message(sender_phone, "Something went wrong. Please try again later.")
-                            whatsapp_flow.set_state(sender_phone, FlowState.MAIN_MENU)
+                    # 6. Mock Payment Success
+                    elif state == FlowState.ONBOARD_PAYMENT:
+                        if button_id == "pay_success":
+                            result = await whatsapp_onboarding.finalize_onboarding(sender_phone, session["data"])
+                            if result["success"]:
+                                success_msg = get_string(
+                                    "pay_success", 
+                                    lang=lang, 
+                                    name=session["data"]["name"],
+                                    phone=sender_phone,
+                                    password=session["data"]["password"]
+                                )
+                                await whatsapp_meta.send_text_message(sender_phone, success_msg)
+                                whatsapp_flow.set_state(sender_phone, FlowState.COMPLETED)
+                            else:
+                                await whatsapp_meta.send_text_message(sender_phone, "Something went wrong. Please try again later.")
+                                whatsapp_flow.set_state(sender_phone, FlowState.MAIN_MENU)
+    except Exception as e:
+        logger.exception(f"Critical error in WhatsApp Webhook: {e}")
+        # Always return 200 to Meta even on internal error to avoid webhook disablement
+        return {"status": "error", "message": str(e)}
 
     return {"status": "success"}
 
