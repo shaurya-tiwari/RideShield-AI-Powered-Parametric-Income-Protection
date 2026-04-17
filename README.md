@@ -16,6 +16,12 @@ RideShield detects disruptions (rain, heat, AQI, platform outages, curfews), ver
 > ⚠️ Coverage activation follows a strict 24-hour delay to prevent adverse selection. All predictive and pricing features are designed around this constraint.
 
 ---
+## 🎤 Pitch Deck
+
+📄 View our pitch deck here:  
+[RideShield Pitch Deck](https://drive.google.com/file/d/16-Zw-gNYjzu5YmEhp238RQF1LcIa8Cmz/view)
+
+---
 
 ## 🏛️ Deployment
 
